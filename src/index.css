@@ -1,0 +1,259 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-app: #f4f6fa;
+  --bg-card: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-light: rgba(226, 232, 240, 0.8);
+  --brand-orange: #ff6b00;
+  --brand-gradient: linear-gradient(135deg, #ff7a1a 0%, #ff5500 100%);
+}
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Smooth custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f4f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Extej-styled Luxury White Card */
+.extej-card {
+  background: #ffffff;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.03), 0 4px 12px -2px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 10;
+}
+
+.extej-card:hover {
+  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.06), 0 6px 16px -3px rgba(0, 0, 0, 0.03);
+  transform: translateY(-2px);
+}
+
+/* Extej Orange Pill Button */
+.btn-orange-pill {
+  background: linear-gradient(135deg, #ff7a1a 0%, #ff5500 100%);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 14px 0 rgba(255, 107, 0, 0.32);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.btn-orange-pill:hover {
+  background: linear-gradient(135deg, #ff8833 0%, #ff6611 100%);
+  box-shadow: 0 6px 20px 0 rgba(255, 107, 0, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-orange-pill:active {
+  transform: translateY(1px);
+}
+
+/* Secondary Smooth Pill */
+.btn-secondary-pill {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-secondary-pill:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-color: #cbd5e1;
+}
+
+/* Active Sidebar Item Gradient with Glow */
+.nav-item-active {
+  background: linear-gradient(135deg, #ff7a1a 0%, #ff5500 100%);
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px -4px rgba(255, 107, 0, 0.4);
+}
+
+/* Facility Card Topographic Background */
+.facility-card-bg {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background-image: radial-gradient(circle at 100% 0%, rgba(255, 107, 0, 0.06) 0%, transparent 50%),
+                    radial-gradient(circle at 0% 100%, rgba(14, 165, 233, 0.05) 0%, transparent 50%);
+}
+
+.facility-card-orange {
+  background: linear-gradient(135deg, #ffffff 0%, #fff7ed 100%);
+  border: 1.5px solid #fdba74;
+}
+
+/* Smooth Entrance Keyframes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Jitter-Style Floating Card Animation */
+@keyframes floatCard {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float-card {
+  animation: floatCard 5.5s ease-in-out infinite;
+}
+
+/* Ken Burns Slow Zoom */
+@keyframes kenBurns {
+  0% {
+    transform: scale(1.04) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.10) translate(-1%, -1%);
+  }
+  100% {
+    transform: scale(1.04) translate(0, 0);
+  }
+}
+
+/* Shimmer Light Reflection */
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(-150%) skewX(-15deg);
+  }
+  40%, 100% {
+    transform: translateX(250%) skewX(-15deg);
+  }
+}
+
+/* Heart Pop Bounce */
+@keyframes heartPop {
+  0% {
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+.animate-heart-pop {
+  animation: heartPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Slow Brand Asterisk Rotation */
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spinSlow 16s linear infinite;
+}
+
+/* Floating Ambient Orbs Keyframes */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -40px) scale(1.08);
+  }
+  66% {
+    transform: translate(-20px, 25px) scale(0.95);
+  }
+}
+
+@keyframes floatReverse {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-35px, 30px) scale(0.94);
+  }
+  66% {
+    transform: translate(25px, -35px) scale(1.06);
+  }
+}
+
+@keyframes pulseSlow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.1);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 18s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 22s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 14s ease-in-out infinite;
+}
+
+/* Flow line animation for graph edges */
+@keyframes flowDash {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+.animated-edge-smooth {
+  stroke-dasharray: 6, 6;
+  animation: flowDash 1.2s linear infinite;
+}
+
+.animated-edge-disrupted-smooth {
+  stroke-dasharray: 6, 6;
+  animation: flowDash 0.6s linear infinite;
+}
