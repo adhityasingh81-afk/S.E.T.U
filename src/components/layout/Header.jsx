@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   Search, 
   Bell, 
@@ -21,9 +21,20 @@ import {
   ExternalLink,
   Clock,
   CheckCheck,
-  MessageSquareText
+  MessageSquareText,
+  LayoutDashboard,
+  Network,
+  Flame,
+  Compass,
+  MessageSquareCode,
+  GitCompare,
+  SlidersHorizontal,
+  Factory,
+  Warehouse,
+  CornerDownLeft
 } from 'lucide-react';
 import { CRISIS_SCENARIOS } from '../../data/scenariosData';
+import { NODES } from '../../data/auraSupplyChainData';
 
 export function Header({
   activeScenario,
@@ -43,6 +54,44 @@ export function Header({
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('all');
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const searchContainerRef = useRef(null);
+  const searchInputRef = useRef(null);
+
+  // Global Keyboard Shortcuts (Cmd+K / Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+          searchInputRef.current.select();
+        }
+      } else if (e.key === 'Escape') {
+        setIsSearchOpen(false);
+        if (searchInputRef.current) {
+          searchInputRef.current.blur();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Click Outside to Close Search Drawer
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+        setIsSearchOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Notification items state
   const [notifications, setNotifications] = useState([
@@ -112,6 +161,224 @@ export function Header({
     },
   ]);
 
+  // Search Items Registry with all features, actions, scenarios, and hubs
+  const searchItems = useMemo(() => {
+    const items = [
+      // 1. MAIN FEATURES & PAGES
+      {
+        id: 'feat-command-center',
+        title: 'Command Center',
+        subtitle: 'Executive overview, real-time alerts, resilience score & revenue risk',
+        category: 'features',
+        categoryLabel: 'Core Views',
+        badge: 'Dashboard',
+        icon: LayoutDashboard,
+        keywords: ['command', 'center', 'dashboard', 'home', 'overview', 'metrics', 'kpi', 'health', 'resilience', 'score', 'risk'],
+        action: () => {
+          if (onNavigateToTab) onNavigateToTab('command-center');
+        }
+      },
+      {
+        id: 'feat-digital-twin',
+        title: 'Digital Twin & Global Network',
+        subtitle: 'Interactive 3D geo-topology map, 15 operational hubs, multi-tier visibility',
+        category: 'features',
+        categoryLabel: 'Core Views',
+        badge: 'Digital Twin',
+        icon: Network,
+        keywords: ['digital', 'twin', 'map', 'topology', 'globe', 'suppliers', 'factories', 'warehouses', 'network', 'routes', 'hubs', 'geo'],
+        action: () => {
+          if (onNavigateToTab) onNavigateToTab('digital-twin');
+        }
+      },
+      {
+        id: 'feat-fracture-mode',
+        title: 'Fracture Mode Simulator',
+        subtitle: 'Cascade ripple engine, blast radius analysis & stress testing',
+        category: 'features',
+        categoryLabel: 'Core Views',
+        badge: 'Simulation',
+        icon: Flame,
+        keywords: ['fracture', 'mode', 'simulator', 'stress', 'test', 'cascade', 'ripple', 'blast', 'radius', 'shock', 'disruption', 'failure'],
+        action: () => {
+          if (onNavigateToTab) onNavigateToTab('fracture-mode');
+        }
+      },
+      {
+        id: 'feat-recovery-cockpit',
+        title: 'Autonomous Recovery Cockpit',
+        subtitle: 'Multi-strategy reroute optimizer, Pareto frontier & mitigation execution',
+        category: 'features',
+        categoryLabel: 'Core Views',
+        badge: 'AI Engine',
+        icon: Compass,
+        keywords: ['recovery', 'cockpit', 'strategies', 'optimizer', 'pareto', 'reroute', 'mitigation', 'autonomous', 'speed', 'cost'],
+        action: () => {
+          if (onNavigateToTab) onNavigateToTab('recovery-cockpit');
+        }
+      },
+      {
+        id: 'feat-negotiation-room',
+        title: 'AI Supplier Negotiation Room',
+        subtitle: 'Multi-agent dynamic bargaining, discount concessions & contract term sheets',
+        category: 'features',
+        categoryLabel: 'Core Views',
+        badge: 'AI Engine',
+        icon: MessageSquareCode,
+        keywords: ['negotiation', 'room', 'supplier', 'bargaining', 'kyoto', 'contract', 'term sheet', 'concession', 'discount', 'agent', 'chat'],
+        action: () => {
+          if (onNavigateToTab) onNavigateToTab('negotiation-room');
+        }
+      },
+      {
+        id: 'feat-counterfactual',
+        title: 'Counterfactual & ROI Analysis',
+        subtitle: 'What-if financial comparison, ROI variance & net value preserved',
+        category: 'features',
+        categoryLabel: 'Core Views',
+        badge: 'Analytics',
+        icon: GitCompare,
+        keywords: ['counterfactual', 'roi', 'what if', 'financial', 'comparison', 'loss', 'variance', 'capital', 'value', 'analysis'],
+        action: () => {
+          if (onNavigateToTab) onNavigateToTab('counterfactual');
+        }
+      },
+      {
+        id: 'feat-resilience-planner',
+        title: 'Resilience Capital Planner',
+        subtitle: 'Strategic buffer sizing, dual-sourcing investment & multi-tier modeling',
+        category: 'features',
+        categoryLabel: 'Core Views',
+        badge: 'Analytics',
+        icon: SlidersHorizontal,
+        keywords: ['resilience', 'planner', 'capital', 'buffer', 'dual sourcing', 'inventory', 'investment', 'sizing', 'budget'],
+        action: () => {
+          if (onNavigateToTab) onNavigateToTab('resilience-planner');
+        }
+      },
+
+      // 2. SYSTEM ACTIONS & REPORTS
+      {
+        id: 'act-executive-report',
+        title: 'Executive Crisis Briefing (PDF Report)',
+        subtitle: 'Generate C-suite crisis audit, recovery plan summary & PDF export',
+        category: 'actions',
+        categoryLabel: 'Actions & Reports',
+        badge: 'Report',
+        icon: FileText,
+        keywords: ['report', 'brief', 'executive', 'briefing', 'pdf', 'export', 'audit', 'summary', 'board'],
+        action: () => {
+          if (onOpenReport) onOpenReport();
+        }
+      },
+      {
+        id: 'act-reset-nominal',
+        title: 'Reset Network to Baseline Nominal',
+        subtitle: 'Clear active disruptions and restore all 15 operational nodes',
+        category: 'actions',
+        categoryLabel: 'Actions & Reports',
+        badge: 'System Action',
+        icon: RefreshCw,
+        keywords: ['reset', 'nominal', 'clear', 'disruption', 'baseline', 'restore', 'normal'],
+        action: () => {
+          if (onResetNetwork) onResetNetwork();
+        }
+      },
+
+      // 3. CRISIS SCENARIOS
+      ...CRISIS_SCENARIOS.map((sc) => ({
+        id: `sc-${sc.id}`,
+        title: sc.title,
+        subtitle: `${sc.badge} • ${sc.description}`,
+        category: 'scenarios',
+        categoryLabel: 'Crisis Scenarios',
+        badge: `⚡ ${sc.severityPct}% Impact`,
+        icon: Zap,
+        keywords: ['scenario', 'crisis', 'disruption', 'shock', sc.title.toLowerCase(), sc.affectedNodeName.toLowerCase(), sc.eventType.toLowerCase(), sc.geographicRegion.toLowerCase()],
+        action: () => {
+          if (onSelectScenario) onSelectScenario(sc);
+          if (onNavigateToTab) onNavigateToTab('command-center');
+        }
+      })),
+
+      // 4. SUPPLY CHAIN NODES & ENTITIES
+      ...NODES.map((node) => ({
+        id: `node-${node.id}`,
+        title: node.name,
+        subtitle: `${node.location} • ${node.category} (${node.criticality})`,
+        category: 'network',
+        categoryLabel: 'Supply Network Nodes',
+        badge: node.type === 'supplier' ? `Tier-${node.tier || 1} Supplier` : node.type === 'factory' ? 'Manufacturing Plant' : 'Logistics Hub',
+        icon: node.type === 'supplier' ? Building2 : node.type === 'factory' ? Factory : Warehouse,
+        keywords: ['node', 'hub', 'supplier', 'factory', 'warehouse', node.name.toLowerCase(), node.location.toLowerCase(), node.category.toLowerCase(), node.region.toLowerCase()],
+        action: () => {
+          if (node.id === 'sup-kyoto-ceramic' && onNavigateToTab) {
+            onNavigateToTab('negotiation-room');
+          } else if (onNavigateToTab) {
+            onNavigateToTab('digital-twin');
+          }
+        }
+      }))
+    ];
+
+    return items;
+  }, [onNavigateToTab, onSelectScenario, onOpenReport, onResetNetwork]);
+
+  // Filtered Results
+  const filteredResults = useMemo(() => {
+    let list = searchItems;
+
+    // Filter by Category Tab if set
+    if (selectedCategoryFilter !== 'all') {
+      list = list.filter(item => item.category === selectedCategoryFilter);
+    }
+
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      // If query is empty, show all items under active filter
+      return list;
+    }
+
+    const terms = query.split(/\s+/);
+    return list.filter(item => {
+      const targetStr = `${item.title} ${item.subtitle} ${item.badge} ${item.categoryLabel} ${item.keywords.join(' ')}`.toLowerCase();
+      return terms.every(term => targetStr.includes(term));
+    });
+  }, [searchItems, searchQuery, selectedCategoryFilter]);
+
+  // Reset selected index on query or filter changes
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [searchQuery, selectedCategoryFilter]);
+
+  // Handle Item Execution
+  const handleExecuteItem = (item) => {
+    if (item && item.action) {
+      item.action();
+    }
+    setIsSearchOpen(false);
+    setSearchQuery('');
+  };
+
+  // Keyboard navigation within search results
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev + 1) % (filteredResults.length || 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev - 1 + (filteredResults.length || 1)) % (filteredResults.length || 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filteredResults.length > 0 && filteredResults[selectedIndex]) {
+        handleExecuteItem(filteredResults[selectedIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      setIsSearchOpen(false);
+      if (searchInputRef.current) searchInputRef.current.blur();
+    }
+  };
+
   const user = currentUser || {
     name: 'Austin Robertson',
     role: 'Chief Supply Chain Officer',
@@ -148,84 +415,173 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 py-3 flex items-center justify-between gap-4 shadow-sm">
-      {/* Left: Search Bar with Interactive Results Drawer */}
-      <div className="flex items-center gap-4 flex-1 max-w-md relative">
+      {/* Left: Interactive Global Command Search Bar & Palette */}
+      <div ref={searchContainerRef} className="flex items-center gap-4 flex-1 max-w-lg relative">
         <div className="relative w-full">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
+            ref={searchInputRef}
             type="text"
-            placeholder="Search suppliers, materials, hubs, SKUs..."
+            placeholder="Search features, views, crisis scenarios, suppliers, hubs... (⌘K)"
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
-              setIsSearchOpen(e.target.value.length > 0);
+              setIsSearchOpen(true);
             }}
             onFocus={() => {
-              if (searchQuery.length > 0) setIsSearchOpen(true);
+              setIsSearchOpen(true);
             }}
-            className="w-full bg-[#f8fafc] border border-slate-200 rounded-full pl-10 pr-4 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white transition-all shadow-inner font-medium"
+            onKeyDown={handleSearchKeyDown}
+            className="w-full bg-[#f8fafc] border border-slate-200 rounded-full pl-10 pr-16 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/10 transition-all shadow-inner font-medium"
           />
-          {searchQuery && (
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                setIsSearchOpen(false);
-              }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
+          
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            {searchQuery ? (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  if (searchInputRef.current) searchInputRef.current.focus();
+                }}
+                className="p-1 text-slate-400 hover:text-slate-700 transition-colors"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 rounded">
+                ⌘K
+              </kbd>
+            )}
+          </div>
         </div>
 
-        {/* Live Search Quick-Jump Popover */}
+        {/* ================= COMMAND PALETTE DROPDOWN DRAWER ================= */}
         {isSearchOpen && (
-          <div className="absolute top-full left-0 mt-2 w-full bg-white border border-slate-200 rounded-2xl shadow-xl p-3 space-y-2 z-50 animate-fade-in-up">
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">
-              Matching Global Hubs & Entities
+          <div className="absolute top-full left-0 mt-2 w-[30rem] sm:w-[36rem] max-w-[calc(100vw-2rem)] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in-up">
+            {/* Filter Tabs Header */}
+            <div className="p-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1 overflow-x-auto text-[11px] font-bold">
+                {[
+                  { id: 'all', label: 'All Items' },
+                  { id: 'features', label: '🚀 Features & Views' },
+                  { id: 'scenarios', label: '⚡ Scenarios' },
+                  { id: 'network', label: '🏭 Supply Hubs' },
+                  { id: 'actions', label: '🛠️ Actions' },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setSelectedCategoryFilter(tab.id)}
+                    className={`px-2.5 py-1 rounded-lg transition-all shrink-0 cursor-pointer ${
+                      selectedCategoryFilter === tab.id
+                        ? 'bg-brand-500 text-white shadow-sm'
+                        : 'text-slate-600 hover:bg-slate-200/70 hover:text-slate-900'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <span className="text-[10px] font-semibold text-slate-400 shrink-0">
+                {filteredResults.length} {filteredResults.length === 1 ? 'match' : 'matches'}
+              </span>
             </div>
-            <div className="space-y-1 text-xs">
-              <div 
-                onClick={() => {
-                  setIsSearchOpen(false);
-                  if (onNavigateToTab) onNavigateToTab('digital-twin');
-                }}
-                className="p-2 rounded-xl hover:bg-orange-50 cursor-pointer flex items-center justify-between group transition-colors"
-              >
-                <div>
-                  <div className="font-bold text-slate-900 group-hover:text-brand-600">Taiwan Micro Foundry (TSMC)</div>
-                  <div className="text-[10px] text-slate-500">Tier-1 Silicon • Hsinchu, Taiwan</div>
-                </div>
-                <span className="text-[10px] text-brand-600 font-bold">Open Twin →</span>
-              </div>
 
-              <div 
-                onClick={() => {
-                  setIsSearchOpen(false);
-                  if (onNavigateToTab) onNavigateToTab('digital-twin');
-                }}
-                className="p-2 rounded-xl hover:bg-orange-50 cursor-pointer flex items-center justify-between group transition-colors"
-              >
-                <div>
-                  <div className="font-bold text-slate-900 group-hover:text-brand-600">Chennai Mega Assembly Hub</div>
-                  <div className="text-[10px] text-slate-500">Primary Assembly Plant • Chennai, India</div>
-                </div>
-                <span className="text-[10px] text-brand-600 font-bold">Open Twin →</span>
-              </div>
+            {/* Results List */}
+            <div className="max-h-80 overflow-y-auto p-2 space-y-1 divide-y divide-slate-50">
+              {filteredResults.length > 0 ? (
+                filteredResults.map((item, idx) => {
+                  const Icon = item.icon;
+                  const isSelected = idx === selectedIndex;
 
-              <div 
-                onClick={() => {
-                  setIsSearchOpen(false);
-                  if (onNavigateToTab) onNavigateToTab('negotiation-room');
-                }}
-                className="p-2 rounded-xl hover:bg-orange-50 cursor-pointer flex items-center justify-between group transition-colors"
-              >
-                <div>
-                  <div className="font-bold text-slate-900 group-hover:text-brand-600">Kyoto Advanced Ceramics</div>
-                  <div className="text-[10px] text-slate-500">Substrate Supplier • Kyoto, Japan</div>
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => handleExecuteItem(item)}
+                      onMouseEnter={() => setSelectedIndex(idx)}
+                      className={`p-2.5 rounded-xl cursor-pointer flex items-center justify-between gap-3 transition-all ${
+                        isSelected
+                          ? 'bg-orange-50/80 border border-brand-200/60 shadow-sm'
+                          : 'hover:bg-slate-50 border border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                          isSelected
+                            ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/30'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs font-bold font-sans truncate ${
+                              isSelected ? 'text-brand-900' : 'text-slate-900'
+                            }`}>
+                              {item.title}
+                            </span>
+                            <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-600 shrink-0">
+                              {item.badge}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
+                            {item.subtitle}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 flex items-center gap-1">
+                        <span className={`text-[10px] font-bold flex items-center gap-1 transition-opacity ${
+                          isSelected ? 'text-brand-600 opacity-100' : 'opacity-0 text-slate-400'
+                        }`}>
+                          <span>Jump</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                /* Empty Results State */
+                <div className="p-6 text-center space-y-3">
+                  <div className="w-10 h-10 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                    <Search className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">No matching features or entities found</p>
+                    <p className="text-[11px] text-slate-400 mt-1">Try searching for key platform modules or hubs</p>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+                    {['Recovery', 'Digital Twin', 'Taiwan 40%', 'Negotiation', 'ROI', 'Report'].map((hint) => (
+                      <button
+                        key={hint}
+                        onClick={() => {
+                          setSearchQuery(hint);
+                          if (searchInputRef.current) searchInputRef.current.focus();
+                        }}
+                        className="text-[10px] font-bold px-2 py-1 rounded-md bg-slate-100 hover:bg-orange-50 hover:text-brand-600 text-slate-600 transition-colors"
+                      >
+                        {hint}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <span className="text-[10px] text-brand-600 font-bold">Negotiate →</span>
+              )}
+            </div>
+
+            {/* Command Palette Keyboard Hints Footer */}
+            <div className="px-3 py-2 bg-slate-50/90 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-medium">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1 py-0.2 bg-white border border-slate-200 rounded font-mono text-[9px]">↑↓</kbd> to navigate
+                </span>
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1 py-0.2 bg-white border border-slate-200 rounded font-mono text-[9px]">↵</kbd> to select
+                </span>
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1 py-0.2 bg-white border border-slate-200 rounded font-mono text-[9px]">ESC</kbd> to close
+                </span>
               </div>
+              <span className="text-brand-600 font-semibold">Nexus Command Search</span>
             </div>
           </div>
         )}
