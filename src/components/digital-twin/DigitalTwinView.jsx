@@ -26,10 +26,20 @@ import {
   Sparkles,
   MapPin,
   TrendingDown,
+  TrendingUp,
   ChevronRight,
   ShieldAlert,
   Navigation,
-  Globe2
+  Globe2,
+  Activity,
+  Plane,
+  Ship,
+  LocateFixed,
+  Boxes,
+  DollarSign,
+  Radio,
+  Crosshair,
+  Award
 } from 'lucide-react';
 import { feature } from 'topojson-client';
 import { geoMercator, geoPath, geoGraticule10 } from 'd3-geo';
@@ -104,6 +114,49 @@ export function DigitalTwinView({
   // Toggle selection helper: clicking the same selected node deselects it
   const handleToggleNodeSelect = (nodeId) => {
     setSelectedNodeId(prev => prev === nodeId ? null : nodeId);
+  };
+
+  // Mouse wheel zoom on map stage (up to 8.0x zoom)
+  const handleMapWheel = (e) => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY < 0 ? 1.18 : 0.85;
+    setMapZoom((prev) => {
+      const newZoom = Math.min(Math.max(prev * zoomFactor, 0.6), 8.0);
+      return parseFloat(newZoom.toFixed(2));
+    });
+  };
+
+  // Region preset jump controls
+  const handlePresetRegion = (region) => {
+    if (region === 'world') {
+      setMapZoom(1);
+      setMapPan({ x: 0, y: 0 });
+    } else if (region === 'east-asia') {
+      setMapZoom(3.6);
+      setMapPan({ x: -280, y: -40 });
+    } else if (region === 'south-asia') {
+      setMapZoom(3.8);
+      setMapPan({ x: -160, y: -20 });
+    } else if (region === 'europe') {
+      setMapZoom(3.6);
+      setMapPan({ x: 60, y: -150 });
+    } else if (region === 'americas') {
+      setMapZoom(3.0);
+      setMapPan({ x: 340, y: -80 });
+    }
+  };
+
+  // Focus directly onto a node on the world map with animated smooth zoom
+  const handleFocusNodeOnMap = (node) => {
+    if (!node) return;
+    setViewMode('map');
+    setSelectedNodeId(node.id);
+    const coords = projectGeoToSVG(node.lat, node.lng);
+    const targetZoom = 4.5;
+    const panX = (500 - coords.x) * (targetZoom - 1);
+    const panY = (250 - coords.y) * (targetZoom - 1);
+    setMapZoom(targetZoom);
+    setMapPan({ x: panX, y: panY });
   };
 
   // Cartographic world geography from Natural Earth
@@ -553,17 +606,18 @@ export function DigitalTwinView({
                     <span className="text-slate-800 font-bold">Global Multi-Modal Logistics Corridors</span>
                   </div>
                   <span className="text-brand-600 font-mono text-[11px] bg-orange-50 px-2.5 py-0.5 rounded-full border border-orange-200">
-                    4 Continents • 10 Active Corridors
+                    4 Continents • 10 Active Corridors • Zoom up to 800%
                   </span>
                 </div>
 
-                {/* Real Continental Map Stage */}
+                {/* Real Continental Map Stage with Wheel Zoom & Pan */}
                 <div 
-                  className="w-full h-[530px] overflow-hidden relative rounded-2xl bg-[#eef4fb] border border-slate-200/90 shadow-inner flex items-center justify-center select-none"
+                  className="w-full h-[540px] overflow-hidden relative rounded-2xl bg-[#eef4fb] border border-slate-200/90 shadow-inner flex items-center justify-center select-none"
                   onMouseDown={handleMapMouseDown}
                   onMouseMove={handleMapMouseMove}
                   onMouseUp={handleMapMouseUp}
                   onMouseLeave={handleMapMouseUp}
+                  onWheel={handleMapWheel}
                   style={{ cursor: isDraggingMap ? 'grabbing' : 'grab' }}
                 >
                   <svg 
@@ -591,7 +645,7 @@ export function DigitalTwinView({
                     <rect width="1000" height="500" fill="#f0f6fc" />
                     <rect width="1000" height="500" fill="url(#mapGridPattern)" opacity="0.6" />
 
-                    {/* TRANSFORMABLE MAP WORLD LAYER */}
+                    {/* TRANSFORMABLE MAP WORLD LAYER (Scale up to 8.0x) */}
                     <g 
                       transform={`translate(${mapPan.x}, ${mapPan.y}) scale(${mapZoom})`}
                       style={{ transformOrigin: '500px 250px', transition: isDraggingMap ? 'none' : 'transform 0.2s ease-out' }}
@@ -679,10 +733,10 @@ export function DigitalTwinView({
                             onMouseLeave={() => setHoveredNode(null)}
                           >
                             {/* Counter-scale node elements so node size stays fixed regardless of zoom */}
-                            <g transform={`scale(${1 / mapZoom})`} style={{ transition: isDraggingMap ? 'none' : 'transform 0.2s ease-out' }}>
+                            <g transform={`scale(${1 / Math.sqrt(mapZoom)})`} style={{ transition: isDraggingMap ? 'none' : 'transform 0.2s ease-out' }}>
                               {/* Ping Animation on Disrupted Node */}
                               {isDisruptedNode && (
-                                <circle cx="0" cy="0" r="16" fill="rgba(244,63,94,0.3)" className="animate-ping" />
+                                <circle cx="0" cy="0" r="16" fill="rgba(244,63,94,0.35)" className="animate-ping" />
                               )}
 
                               {/* Outer halo */}
@@ -696,7 +750,7 @@ export function DigitalTwinView({
                                 className="transition-all shadow-md"
                               />
 
-                              {/* Clean Node Label Pill (Avoid overlapping by offsetting based on latitude) */}
+                              {/* Clean Node Label Pill */}
                               <g transform={`translate(${node.lng > 0 ? 10 : -90}, ${node.lat > 30 ? -12 : 14})`}>
                                 <rect
                                   x="0"
@@ -704,7 +758,7 @@ export function DigitalTwinView({
                                   width={Math.min(node.name.split('(')[0].length * 6.8 + 12, 110)}
                                   height="17"
                                   rx="5"
-                                  fill="rgba(255, 255, 255, 0.92)"
+                                  fill="rgba(255, 255, 255, 0.94)"
                                   stroke={isSelected ? "#ff6b00" : isDisruptedNode ? "#f43f5e" : "#cbd5e1"}
                                   strokeWidth={isSelected ? "1.5" : "0.8"}
                                   filter="drop-shadow(0 2px 4px rgba(0,0,0,0.06))"
@@ -727,39 +781,70 @@ export function DigitalTwinView({
                     </g>
                   </svg>
 
-                  {/* Map Zoom Controls */}
-                  <div className="absolute top-3 right-3 bg-white/95 border border-slate-200 p-1.5 rounded-2xl shadow-md flex items-center gap-1 backdrop-blur-sm z-20">
+                  {/* Top-Left: Regional Preset Quick-Jump Bar */}
+                  <div className="absolute top-3 left-3 bg-white/95 border border-slate-200 p-1 rounded-2xl shadow-md hidden sm:flex items-center gap-1 backdrop-blur-sm z-20">
+                    {[
+                      { id: 'world', label: '🌍 World' },
+                      { id: 'east-asia', label: '🇹🇼 East Asia' },
+                      { id: 'south-asia', label: '🇮🇳 South Asia' },
+                      { id: 'europe', label: '🇪🇺 Europe' },
+                      { id: 'americas', label: '🇺🇸 Americas' },
+                    ].map((reg) => (
+                      <button
+                        key={reg.id}
+                        onClick={() => handlePresetRegion(reg.id)}
+                        className="px-2.5 py-1 rounded-xl text-[10px] font-bold text-slate-600 hover:bg-orange-50 hover:text-brand-600 transition-colors cursor-pointer"
+                      >
+                        {reg.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Top-Right: Map Zoom Controls (Up to 8.0x) */}
+                  <div className="absolute top-3 right-3 bg-white/95 border border-slate-200 p-1.5 rounded-2xl shadow-md flex items-center gap-1.5 backdrop-blur-sm z-20">
                     <button
-                      onClick={() => setMapZoom(prev => Math.min(prev + 0.25, 2.5))}
-                      className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer"
-                      title="Zoom In Map"
+                      onClick={() => setMapZoom(prev => Math.min(parseFloat((prev + 0.5).toFixed(2)), 8.0))}
+                      className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-700 cursor-pointer"
+                      title="Zoom In (Max 800%)"
                     >
-                      <ZoomIn className="w-3.5 h-3.5" />
+                      <ZoomIn className="w-4 h-4" />
                     </button>
+                    <span className="px-2 py-0.5 text-[10px] font-mono font-bold text-slate-700 bg-slate-100 rounded-lg min-w-[42px] text-center">
+                      {Math.round(mapZoom * 100)}%
+                    </span>
                     <button
-                      onClick={() => setMapZoom(prev => Math.max(prev - 0.25, 0.75))}
-                      className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer"
-                      title="Zoom Out Map"
+                      onClick={() => setMapZoom(prev => Math.max(parseFloat((prev - 0.5).toFixed(2)), 0.6))}
+                      className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-700 cursor-pointer"
+                      title="Zoom Out"
                     >
-                      <ZoomOut className="w-3.5 h-3.5" />
+                      <ZoomOut className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => {
                         setMapZoom(1);
                         setMapPan({ x: 0, y: 0 });
                       }}
-                      className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer"
+                      className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-700 cursor-pointer"
                       title="Reset Map View"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                     </button>
+                    {selectedNode && (
+                      <button
+                        onClick={() => handleFocusNodeOnMap(selectedNode)}
+                        className="p-1.5 rounded-xl bg-orange-50 text-brand-600 hover:bg-orange-100 transition-colors cursor-pointer"
+                        title="Center on Selected Node"
+                      >
+                        <LocateFixed className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
 
-                  {/* Map Status Legend */}
+                  {/* Bottom-Left: Map Status Legend */}
                   <div className="absolute bottom-3 left-3 bg-white/95 border border-slate-200 px-3.5 py-2.5 rounded-2xl text-[11px] text-slate-700 shadow-md space-y-1.5 backdrop-blur-sm z-20">
                     <div className="font-extrabold text-slate-900 flex items-center gap-1.5 text-xs">
                       <Globe2 className="w-3.5 h-3.5 text-brand-500" />
-                      Live Maritime & Air Corridors
+                      Live Logistics Corridors
                     </div>
                     <div className="flex items-center gap-3 text-[10px] text-slate-600 font-semibold">
                       <span className="flex items-center gap-1">
@@ -770,9 +855,6 @@ export function DigitalTwinView({
                       </span>
                       <span className="flex items-center gap-1">
                         <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Gateways
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Clients
                       </span>
                     </div>
                   </div>
@@ -798,13 +880,15 @@ export function DigitalTwinView({
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Real-Time Node Telemetry Inspector */}
-        <div className="lg:col-span-4 extej-card p-6 space-y-5 animate-fade-in-up">
+        {/* RIGHT COLUMN: Real-Time Node Telemetry & Global Intelligence Inspector */}
+        <div className="lg:col-span-4 extej-card p-5 sm:p-6 space-y-5 animate-fade-in-up">
           {selectedNode ? (
-            <div className="space-y-5">
-              <div className="flex items-start justify-between pb-3 border-b border-slate-100">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+            /* ================= STATE A: INTRICATE NODE TELEMETRY INSPECTOR ================= */
+            <div className="space-y-4">
+              {/* Header with Coordinates & Actions */}
+              <div className="flex items-start justify-between pb-3 border-b border-slate-100 gap-2">
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getNodeTypeMeta(selectedNode.type).color}`}>
                       {getNodeTypeMeta(selectedNode.type).label}
                     </span>
@@ -813,172 +897,419 @@ export function DigitalTwinView({
                         Tier {selectedNode.tier}
                       </span>
                     )}
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-orange-50 text-brand-700 border border-orange-200/60">
+                      {selectedNode.category.split('&')[0]}
+                    </span>
                   </div>
-                  <h3 className="text-base font-extrabold text-slate-900 font-sans mt-1">
+                  <h3 className="text-base font-extrabold text-slate-900 font-sans mt-1 truncate">
                     {selectedNode.name}
                   </h3>
-                  <p className="text-xs text-slate-500 flex items-center gap-1 font-medium">
-                    <MapPin className="w-3.5 h-3.5 text-brand-500" />
-                    {selectedNode.location}
-                  </p>
+                  <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+                    <span className="flex items-center gap-1 truncate">
+                      <MapPin className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                      {selectedNode.location}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400 shrink-0">
+                      {selectedNode.lat.toFixed(1)}°N, {selectedNode.lng.toFixed(1)}°E
+                    </span>
+                  </div>
                 </div>
 
-                {/* Deselect Button */}
-                <button
-                  onClick={() => setSelectedNodeId(null)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                  title="Deselect node"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => handleFocusNodeOnMap(selectedNode)}
+                    className="p-1.5 rounded-lg text-brand-600 bg-orange-50 hover:bg-orange-100 transition-colors cursor-pointer"
+                    title="Focus on Map"
+                  >
+                    <LocateFixed className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setSelectedNodeId(null)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                    title="Deselect node"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              {/* Health & Status Barometer */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1.5">
+              {/* Status Barometer & Live Diagnosis */}
+              <div className={`p-3.5 rounded-2xl border space-y-2 ${
+                selectedNode.simulatedStatus === 'disrupted'
+                  ? 'bg-rose-50/70 border-rose-200 text-rose-950'
+                  : selectedNode.simulatedStatus === 'impaired'
+                  ? 'bg-amber-50/70 border-amber-200 text-amber-950'
+                  : 'bg-emerald-50/60 border-emerald-200 text-emerald-950'
+              }`}>
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500 font-semibold">Node Status:</span>
-                  <span className={`font-bold uppercase tracking-wider ${
+                  <span className="font-bold flex items-center gap-1.5">
+                    <span className={`w-2 h-2 rounded-full ${
+                      selectedNode.simulatedStatus === 'disrupted'
+                        ? 'bg-rose-500 animate-ping'
+                        : selectedNode.simulatedStatus === 'impaired'
+                        ? 'bg-amber-500'
+                        : 'bg-emerald-500'
+                    }`}></span>
+                    Telemetry State:
+                  </span>
+                  <span className={`font-black uppercase tracking-wider text-[11px] ${
                     selectedNode.simulatedStatus === 'disrupted' 
-                      ? 'text-rose-600' 
+                      ? 'text-rose-700' 
                       : selectedNode.simulatedStatus === 'impaired' 
-                      ? 'text-amber-600' 
-                      : 'text-emerald-600'
+                      ? 'text-amber-700' 
+                      : 'text-emerald-700'
                   }`}>
-                    {selectedNode.simulatedStatus || 'Operational'}
+                    {selectedNode.simulatedStatus === 'disrupted'
+                      ? 'CRITICAL DISRUPTION'
+                      : selectedNode.simulatedStatus === 'impaired'
+                      ? 'DOWNSTREAM BOTTLENECK'
+                      : 'OPTIMAL SLA'}
                   </span>
                 </div>
-                {selectedNode.impactNote && (
-                  <p className="text-[11px] text-slate-600 italic bg-white p-2.5 rounded-xl border border-slate-200/60 font-medium">
+                {selectedNode.impactNote ? (
+                  <p className="text-[11px] italic bg-white/80 p-2.5 rounded-xl border border-rose-200/60 font-medium leading-relaxed">
                     "{selectedNode.impactNote}"
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-emerald-800 font-medium">
+                    All outbound fulfillment shipments, telemetry feeds, and quality buffers are operating nominally.
                   </p>
                 )}
               </div>
 
-              {/* Telemetry Metrics Grid */}
+              {/* Operational Capacity Utilization Bar */}
+              {selectedNode.capacityUnitsPerMonth && (
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-600 font-bold flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5 text-brand-500" />
+                      Capacity Utilization
+                    </span>
+                    <span className="font-mono font-black text-slate-900">
+                      {selectedNode.currentUtilization || 85}% Load
+                    </span>
+                  </div>
+                  
+                  {/* Visual Progress Bar */}
+                  <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden flex">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-700 ${
+                        selectedNode.simulatedStatus === 'disrupted'
+                          ? 'bg-gradient-to-r from-rose-500 to-red-600'
+                          : (selectedNode.currentUtilization || 85) > 90
+                          ? 'bg-gradient-to-r from-amber-400 to-orange-500'
+                          : 'bg-gradient-to-r from-emerald-400 to-brand-500'
+                      }`}
+                      style={{ width: `${selectedNode.currentUtilization || 85}%` }}
+                    ></div>
+                  </div>
+
+                  <div className="flex justify-between items-center text-[10px] text-slate-500 font-semibold pt-0.5">
+                    <span>Throughput: {selectedNode.capacityUnitsPerMonth.toLocaleString()} Units/mo</span>
+                    <span>Spare Buffer: {100 - (selectedNode.currentUtilization || 85)}%</span>
+                  </div>
+                </div>
+              )}
+
+              {/* 4 Intricate Metric Diagnostic Tiles */}
               <div className="grid grid-cols-2 gap-2.5 text-xs">
-                {selectedNode.capacityUnitsPerMonth && (
-                  <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                    <span className="text-slate-400 text-[10px] block font-semibold">Monthly Capacity</span>
-                    <span className="font-bold text-slate-900 font-mono">{selectedNode.capacityUnitsPerMonth.toLocaleString()} Units</span>
+                {/* Tile 1: Lead Time */}
+                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
+                  <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase">
+                    <span>Transit Lead Time</span>
+                    <Clock className="w-3 h-3 text-slate-400" />
+                  </div>
+                  <div className="font-mono font-black text-slate-900 text-sm">
+                    {selectedNode.leadTimeDays || 14} <span className="text-xs font-sans font-semibold text-slate-500">Days</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-medium">
+                    {selectedNode.type === 'supplier' ? '✈️ Air Express Corridor' : '🚢 Maritime Route'}
+                  </div>
+                </div>
+
+                {/* Tile 2: Reliability SLA */}
+                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
+                  <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase">
+                    <span>Historical SLA</span>
+                    <Shield className="w-3 h-3 text-emerald-500" />
+                  </div>
+                  <div className="font-mono font-black text-emerald-600 text-sm">
+                    {selectedNode.reliabilityScore || 98}% <span className="text-xs font-sans font-semibold text-slate-500">Score</span>
+                  </div>
+                  <div className="text-[10px] text-emerald-700 font-medium">
+                    Tier-1 SLA Compliance
+                  </div>
+                </div>
+
+                {/* Tile 3: Unit Cost */}
+                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
+                  <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase">
+                    <span>Unit Baseline</span>
+                    <DollarSign className="w-3 h-3 text-brand-500" />
+                  </div>
+                  <div className="font-mono font-black text-slate-900 text-sm">
+                    ₹{selectedNode.unitCostINR ? selectedNode.unitCostINR.toLocaleString() : '4,200'}
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-medium truncate">
+                    {selectedNode.monthlyContractINR || '₹50.4 Cr Run-rate'}
+                  </div>
+                </div>
+
+                {/* Tile 4: Stockout Runway */}
+                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
+                  <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase">
+                    <span>Stockout Runway</span>
+                    <Boxes className="w-3 h-3 text-amber-500" />
+                  </div>
+                  <div className={`font-mono font-black text-sm ${
+                    (selectedNode.inventoryRunwayDays || selectedNode.inventoryBufferDays || 25) < 14
+                      ? 'text-rose-600'
+                      : 'text-amber-600'
+                  }`}>
+                    {selectedNode.inventoryRunwayDays || selectedNode.inventoryBufferDays || 25} <span className="text-xs font-sans font-semibold text-slate-500">Days</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-medium">
+                    {(selectedNode.inventoryRunwayDays || selectedNode.inventoryBufferDays || 25) < 14 ? '⚠️ Critical Warning' : 'Safe Buffer Zone'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Interconnections & Redundancy Channels */}
+              <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 space-y-2.5 shadow-2xs">
+                <div className="text-[11px] font-bold text-slate-800 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Radio className="w-3.5 h-3.5 text-brand-500" />
+                    Network Interconnections
+                  </span>
+                  <span className="text-[10px] text-slate-400">Click to jump</span>
+                </div>
+
+                {/* Upstream/Downstream Connected Nodes */}
+                {selectedNode.dependencies && selectedNode.dependencies.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Connected Nodes:</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedNode.dependencies.map((depId) => {
+                        const depNode = nodes.find(n => n.id === depId);
+                        if (!depNode) return null;
+                        return (
+                          <button
+                            key={depId}
+                            onClick={() => handleToggleNodeSelect(depId)}
+                            className="px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-orange-50 hover:text-brand-600 text-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
+                            <span>{depNode.name.split('(')[0]}</span>
+                            <ArrowRight className="w-2.5 h-2.5 opacity-60" />
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
-                {selectedNode.leadTimeDays && (
-                  <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                    <span className="text-slate-400 text-[10px] block font-semibold">Lead Time</span>
-                    <span className="font-bold text-slate-900 font-mono">{selectedNode.leadTimeDays} Days</span>
+
+                {/* Alternative Qualified Backup Suppliers */}
+                {selectedNode.alternativeSuppliers && selectedNode.alternativeSuppliers.length > 0 && (
+                  <div className="space-y-1 pt-1 border-t border-slate-100">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Backup Redundancies:</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedNode.alternativeSuppliers.map((altId) => {
+                        const altNode = nodes.find(n => n.id === altId);
+                        if (!altNode) return null;
+                        return (
+                          <button
+                            key={altId}
+                            onClick={() => handleToggleNodeSelect(altId)}
+                            className="px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition-colors flex items-center gap-1 cursor-pointer border border-emerald-200/60"
+                          >
+                            <Shield className="w-2.5 h-2.5 text-emerald-600" />
+                            <span>{altNode.name.split('(')[0]} (Ready)</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
-                {selectedNode.unitCostINR && (
-                  <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                    <span className="text-slate-400 text-[10px] block font-semibold">Unit Baseline Cost</span>
-                    <span className="font-bold text-slate-900 font-mono">₹{selectedNode.unitCostINR.toLocaleString()}</span>
-                  </div>
-                )}
-                {selectedNode.reliabilityScore && (
-                  <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                    <span className="text-slate-400 text-[10px] block font-semibold">Reliability Score</span>
-                    <span className="font-bold text-emerald-600 font-mono">{selectedNode.reliabilityScore}%</span>
-                  </div>
-                )}
-                {selectedNode.inventoryRunwayDays && (
-                  <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                    <span className="text-slate-400 text-[10px] block font-semibold">Inventory Runway</span>
-                    <span className="font-bold text-amber-600 font-mono">{selectedNode.inventoryRunwayDays} Days</span>
-                  </div>
-                )}
-                {selectedNode.monthlyContractINR && (
-                  <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                    <span className="text-slate-400 text-[10px] block font-semibold">Contract Value</span>
-                    <span className="font-bold text-brand-600 font-mono">{selectedNode.monthlyContractINR}</span>
+
+                {/* Site Director / Contact Person */}
+                {(selectedNode.contactPerson || selectedNode.facilityManager) && (
+                  <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-400 font-semibold">Lead Contact:</span>
+                    <span className="font-bold text-slate-800">
+                      {selectedNode.contactPerson || selectedNode.facilityManager}
+                    </span>
                   </div>
                 )}
               </div>
 
               {/* Direct Simulation Action */}
-              <div className="pt-2 border-t border-slate-100 space-y-2">
-                <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
-                  Direct Fracture Action
-                </span>
+              <div className="pt-1">
                 <button
                   onClick={() => onTriggerDisruption(selectedNode.id)}
-                  className="w-full btn-orange-pill py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                  className="w-full btn-orange-pill py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 shadow-sm cursor-pointer hover:shadow-md transition-all"
                 >
-                  <Zap className="w-4 h-4" />
+                  <Zap className="w-4 h-4 animate-pulse" />
                   <span>Simulate Fracture on {selectedNode.name.split('(')[0]}</span>
                 </button>
               </div>
             </div>
           ) : (
-            /* Global Network Telemetry Overview (When Deselected) */
-            <div className="space-y-5">
-              <div className="pb-3 border-b border-slate-100">
+            /* ================= STATE B: INTRICATE GLOBAL NETWORK OVERVIEW ================= */
+            <div className="space-y-4.5">
+              {/* Header */}
+              <div className="pb-3 border-b border-slate-100 space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold border bg-brand-50 text-brand-700 border-brand-200">
-                    Topology Overview
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold border bg-orange-50 text-brand-700 border-orange-200">
+                    Global Mesh Telemetry
                   </span>
+                  <span className="text-[10px] font-bold text-slate-400 font-mono">15 Active Nodes</span>
                 </div>
-                <h3 className="text-base font-extrabold text-slate-900 font-sans mt-1">
-                  Global Supply Chain Mesh
+                <h3 className="text-base font-extrabold text-slate-900 font-sans">
+                  AURA Global Supply Network
                 </h3>
                 <p className="text-xs text-slate-500 font-medium">
-                  {nodes.length} Operational Hubs & Interconnected Routes
+                  Autonomous Multi-Tier Electronics Topology
                 </p>
               </div>
 
-              {/* Overall Network State */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500 font-semibold">Network State:</span>
-                  <span className={`font-bold uppercase tracking-wider ${
-                    isDisrupted ? 'text-rose-600' : 'text-emerald-600'
-                  }`}>
-                    {isDisrupted ? 'Disruption Active' : 'All Hubs Nominal'}
-                  </span>
+              {/* Composite Network Health Radar Card */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 text-white space-y-3 shadow-md">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Network Resilience Score</span>
+                    <div className="text-xl font-black font-sans flex items-center gap-2">
+                      <span>{isDisrupted ? '78% Health' : '94% Nominal'}</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        isDisrupted ? 'bg-rose-500/30 text-rose-300 border border-rose-500/50' : 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50'
+                      }`}>
+                        {isDisrupted ? 'Elevated Stress' : 'Optimal'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="w-11 h-11 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
+                    <Activity className="w-5 h-5 text-amber-400" />
+                  </div>
                 </div>
-                <p className="text-[11px] text-slate-600 font-medium">
-                  {isDisrupted 
-                    ? (activeScenario?.description || 'Active shock simulation in progress.')
-                    : 'All primary semiconductors, substrates, PCB plants, and assembly corridors are operational.'}
-                </p>
+
+                {/* Progress Bar */}
+                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-700 ${
+                      isDisrupted ? 'bg-gradient-to-r from-amber-400 to-rose-500' : 'bg-gradient-to-r from-emerald-400 to-brand-500'
+                    }`}
+                    style={{ width: isDisrupted ? '78%' : '94%' }}
+                  ></div>
+                </div>
+
+                <div className="flex justify-between items-center text-[10px] text-slate-400 font-semibold pt-0.5">
+                  <span>Revenue Exposure: {isDisrupted ? '₹18.7 Cr' : '₹0.0 Cr'}</span>
+                  <span>15 Hubs Tracked</span>
+                </div>
               </div>
 
-              {/* Hub Summary Grid */}
+              {/* 4 Fleet-Wide Vital Metrics */}
               <div className="grid grid-cols-2 gap-2.5 text-xs">
-                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                  <span className="text-slate-400 text-[10px] block font-semibold">Tier-1 Suppliers</span>
-                  <span className="font-bold text-slate-900 font-mono">
-                    {nodes.filter(n => n.type === 'supplier' && n.tier === 1).length} Hubs
+                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
+                  <span className="text-slate-400 text-[10px] block font-bold uppercase">Revenue Risk</span>
+                  <span className={`font-black font-mono text-sm ${isDisrupted ? 'text-rose-600' : 'text-slate-900'}`}>
+                    {isDisrupted ? '₹18.7 Cr' : '₹0.0 Cr'}
                   </span>
+                  <span className="text-[10px] text-slate-500 block font-medium">Taiwan Foundry Chokepoint</span>
                 </div>
-                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                  <span className="text-slate-400 text-[10px] block font-semibold">Tier-2 Suppliers</span>
-                  <span className="font-bold text-slate-900 font-mono">
-                    {nodes.filter(n => n.type === 'supplier' && n.tier === 2).length} Hubs
+
+                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
+                  <span className="text-slate-400 text-[10px] block font-bold uppercase">Avg Stockout Buffer</span>
+                  <span className="font-black font-mono text-slate-900 text-sm">
+                    19.4 <span className="text-xs font-sans font-semibold text-slate-500">Days</span>
                   </span>
+                  <span className="text-[10px] text-amber-600 block font-medium">Min 9d (Chennai Line)</span>
                 </div>
-                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                  <span className="text-slate-400 text-[10px] block font-semibold">Assembly Plants</span>
-                  <span className="font-bold text-slate-900 font-mono">
-                    {nodes.filter(n => n.type === 'factory').length} Facilities
+
+                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
+                  <span className="text-slate-400 text-[10px] block font-bold uppercase">Fleet Availability</span>
+                  <span className="font-black font-mono text-emerald-600 text-sm">
+                    {nodes.filter(n => !n.simulatedStatus || n.simulatedStatus === 'operational').length} / {nodes.length}
                   </span>
+                  <span className="text-[10px] text-slate-500 block font-medium">Operational Hubs</span>
                 </div>
-                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                  <span className="text-slate-400 text-[10px] block font-semibold">Distribution Hubs</span>
-                  <span className="font-bold text-slate-900 font-mono">
-                    {nodes.filter(n => n.type === 'warehouse').length} Gateways
+
+                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
+                  <span className="text-slate-400 text-[10px] block font-bold uppercase">Fleet SLA Reliability</span>
+                  <span className="font-black font-mono text-emerald-600 text-sm">
+                    96.8%
                   </span>
+                  <span className="text-[10px] text-slate-500 block font-medium">All Regional Corridors</span>
                 </div>
               </div>
 
-              {/* Interactive Inspector Hint */}
-              <div className="p-3.5 rounded-2xl bg-orange-50/60 border border-orange-200/60 text-xs space-y-1">
-                <div className="flex items-center gap-1.5 text-brand-700 font-bold text-xs">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Interactive Node Inspector</span>
+              {/* Multi-Tier Pipeline Volume Distribution */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-brand-500" />
+                    Multi-Tier Volume Distribution
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-500">100% Mesh</span>
                 </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                  Click on any node in the graph, map, or card list to inspect its capacity, cost, and reliability metrics. Click it again to deselect.
-                </p>
+
+                {/* Segmented Bar */}
+                <div className="w-full h-2.5 rounded-full overflow-hidden flex bg-slate-200 gap-0.5">
+                  <div className="bg-brand-500 h-full w-[42%]" title="Tier-1 Silicon (42%)"></div>
+                  <div className="bg-amber-500 h-full w-[28%]" title="Tier-2 Substrates (28%)"></div>
+                  <div className="bg-purple-500 h-full w-[18%]" title="Assembly Plants (18%)"></div>
+                  <div className="bg-emerald-500 h-full w-[12%]" title="Warehouses (12%)"></div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-600 font-semibold pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-brand-500 shrink-0"></span>
+                    <span>Tier-1 Silicon: 4 Hubs (42%)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+                    <span>Tier-2 Passives: 4 Hubs (28%)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
+                    <span>Assembly Plants: 3 Hubs (18%)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                    <span>Logistics Gateways: 4 Hubs (12%)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Interactive Quick-Jump Node Selector */}
+              <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 space-y-2 shadow-2xs">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-brand-500" />
+                    Quick Node Inspector
+                  </span>
+                  <span className="text-[10px] text-slate-400">Select any node</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pt-1">
+                  {nodes.map((n) => (
+                    <button
+                      key={n.id}
+                      onClick={() => handleToggleNodeSelect(n.id)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
+                        n.simulatedStatus === 'disrupted'
+                          ? 'bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100'
+                          : n.simulatedStatus === 'impaired'
+                          ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
+                          : 'bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-orange-50 hover:text-brand-600'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        n.simulatedStatus === 'disrupted' ? 'bg-rose-500' : n.simulatedStatus === 'impaired' ? 'bg-amber-500' : 'bg-emerald-500'
+                      }`}></span>
+                      <span className="truncate max-w-[110px]">{n.name.split('(')[0]}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
