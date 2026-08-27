@@ -219,7 +219,7 @@ export function FractureSimulator({
 
         {/* Right 7 Cols: Step-by-Step Ripple Propagation Stepper */}
         <div className="lg:col-span-7 extej-card p-6 space-y-5">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div>
               <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
                 <TrendingDown className="w-4 h-4 text-rose-500" />
@@ -229,46 +229,117 @@ export function FractureSimulator({
                 Deterministic calculation of multi-tier operational propagation
               </p>
             </div>
-            <span className="text-xs font-extrabold text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
-              Total Risk: ₹{currentResult?.metrics?.totalRevenueAtRiskCr || 18.7} Cr
-            </span>
+            <div className="inline-flex items-center gap-2 self-start sm:self-auto bg-rose-50 border-2 border-rose-300 px-3 py-1.5 rounded-xl shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+              <span className="text-[11px] font-bold text-rose-700 uppercase tracking-wide">Total At-Risk</span>
+              <span className="text-sm font-extrabold font-mono text-rose-700">
+                ₹{currentResult?.metrics?.totalRevenueAtRiskCr || 18.7} Cr
+              </span>
+            </div>
+          </div>
+
+          {/* Clean Light-Mode Executive Impact Metrics Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-2xl bg-slate-50/90 border-2 border-slate-200">
+            <div className="bg-white p-3.5 rounded-xl border-2 border-rose-300 shadow-sm relative">
+              <span className="text-[10px] font-bold text-rose-600 uppercase tracking-wider block">
+                Total Risk Exposure
+              </span>
+              <div className="flex items-baseline gap-1 mt-1">
+                <span className="text-2xl font-black font-mono tracking-tight text-rose-600">
+                  ₹{currentResult?.metrics?.totalRevenueAtRiskCr || 18.7}
+                </span>
+                <span className="text-xs font-bold text-rose-600">Cr</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
+                {durationDays}d unmitigated impact
+              </span>
+            </div>
+
+            <div className="bg-white p-3.5 rounded-xl border-2 border-slate-200/90 shadow-sm">
+              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">
+                Daily Burn Rate
+              </span>
+              <div className="flex items-baseline gap-1 mt-1">
+                <span className="text-2xl font-bold font-mono tracking-tight text-slate-800">
+                  ₹{(Number(currentResult?.metrics?.dailyLossRateCr) || (Number(currentResult?.metrics?.totalRevenueAtRiskCr || 18.7) / Math.min(durationDays, 25))).toFixed(2)}
+                </span>
+                <span className="text-xs font-semibold text-slate-500">Cr/day</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
+                Baseline revenue loss
+              </span>
+            </div>
+
+            <div className="bg-white p-3.5 rounded-xl border-2 border-slate-200/90 shadow-sm">
+              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">
+                Unassisted Downtime
+              </span>
+              <div className="flex items-baseline gap-1 mt-1">
+                <span className="text-2xl font-bold font-mono tracking-tight text-amber-600">
+                  {currentResult?.metrics?.unassistedRecoveryDays || 27}
+                </span>
+                <span className="text-xs font-semibold text-slate-500">Days</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
+                Without NEXUS routing
+              </span>
+            </div>
           </div>
 
           {/* Stepper Chain */}
           <div className="space-y-3 relative">
-            {currentResult?.propagationTimeline?.map((item) => (
-              <div
-                key={item.step}
-                className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-brand-300 hover:shadow-sm transition-all"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-xs font-mono font-bold text-slate-700 shrink-0 shadow-sm">
-                    0{item.step}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-extrabold text-slate-900 font-sans">{item.title}</span>
-                      <span className="text-[10px] text-slate-500 font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-200/70">
-                        {item.timeframe}
-                      </span>
+            {currentResult?.propagationTimeline?.map((item) => {
+              const isTerminalRevenue = item.step === 5;
+              return (
+                <div
+                  key={item.step}
+                  className={`p-3.5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                    isTerminalRevenue
+                      ? 'bg-rose-50/50 border-rose-300 shadow-sm ring-1 ring-rose-100 hover:border-rose-400'
+                      : 'bg-[#f8fafc] border-slate-200 hover:border-brand-300 hover:shadow-sm'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-7 h-7 rounded-lg border flex items-center justify-center text-xs font-mono font-bold shrink-0 shadow-sm ${
+                      isTerminalRevenue 
+                        ? 'bg-rose-600 text-white border-rose-600' 
+                        : 'bg-white text-slate-700 border-slate-200'
+                    }`}>
+                      0{item.step}
                     </div>
-                    <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed font-medium">
-                      {item.description}
-                    </p>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-extrabold font-sans ${
+                          isTerminalRevenue ? 'text-rose-950' : 'text-slate-900'
+                        }`}>
+                          {item.title}
+                        </span>
+                        <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full ${
+                          isTerminalRevenue ? 'bg-rose-100 text-rose-700' : 'bg-slate-200/70 text-slate-500'
+                        }`}>
+                          {item.timeframe}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed font-medium">
+                        {item.description}
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                {/* Metric Before -> After Pill */}
-                <div className="shrink-0 sm:text-right bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-sm">
-                  <span className="text-[10px] text-slate-400 block font-semibold">{item.metricName}</span>
-                  <div className="flex items-center gap-1.5 text-xs font-mono font-bold mt-0.5">
-                    <span className="text-slate-400 line-through">{item.beforeVal}</span>
-                    <ArrowRight className="w-3 h-3 text-rose-500" />
-                    <span className="text-rose-600 font-extrabold">{item.afterVal}</span>
+                  {/* Metric Before -> After Pill */}
+                  <div className={`shrink-0 sm:text-right px-3.5 py-2 rounded-xl border shadow-sm ${
+                    isTerminalRevenue ? 'bg-white border-rose-200' : 'bg-white border-slate-200'
+                  }`}>
+                    <span className="text-[10px] text-slate-400 block font-semibold">{item.metricName}</span>
+                    <div className="flex items-center gap-1.5 text-xs font-mono font-bold mt-0.5">
+                      <span className="text-slate-400 line-through">{item.beforeVal}</span>
+                      <ArrowRight className="w-3 h-3 text-rose-500" />
+                      <span className="text-rose-600 font-extrabold">{item.afterVal}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Direct CTA to Recovery Cockpit */}
