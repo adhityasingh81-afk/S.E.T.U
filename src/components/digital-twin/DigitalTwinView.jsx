@@ -99,7 +99,12 @@ export function DigitalTwinView({
     }
   }, [nodes]);
 
-  const selectedNode = nodes.find(n => n.id === selectedNodeId) || nodes[0];
+  const selectedNode = nodes.find(n => n.id === selectedNodeId) || null;
+
+  // Toggle selection helper: clicking the same selected node deselects it
+  const handleToggleNodeSelect = (nodeId) => {
+    setSelectedNodeId(prev => prev === nodeId ? null : nodeId);
+  };
 
   // Cartographic world geography from Natural Earth
   const landData = useMemo(() => feature(worldAtlasData, worldAtlasData.objects.land), []);
@@ -436,7 +441,7 @@ export function DigitalTwinView({
                           key={nodeId}
                           transform={`translate(${pos.x}, ${pos.y})`}
                           className="cursor-pointer select-none"
-                          onClick={() => setSelectedNodeId(nodeId)}
+                          onClick={() => handleToggleNodeSelect(nodeId)}
                           onMouseEnter={() => setHoveredNode(node)}
                           onMouseLeave={() => setHoveredNode(null)}
                         >
@@ -667,7 +672,7 @@ export function DigitalTwinView({
                             onClick={(e) => {
                               e.stopPropagation();
                               if (!hasDragged) {
-                                setSelectedNodeId(node.id);
+                                handleToggleNodeSelect(node.id);
                               }
                             }}
                             onMouseEnter={() => setHoveredNode(node)}
@@ -784,7 +789,7 @@ export function DigitalTwinView({
                       key={node.id} 
                       node={node} 
                       isSelected={selectedNode?.id === node.id}
-                      onClick={() => setSelectedNodeId(node.id)} 
+                      onClick={() => handleToggleNodeSelect(node.id)} 
                     />
                   ))}
                 </div>
@@ -795,102 +800,188 @@ export function DigitalTwinView({
 
         {/* RIGHT COLUMN: Real-Time Node Telemetry Inspector */}
         <div className="lg:col-span-4 extej-card p-6 space-y-5 animate-fade-in-up">
-          <div className="flex items-start justify-between pb-3 border-b border-slate-100">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getNodeTypeMeta(selectedNode.type).color}`}>
-                  {getNodeTypeMeta(selectedNode.type).label}
-                </span>
-                {selectedNode.tier && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                    Tier {selectedNode.tier}
+          {selectedNode ? (
+            <div className="space-y-5">
+              <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getNodeTypeMeta(selectedNode.type).color}`}>
+                      {getNodeTypeMeta(selectedNode.type).label}
+                    </span>
+                    {selectedNode.tier && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                        Tier {selectedNode.tier}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-base font-extrabold text-slate-900 font-sans mt-1">
+                    {selectedNode.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+                    <MapPin className="w-3.5 h-3.5 text-brand-500" />
+                    {selectedNode.location}
+                  </p>
+                </div>
+
+                {/* Deselect Button */}
+                <button
+                  onClick={() => setSelectedNodeId(null)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  title="Deselect node"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Health & Status Barometer */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-500 font-semibold">Node Status:</span>
+                  <span className={`font-bold uppercase tracking-wider ${
+                    selectedNode.simulatedStatus === 'disrupted' 
+                      ? 'text-rose-600' 
+                      : selectedNode.simulatedStatus === 'impaired' 
+                      ? 'text-amber-600' 
+                      : 'text-emerald-600'
+                  }`}>
+                    {selectedNode.simulatedStatus || 'Operational'}
                   </span>
+                </div>
+                {selectedNode.impactNote && (
+                  <p className="text-[11px] text-slate-600 italic bg-white p-2.5 rounded-xl border border-slate-200/60 font-medium">
+                    "{selectedNode.impactNote}"
+                  </p>
                 )}
               </div>
-              <h3 className="text-base font-extrabold text-slate-900 font-sans mt-1">
-                {selectedNode.name}
-              </h3>
-              <p className="text-xs text-slate-500 flex items-center gap-1 font-medium">
-                <MapPin className="w-3.5 h-3.5 text-brand-500" />
-                {selectedNode.location}
-              </p>
+
+              {/* Telemetry Metrics Grid */}
+              <div className="grid grid-cols-2 gap-2.5 text-xs">
+                {selectedNode.capacityUnitsPerMonth && (
+                  <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
+                    <span className="text-slate-400 text-[10px] block font-semibold">Monthly Capacity</span>
+                    <span className="font-bold text-slate-900 font-mono">{selectedNode.capacityUnitsPerMonth.toLocaleString()} Units</span>
+                  </div>
+                )}
+                {selectedNode.leadTimeDays && (
+                  <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
+                    <span className="text-slate-400 text-[10px] block font-semibold">Lead Time</span>
+                    <span className="font-bold text-slate-900 font-mono">{selectedNode.leadTimeDays} Days</span>
+                  </div>
+                )}
+                {selectedNode.unitCostINR && (
+                  <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
+                    <span className="text-slate-400 text-[10px] block font-semibold">Unit Baseline Cost</span>
+                    <span className="font-bold text-slate-900 font-mono">₹{selectedNode.unitCostINR.toLocaleString()}</span>
+                  </div>
+                )}
+                {selectedNode.reliabilityScore && (
+                  <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
+                    <span className="text-slate-400 text-[10px] block font-semibold">Reliability Score</span>
+                    <span className="font-bold text-emerald-600 font-mono">{selectedNode.reliabilityScore}%</span>
+                  </div>
+                )}
+                {selectedNode.inventoryRunwayDays && (
+                  <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
+                    <span className="text-slate-400 text-[10px] block font-semibold">Inventory Runway</span>
+                    <span className="font-bold text-amber-600 font-mono">{selectedNode.inventoryRunwayDays} Days</span>
+                  </div>
+                )}
+                {selectedNode.monthlyContractINR && (
+                  <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
+                    <span className="text-slate-400 text-[10px] block font-semibold">Contract Value</span>
+                    <span className="font-bold text-brand-600 font-mono">{selectedNode.monthlyContractINR}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Direct Simulation Action */}
+              <div className="pt-2 border-t border-slate-100 space-y-2">
+                <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
+                  Direct Fracture Action
+                </span>
+                <button
+                  onClick={() => onTriggerDisruption(selectedNode.id)}
+                  className="w-full btn-orange-pill py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                >
+                  <Zap className="w-4 h-4" />
+                  <span>Simulate Fracture on {selectedNode.name.split('(')[0]}</span>
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Global Network Telemetry Overview (When Deselected) */
+            <div className="space-y-5">
+              <div className="pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold border bg-brand-50 text-brand-700 border-brand-200">
+                    Topology Overview
+                  </span>
+                </div>
+                <h3 className="text-base font-extrabold text-slate-900 font-sans mt-1">
+                  Global Supply Chain Mesh
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">
+                  {nodes.length} Operational Hubs & Interconnected Routes
+                </p>
+              </div>
 
-          {/* Health & Status Barometer */}
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-1.5">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-500 font-semibold">Node Status:</span>
-              <span className={`font-bold uppercase tracking-wider ${
-                selectedNode.simulatedStatus === 'disrupted' 
-                  ? 'text-rose-600' 
-                  : selectedNode.simulatedStatus === 'impaired' 
-                  ? 'text-amber-600' 
-                  : 'text-emerald-600'
-              }`}>
-                {selectedNode.simulatedStatus || 'Operational'}
-              </span>
+              {/* Overall Network State */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-500 font-semibold">Network State:</span>
+                  <span className={`font-bold uppercase tracking-wider ${
+                    isDisrupted ? 'text-rose-600' : 'text-emerald-600'
+                  }`}>
+                    {isDisrupted ? 'Disruption Active' : 'All Hubs Nominal'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 font-medium">
+                  {isDisrupted 
+                    ? (activeScenario?.description || 'Active shock simulation in progress.')
+                    : 'All primary semiconductors, substrates, PCB plants, and assembly corridors are operational.'}
+                </p>
+              </div>
+
+              {/* Hub Summary Grid */}
+              <div className="grid grid-cols-2 gap-2.5 text-xs">
+                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
+                  <span className="text-slate-400 text-[10px] block font-semibold">Tier-1 Suppliers</span>
+                  <span className="font-bold text-slate-900 font-mono">
+                    {nodes.filter(n => n.type === 'supplier' && n.tier === 1).length} Hubs
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
+                  <span className="text-slate-400 text-[10px] block font-semibold">Tier-2 Suppliers</span>
+                  <span className="font-bold text-slate-900 font-mono">
+                    {nodes.filter(n => n.type === 'supplier' && n.tier === 2).length} Hubs
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
+                  <span className="text-slate-400 text-[10px] block font-semibold">Assembly Plants</span>
+                  <span className="font-bold text-slate-900 font-mono">
+                    {nodes.filter(n => n.type === 'factory').length} Facilities
+                  </span>
+                </div>
+                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
+                  <span className="text-slate-400 text-[10px] block font-semibold">Distribution Hubs</span>
+                  <span className="font-bold text-slate-900 font-mono">
+                    {nodes.filter(n => n.type === 'warehouse').length} Gateways
+                  </span>
+                </div>
+              </div>
+
+              {/* Interactive Inspector Hint */}
+              <div className="p-3.5 rounded-2xl bg-orange-50/60 border border-orange-200/60 text-xs space-y-1">
+                <div className="flex items-center gap-1.5 text-brand-700 font-bold text-xs">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Interactive Node Inspector</span>
+                </div>
+                <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                  Click on any node in the graph, map, or card list to inspect its capacity, cost, and reliability metrics. Click it again to deselect.
+                </p>
+              </div>
             </div>
-            {selectedNode.impactNote && (
-              <p className="text-[11px] text-slate-600 italic bg-white p-2.5 rounded-xl border border-slate-200/60 font-medium">
-                "{selectedNode.impactNote}"
-              </p>
-            )}
-          </div>
-
-          {/* Telemetry Metrics Grid */}
-          <div className="grid grid-cols-2 gap-2.5 text-xs">
-            {selectedNode.capacityUnitsPerMonth && (
-              <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                <span className="text-slate-400 text-[10px] block font-semibold">Monthly Capacity</span>
-                <span className="font-bold text-slate-900 font-mono">{selectedNode.capacityUnitsPerMonth.toLocaleString()} Units</span>
-              </div>
-            )}
-            {selectedNode.leadTimeDays && (
-              <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                <span className="text-slate-400 text-[10px] block font-semibold">Lead Time</span>
-                <span className="font-bold text-slate-900 font-mono">{selectedNode.leadTimeDays} Days</span>
-              </div>
-            )}
-            {selectedNode.unitCostINR && (
-              <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                <span className="text-slate-400 text-[10px] block font-semibold">Unit Baseline Cost</span>
-                <span className="font-bold text-slate-900 font-mono">₹{selectedNode.unitCostINR.toLocaleString()}</span>
-              </div>
-            )}
-            {selectedNode.reliabilityScore && (
-              <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                <span className="text-slate-400 text-[10px] block font-semibold">Reliability Score</span>
-                <span className="font-bold text-emerald-600 font-mono">{selectedNode.reliabilityScore}%</span>
-              </div>
-            )}
-            {selectedNode.inventoryRunwayDays && (
-              <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                <span className="text-slate-400 text-[10px] block font-semibold">Inventory Runway</span>
-                <span className="font-bold text-amber-600 font-mono">{selectedNode.inventoryRunwayDays} Days</span>
-              </div>
-            )}
-            {selectedNode.monthlyContractINR && (
-              <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70">
-                <span className="text-slate-400 text-[10px] block font-semibold">Contract Value</span>
-                <span className="font-bold text-brand-600 font-mono">{selectedNode.monthlyContractINR}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Direct Simulation Action */}
-          <div className="pt-2 border-t border-slate-100 space-y-2">
-            <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider block">
-              Direct Fracture Action
-            </span>
-            <button
-              onClick={() => onTriggerDisruption(selectedNode.id)}
-              className="w-full btn-orange-pill py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-            >
-              <Zap className="w-4 h-4" />
-              <span>Simulate Fracture on {selectedNode.name.split('(')[0]}</span>
-            </button>
-          </div>
+          )}
         </div>
       </div>
     </div>
