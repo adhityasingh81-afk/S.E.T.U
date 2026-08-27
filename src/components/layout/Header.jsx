@@ -414,11 +414,11 @@ export function Header({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 py-3 flex items-center justify-between gap-4 shadow-sm">
-      {/* Left: Interactive Global Command Search Bar & Palette */}
-      <div ref={searchContainerRef} className="flex items-center gap-4 flex-1 max-w-lg relative">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 sm:gap-4 shadow-sm">
+      {/* Left: Interactive Global Command Search Bar & Palette (Enlarged & High Visibility) */}
+      <div ref={searchContainerRef} className="flex items-center gap-3 flex-1 min-w-[260px] max-w-2xl relative">
         <div className="relative w-full">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             ref={searchInputRef}
             type="text"
@@ -432,7 +432,7 @@ export function Header({
               setIsSearchOpen(true);
             }}
             onKeyDown={handleSearchKeyDown}
-            className="w-full bg-[#f8fafc] border border-slate-200 rounded-full pl-10 pr-16 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/10 transition-all shadow-inner font-medium"
+            className="w-full bg-white border-2 border-slate-200/90 rounded-full pl-10 pr-16 py-2 text-sm font-semibold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all shadow-sm caret-brand-600"
           />
           
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
@@ -442,13 +442,13 @@ export function Header({
                   setSearchQuery('');
                   if (searchInputRef.current) searchInputRef.current.focus();
                 }}
-                className="p-1 text-slate-400 hover:text-slate-700 transition-colors"
+                className="p-1 text-slate-400 hover:text-slate-800 transition-colors"
                 title="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             ) : (
-              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 rounded">
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 rounded shadow-2xs">
                 ⌘K
               </kbd>
             )}
@@ -457,7 +457,7 @@ export function Header({
 
         {/* ================= COMMAND PALETTE DROPDOWN DRAWER ================= */}
         {isSearchOpen && (
-          <div className="absolute top-full left-0 mt-2 w-[30rem] sm:w-[36rem] max-w-[calc(100vw-2rem)] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in-up">
+          <div className="absolute top-full left-0 mt-2 w-full min-w-[340px] sm:min-w-[500px] max-w-[calc(100vw-2rem)] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in-up">
             {/* Filter Tabs Header */}
             <div className="p-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between gap-2">
               <div className="flex items-center gap-1 overflow-x-auto text-[11px] font-bold">
@@ -587,53 +587,57 @@ export function Header({
         )}
       </div>
 
-      {/* Center: Live Disruption / Recovery Status Indicator */}
-      <div className="hidden lg:flex items-center gap-3">
-        {/* Disruption status pill */}
-        <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-          isDisrupted && !activeStrategy
-            ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse'
-            : activeStrategy
-            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-        }`}>
+      {/* Center: Compact Live Disruption / Recovery Status Indicator */}
+      <div className="hidden lg:flex items-center gap-2 shrink-0">
+        {/* Compact Disruption Status Pill */}
+        <div 
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all ${
+            isDisrupted && !activeStrategy
+              ? 'bg-rose-50 text-rose-700 border-rose-200 animate-pulse'
+              : activeStrategy
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+          }`}
+          title={isDisrupted && !activeStrategy ? (activeScenario?.title || 'Fracture Active') : activeStrategy ? activeStrategy.title : 'All 15 Hubs Nominal'}
+        >
           {isDisrupted && !activeStrategy ? (
             <>
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
-              <span>Fracture Active: {activeScenario ? activeScenario.title.split('(')[0] : 'Taiwan 40% Drop'}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0"></span>
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+              <span className="truncate max-w-[120px]">Fracture Active</span>
             </>
           ) : activeStrategy ? (
             <>
-              <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Recovery Active: {activeStrategy.name} ({activeStrategy.title})</span>
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="truncate max-w-[120px]">Recovery Active</span>
             </>
           ) : (
             <>
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Network Nominal (15 Hubs Online)</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>Nominal</span>
             </>
           )}
         </div>
 
-        {/* Quick Crisis Scenario Dropdown */}
-        <div className="flex items-center gap-1.5 bg-[#f8fafc] border border-slate-200 rounded-full px-3 py-1 text-xs">
-          <Zap className="w-3.5 h-3.5 text-amber-500" />
+        {/* Compact Quick Crisis Scenario Dropdown */}
+        <div className="flex items-center gap-1 bg-[#f8fafc] border border-slate-200 rounded-full px-2.5 py-1 text-[11px]">
+          <Zap className="w-3 h-3 text-amber-500 shrink-0" />
           <select
             value={activeScenario?.id || ""}
             onChange={(e) => {
               const sc = CRISIS_SCENARIOS.find(s => s.id === e.target.value);
               if (sc) onSelectScenario(sc);
             }}
-            className="bg-transparent text-slate-700 font-medium text-xs focus:outline-none cursor-pointer pr-1"
+            className="bg-transparent text-slate-700 font-semibold text-[11px] focus:outline-none cursor-pointer pr-1 max-w-[115px] truncate"
+            title="Trigger Crisis Scenario"
           >
             <option value="" disabled className="text-slate-400">
-              ⚡ Trigger Scenario...
+              ⚡ Scenario...
             </option>
             {CRISIS_SCENARIOS.map((scenario) => (
               <option key={scenario.id} value={scenario.id} className="text-slate-800">
-                {scenario.title}
+                {scenario.badge || scenario.title}
               </option>
             ))}
           </select>
@@ -642,10 +646,10 @@ export function Header({
         {isDisrupted && (
           <button
             onClick={onResetNetwork}
-            className="flex items-center gap-1 px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold transition-colors cursor-pointer"
             title="Reset to baseline nominal"
           >
-            <RefreshCw className="w-3 h-3 text-slate-500" />
+            <RefreshCw className="w-3 h-3 text-slate-500 shrink-0" />
             <span>Reset</span>
           </button>
         )}
