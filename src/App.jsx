@@ -21,7 +21,13 @@ import { nexusApi } from './api/nexusApi';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [currentUser, setCurrentUser] = useState(DEMO_USERS[0]);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nexus_current_user');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEMO_USERS[0];
+  });
 
   const [activeTab, setActiveTab] = useState('command-center');
   const [activeScenario, setActiveScenario] = useState(CRISIS_SCENARIOS[0]);
@@ -140,6 +146,7 @@ export default function App() {
         onOpenReport={() => setIsReportOpen(true)}
         activeStrategy={activeStrategy}
         currentUser={currentUser}
+        onUpdateUser={(updated) => setCurrentUser(updated)}
         onLogout={handleLogout}
         onNavigateToTab={setActiveTab}
         backendOnline={backendOnline}

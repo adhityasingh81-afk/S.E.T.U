@@ -248,7 +248,7 @@ export const nexusApi = {
   },
 
   /**
-   * Authentication
+   * Authentication & Profile
    */
   async login(email, password, persona) {
     return fetchWithFallback(
@@ -261,6 +261,17 @@ export const nexusApi = {
         const user = DEMO_USERS.find(u => u.persona === persona) || DEMO_USERS[0];
         return { user, token: `mock-jwt-token-${user.id}` };
       }
+    );
+  },
+
+  async updateProfile(userData) {
+    return fetchWithFallback(
+      '/auth/profile',
+      {
+        method: 'PUT',
+        body: JSON.stringify(userData)
+      },
+      () => userData
     );
   },
 

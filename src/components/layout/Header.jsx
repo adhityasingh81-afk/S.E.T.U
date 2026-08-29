@@ -31,10 +31,14 @@ import {
   SlidersHorizontal,
   Factory,
   Warehouse,
-  CornerDownLeft
+  CornerDownLeft,
+  Camera,
+  User as UserIcon,
+  Edit3
 } from 'lucide-react';
 import { CRISIS_SCENARIOS } from '../../data/scenariosData';
 import { NODES } from '../../data/auraSupplyChainData';
+import { ProfileSettingsModal } from '../profile/ProfileSettingsModal';
 
 export function Header({
   activeScenario,
@@ -46,12 +50,14 @@ export function Header({
   onOpenReport,
   activeStrategy,
   currentUser,
+  onUpdateUser,
   onLogout,
   onNavigateToTab,
   backendOnline = true
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -868,20 +874,65 @@ export function Header({
 
           {/* Profile Dropdown Menu */}
           {isProfileOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl p-3 space-y-2 z-50 animate-fade-in-up">
-              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                <div className="text-xs font-bold text-slate-900">{user.name}</div>
-                <div className="text-[11px] text-slate-500">{user.email || 'austin.robertson@auradevices.io'}</div>
-                <div className="text-[10px] text-brand-600 font-bold mt-1 uppercase tracking-wider">{user.clearance || 'Tier-1 Clearance'}</div>
+            <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-2xl shadow-xl p-3 space-y-2 z-50 animate-fade-in-up">
+              {/* Clickable Profile Card Banner */}
+              <div 
+                onClick={() => {
+                  setIsProfileModalOpen(true);
+                  setIsProfileOpen(false);
+                }}
+                className="p-3 rounded-xl bg-gradient-to-br from-orange-50/70 to-amber-50/40 border border-orange-200/70 cursor-pointer hover:border-brand-400 hover:shadow-sm transition-all group"
+                title="Click to edit profile and photo"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="relative">
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        className="w-10 h-10 rounded-full object-cover ring-2 ring-brand-500/40 group-hover:ring-brand-500 transition-all"
+                      />
+                      <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-brand-500 text-white flex items-center justify-center text-[7px] font-bold ring-1 ring-white">
+                        ✎
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-xs font-extrabold text-slate-900 font-sans group-hover:text-brand-700 transition-colors">
+                        {user.name}
+                      </div>
+                      <div className="text-[10.5px] text-slate-500 truncate max-w-[140px]">
+                        {user.email || 'operator@auradevices.io'}
+                      </div>
+                      <div className="text-[9.5px] text-brand-600 font-extrabold mt-0.5 uppercase tracking-wider font-mono">
+                        {user.clearance || 'Tier-1 Clearance'}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-brand-600 bg-white px-2 py-0.5 rounded-full border border-orange-200 shadow-2xs group-hover:bg-brand-500 group-hover:text-white transition-all">
+                    Edit
+                  </span>
+                </div>
               </div>
 
+              {/* Action Links */}
               <div className="pt-1 border-t border-slate-100 space-y-1 text-xs">
+                <button
+                  onClick={() => {
+                    setIsProfileModalOpen(true);
+                    setIsProfileOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 hover:bg-orange-50 hover:text-brand-700 font-bold transition-colors cursor-pointer text-left"
+                >
+                  <Camera className="w-4 h-4 text-brand-500" />
+                  <span>Change Photo & Profile Info</span>
+                </button>
+
                 <button
                   onClick={() => {
                     setIsProfileOpen(false);
                     if (onLogout) onLogout();
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 font-bold transition-colors cursor-pointer text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 font-bold transition-colors cursor-pointer text-left"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sign Out / Switch Station</span>
@@ -900,6 +951,14 @@ export function Header({
           <span className="hidden md:inline">Executive Brief</span>
         </button>
       </div>
+
+      {/* User Profile & Photo Settings Modal */}
+      <ProfileSettingsModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        currentUser={currentUser}
+        onUpdateUser={onUpdateUser}
+      />
     </header>
   );
 }

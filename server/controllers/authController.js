@@ -69,3 +69,36 @@ export function getUsers(req, res) {
   }
 }
 
+export function updateProfile(req, res) {
+  try {
+    const { id, email, name, role, avatar, quote, clearance, heroImage } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
+
+    const existing = dbGetUserByEmail(email) || {};
+    const updatedUser = {
+      id: id || existing.id || `usr-${Date.now().toString(36)}`,
+      email: email.trim().toLowerCase(),
+      name: name || existing.name || 'Enterprise Operator',
+      role: role || existing.role || 'Authorized Operator',
+      persona: existing.persona || 'custom',
+      avatar: avatar || existing.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+      quote: quote || existing.quote || 'Authorized user connected to NEXUS Network.',
+      clearance: clearance || existing.clearance || 'Tier-1 Command',
+      heroImage: heroImage || existing.hero_image || existing.heroImage || null
+    };
+
+    const saved = dbSaveUser(updatedUser);
+
+    return res.json({
+      success: true,
+      data: saved || updatedUser
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+
