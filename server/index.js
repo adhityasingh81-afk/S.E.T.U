@@ -62,7 +62,7 @@ const distPath = path.resolve(__dirname, '../dist');
 app.use(express.static(distPath));
 
 // API 404 Route Handler
-app.use('/api/*', (req, res) => {
+app.use('/api', (req, res) => {
   res.status(404).json({
     success: false,
     error: `API route ${req.originalUrl} not found`
@@ -70,8 +70,12 @@ app.use('/api/*', (req, res) => {
 });
 
 // SPA Fallback: send index.html for all client routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
+app.use((req, res, next) => {
+  if (req.method === 'GET') {
+    res.sendFile(path.join(distPath, 'index.html'));
+  } else {
+    next();
+  }
 });
 
 // Global Error Handler
