@@ -18,6 +18,7 @@ import {
   Award
 } from 'lucide-react';
 import { generateRecoveryStrategies } from '../../engine/recoveryOptimizer';
+import { nexusApi } from '../../api/nexusApi';
 
 export function RecoveryCockpit({
   simulationResult,
@@ -36,13 +37,32 @@ export function RecoveryCockpit({
   const [selectedStrategyForDetails, setSelectedStrategyForDetails] = useState(null);
   const [showExplanationModal, setShowExplanationModal] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [strategies, setStrategies] = useState(() => generateRecoveryStrategies(simulationResult, resilienceBudget));
+
+  // Sync recovery strategies with backend API
+  React.useEffect(() => {
+    let isMounted = true;
+    nexusApi.getRecoveryStrategies(simulationResult, resilienceBudget)
+      .then(res => {
+        if (isMounted) {
+          const list = Array.isArray(res) ? res : (res?.strategies || generateRecoveryStrategies(simulationResult, resilienceBudget));
+          setStrategies(list);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setStrategies(generateRecoveryStrategies(simulationResult, resilienceBudget));
+        }
+      });
+
+    return () => { isMounted = false; };
+  }, [simulationResult, resilienceBudget]);
 
   const handleBudgetChange = (updates) => {
     setResilienceBudget(prev => ({ ...prev, ...updates }));
     setSelectedStrategyForDetails(null);
   };
 
-  const strategies = generateRecoveryStrategies(simulationResult, resilienceBudget);
   const currentSelected = selectedStrategyForDetails || strategies.find(s => s.isRecommended) || strategies[0];
 
   const handleApply = (strat) => {

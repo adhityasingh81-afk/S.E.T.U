@@ -13,9 +13,24 @@ import {
 } from 'lucide-react';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from 'recharts';
 import { STRUCTURAL_VULNERABILITIES, RADAR_PROJECTIONS } from '../../data/resilienceData';
+import { nexusApi } from '../../api/nexusApi';
 
 export function ResiliencePlanner() {
   const [approvedUpgrades, setApprovedUpgrades] = useState(['vuln-buffer-safety']);
+  const [radarData, setRadarData] = useState(RADAR_PROJECTIONS);
+
+  // Sync radar projections with backend API
+  React.useEffect(() => {
+    let isMounted = true;
+    nexusApi.getResilienceRadar()
+      .then(res => {
+        if (isMounted && res?.radarDimensions) {
+          setRadarData(res.radarDimensions);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   const toggleUpgrade = (id) => {
     if (approvedUpgrades.includes(id)) {
@@ -167,7 +182,7 @@ export function ResiliencePlanner() {
 
             <div className="h-64 flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={RADAR_PROJECTIONS}>
+                <RadarChart data={radarData}>
                   <PolarGrid stroke="#e2e8f0" />
                   <PolarAngleAxis dataKey="dimension" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }} />
                   <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} stroke="#cbd5e1" />

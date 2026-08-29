@@ -262,5 +262,95 @@ export const nexusApi = {
         return { user, token: `mock-jwt-token-${user.id}` };
       }
     );
+  },
+
+  /**
+   * Executive Crisis Briefing Report
+   */
+  async generateExecutiveReport(reportData) {
+    return fetchWithFallback(
+      '/reports/executive',
+      {
+        method: 'POST',
+        body: JSON.stringify(reportData)
+      },
+      () => {
+        const { activeScenario, simulationResult, activeStrategy, resilienceScore } = reportData || {};
+        return {
+          reportId: `NEXUS-EXEC-REPORT-${Date.now().toString().slice(-6)}`,
+          company: COMPANY_PROFILE.name,
+          generatedAt: new Date().toISOString(),
+          classification: "CONFIDENTIAL // BOARD OF DIRECTORS BRIEFING",
+          crisisSummary: {
+            scenarioTitle: activeScenario?.title || "Active Network Fracture",
+            affectedNode: simulationResult?.affectedNode?.name || "Taiwan Micro Foundry",
+            severityPct: simulationResult?.severityPct || 40,
+            unassistedExposureCr: simulationResult?.metrics?.totalRevenueAtRiskCr || 18.7,
+            unassistedDowntimeDays: simulationResult?.metrics?.unassistedRecoveryDays || 27,
+          },
+          mitigationStatus: activeStrategy ? {
+            strategyTitle: activeStrategy.title,
+            executionCostCr: activeStrategy.costCr,
+            recoveryTimeDays: activeStrategy.recoveryTimeDays,
+            netRevenueProtectedCr: activeStrategy.revenueProtectedCr,
+            resilienceScoreLift: resilienceScore?.overallScore || 91,
+            status: "APPROVED & DISPATCHED"
+          } : {
+            status: "PENDING AUTHORIZATION",
+            recommendedAction: "Dispatch Speed-Optimized Rapid Airlift (Strategy B)"
+          },
+          auditSignature: {
+            signatory: "NEXUS Self-Healing Autonomous Engine",
+            complianceStandard: "ISO 22301 Business Continuity Management",
+            verified: true
+          }
+        };
+      }
+    );
+  },
+
+  /**
+   * Database Statistics & Historical Records
+   */
+  async getDbStats() {
+    return fetchWithFallback(
+      '/db/stats',
+      { method: 'GET' },
+      () => ({
+        usersCount: 4,
+        nodesCount: 15,
+        routesCount: 10,
+        scenariosCount: 4,
+        simulationsCount: 0,
+        mousCount: 0,
+        reportsCount: 0,
+        databaseEngine: 'SQLite (Node 24 Built-in DatabaseSync)',
+        status: 'online'
+      })
+    );
+  },
+
+  async getSimulationHistory(limit = 15) {
+    return fetchWithFallback(
+      `/db/simulations?limit=${limit}`,
+      { method: 'GET' },
+      () => []
+    );
+  },
+
+  async getMOUsHistory() {
+    return fetchWithFallback(
+      '/db/mous',
+      { method: 'GET' },
+      () => []
+    );
+  },
+
+  async getReportsHistory(limit = 15) {
+    return fetchWithFallback(
+      `/db/reports?limit=${limit}`,
+      { method: 'GET' },
+      () => []
+    );
   }
 };

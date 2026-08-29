@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileText, 
   Printer, 
@@ -10,8 +10,10 @@ import {
   X,
   TrendingDown,
   Clock,
-  Compass
+  Compass,
+  Sparkles
 } from 'lucide-react';
+import { nexusApi } from '../../api/nexusApi';
 
 export function ExecutiveReportModal({
   isOpen,
@@ -22,6 +24,26 @@ export function ExecutiveReportModal({
   simulationResult,
   resilienceScore
 }) {
+  const [reportData, setReportData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoading(true);
+      nexusApi.generateExecutiveReport({
+        activeScenario,
+        simulationResult,
+        activeStrategy,
+        resilienceScore
+      }).then(data => {
+        setReportData(data);
+        setLoading(false);
+      }).catch(() => {
+        setLoading(false);
+      });
+    }
+  }, [isOpen, activeScenario, simulationResult, activeStrategy, resilienceScore]);
+
   if (!isOpen) return null;
 
   const handlePrint = () => {
@@ -42,7 +64,7 @@ export function ExecutiveReportModal({
                 Executive Crisis Response & Resilience Briefing
               </h3>
               <p className="text-xs text-slate-400 font-medium">
-                Prepared for Executive Leadership & Operations Committee • Date: {new Date().toLocaleDateString()}
+                {reportData?.reportId ? `${reportData.reportId} • ` : ''}Prepared for Executive Leadership & Operations Committee • Date: {new Date().toLocaleDateString()}
               </p>
             </div>
           </div>

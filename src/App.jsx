@@ -142,6 +142,7 @@ export default function App() {
         currentUser={currentUser}
         onLogout={handleLogout}
         onNavigateToTab={setActiveTab}
+        backendOnline={backendOnline}
       />
 
       {/* Main Body with Sidebar + Active View */}

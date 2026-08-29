@@ -16,13 +16,15 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { NEGOTIATION_SUPPLIERS, getSupplierNegotiation } from '../../engine/negotiationEngine';
+import { nexusApi } from '../../api/nexusApi';
 
 export function NegotiationRoom({ onSignTermSheet }) {
   const [selectedSupplierId, setSelectedSupplierId] = useState('sup-phoenix-semi');
-  const [activeNegotiation, setActiveNegotiation] = useState(getSupplierNegotiation('sup-phoenix-semi'));
+  const [activeNegotiation, setActiveNegotiation] = useState(() => getSupplierNegotiation('sup-phoenix-semi'));
   const [visibleMessagesCount, setVisibleMessagesCount] = useState(2);
   const [customOfferText, setCustomOfferText] = useState('');
   const [showTermSheet, setShowTermSheet] = useState(false);
+  const [generatedMOU, setGeneratedMOU] = useState(null);
   const [isSigned, setIsSigned] = useState(false);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
 
@@ -31,6 +33,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
     setActiveNegotiation(neg);
     setVisibleMessagesCount(2);
     setIsSigned(false);
+    setGeneratedMOU(null);
   }, [selectedSupplierId]);
 
   const handleNextMessage = () => {
@@ -306,9 +309,15 @@ export function NegotiationRoom({ onSignTermSheet }) {
           {/* Action to Sign MOU */}
           <div className="space-y-2 pt-3 border-t border-slate-100">
             <button
-              onClick={() => {
+              onClick={async () => {
                 setShowTermSheet(true);
                 setIsSigned(true);
+                try {
+                  const mou = await nexusApi.generateMOU(selectedSupplierId, activeNegotiation.negotiatedOffer);
+                  setGeneratedMOU(mou);
+                } catch {
+                  // Fallback to local
+                }
                 if (onSignTermSheet) onSignTermSheet(activeNegotiation);
               }}
               className="w-full btn-orange-pill py-3 px-4 text-xs font-bold flex items-center justify-center gap-2"
@@ -331,7 +340,9 @@ export function NegotiationRoom({ onSignTermSheet }) {
                 </div>
                 <div>
                   <h3 className="text-base font-extrabold text-slate-900">Commercial Term Sheet & MOU</h3>
-                  <p className="text-xs text-slate-400 font-medium">Contract Ref: NEXUS-MOU-2026-089-AZ</p>
+                  <p className="text-xs text-slate-400 font-medium font-mono">
+                    Contract Ref: {generatedMOU?.documentId || 'NEXUS-MOU-2026-089-AZ'}
+                  </p>
                 </div>
               </div>
               <button 

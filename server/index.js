@@ -10,6 +10,11 @@ import negotiationRoutes from './routes/negotiationRoutes.js';
 import networkRoutes from './routes/networkRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import databaseRoutes from './routes/databaseRoutes.js';
+import { initDatabase } from './db/database.js';
+
+// Initialize SQLite database & migrations
+initDatabase();
 
 const app = express();
 
@@ -29,6 +34,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
     service: 'NEXUS Autonomous Supply Chain API Server',
+    database: 'SQLite (Node 24 DatabaseSync)',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
@@ -43,6 +49,7 @@ app.use('/api/negotiation', negotiationRoutes);
 app.use('/api/network', networkRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/db', databaseRoutes);
 
 // 404 Route Handler
 app.use((req, res) => {

@@ -1,4 +1,5 @@
 import { COMPANY_PROFILE } from '../../src/data/auraSupplyChainData.js';
+import { dbSaveExecutiveReport, dbGetExecutiveReports } from '../db/database.js';
 
 export function generateExecutiveReport(req, res) {
   try {
@@ -34,8 +35,25 @@ export function generateExecutiveReport(req, res) {
       }
     };
 
+    // Persist report in database
+    try {
+      dbSaveExecutiveReport(report);
+    } catch (dbErr) {
+      console.warn('Executive report database save notice:', dbErr.message);
+    }
+
     return res.json({ success: true, data: report });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
   }
 }
+
+export function getExecutiveReportsHistory(req, res) {
+  try {
+    const reports = dbGetExecutiveReports();
+    return res.json({ success: true, count: reports.length, data: reports });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+}
+

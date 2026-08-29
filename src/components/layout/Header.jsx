@@ -47,7 +47,8 @@ export function Header({
   activeStrategy,
   currentUser,
   onLogout,
-  onNavigateToTab
+  onNavigateToTab,
+  backendOnline = true
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -591,11 +592,15 @@ export function Header({
       <div className="hidden lg:flex items-center gap-2 shrink-0">
         {/* Backend API Server Status Pill */}
         <div 
-          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-slate-50 text-slate-600 border-slate-200"
-          title="Node.js Express Server on port 5000"
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors ${
+            backendOnline 
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+              : 'bg-amber-50 text-amber-700 border-amber-200'
+          }`}
+          title={backendOnline ? "Node.js Express Server Live on port 5000" : "Running in client-side resilience mode"}
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-          <span className="font-mono">API:5000</span>
+          <span className={`w-1.5 h-1.5 rounded-full ${backendOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'} shrink-0`}></span>
+          <span className="font-mono">{backendOnline ? 'API:5000 Live' : 'API:Offline'}</span>
         </div>
 
         {/* Compact Disruption Status Pill */}

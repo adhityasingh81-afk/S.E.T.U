@@ -20,6 +20,7 @@ import {
   Pause
 } from 'lucide-react';
 import { DEMO_USERS } from '../../data/usersData';
+import { nexusApi } from '../../api/nexusApi';
 
 export function LoginPage({ onLoginSuccess }) {
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
@@ -37,7 +38,7 @@ export function LoginPage({ onLoginSuccess }) {
   // Mouse tilt physics for frosted card
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
 
-  // Auto-cycle through quotes every 5.5 seconds (Jitter video style)
+  // Auto-cycle through quotes every 5.5 seconds (Jitter video style) - does NOT touch email input
   useEffect(() => {
     if (!isAutoPlay) return;
     const interval = setInterval(() => {
@@ -45,11 +46,6 @@ export function LoginPage({ onLoginSuccess }) {
     }, 5500);
     return () => clearInterval(interval);
   }, [isAutoPlay]);
-
-  // Sync email when user index changes
-  useEffect(() => {
-    setEmail(DEMO_USERS[currentUserIndex].email);
-  }, [currentUserIndex]);
 
   const handleMouseMoveHero = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -71,23 +67,47 @@ export function LoginPage({ onLoginSuccess }) {
     setEmail(user.email);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const user = DEMO_USERS.find(u => u.email.toLowerCase() === email.toLowerCase()) || {
-      ...selectedUser,
-      email: email,
-      name: email.split('@')[0].replace('.', ' ').toUpperCase(),
-    };
+    const cleanEmail = (email || '').trim();
+    const matchedDemoUser = DEMO_USERS.find(u => u.email.toLowerCase() === cleanEmail.toLowerCase());
+    const personaToSend = matchedDemoUser ? matchedDemoUser.persona : null;
 
-    setTimeout(() => {
+    try {
+      const authResponse = await nexusApi.login(cleanEmail, password, personaToSend);
+      const user = authResponse?.user || authResponse;
+      if (authResponse?.token) {
+        localStorage.setItem('nexus_auth_token', authResponse.token);
+      }
       setIsLoading(false);
       setLoginSuccess(true);
       setTimeout(() => {
         onLoginSuccess(user);
-      }, 600);
-    }, 500);
+      }, 500);
+    } catch {
+      const username = cleanEmail.split('@')[0];
+      const formattedName = username
+        .replace(/[._-]/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+
+      const fallbackUser = matchedDemoUser || {
+        id: `usr-custom-${Date.now().toString(36)}`,
+        email: cleanEmail,
+        name: formattedName || 'Enterprise Operator',
+        role: 'Custom Station Operator',
+        persona: 'custom',
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+        quote: "Authorized user connected to NEXUS Network.",
+        clearance: 'Tier-1 Command'
+      };
+      setIsLoading(false);
+      setLoginSuccess(true);
+      setTimeout(() => {
+        onLoginSuccess(fallbackUser);
+      }, 500);
+    }
   };
 
   return (
@@ -275,7 +295,7 @@ export function LoginPage({ onLoginSuccess }) {
 
               <div className="grid grid-cols-2 gap-2">
                 {DEMO_USERS.map((user, idx) => {
-                  const isSelected = currentUserIndex === idx;
+                  const isSelected = email.toLowerCase() === user.email.toLowerCase();
                   return (
                     <button
                       key={user.id}
@@ -317,8 +337,12 @@ export function LoginPage({ onLoginSuccess }) {
                     type="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@auradevices.io"
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setIsAutoPlay(false);
+                    }}
+                    onFocus={() => setIsAutoPlay(false)}
+                    placeholder="e.g. yourname@company.com"
                     className="w-full bg-[#f8fafc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 font-semibold focus:outline-none focus:border-brand-500 focus:bg-white transition-all shadow-inner"
                   />
                 </div>
