@@ -51,12 +51,27 @@ app.use('/api/auth', authRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/db', databaseRoutes);
 
-// 404 Route Handler
-app.use((req, res) => {
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.resolve(__dirname, '../dist');
+
+// Serve static frontend bundle in production
+app.use(express.static(distPath));
+
+// API 404 Route Handler
+app.use('/api/*', (req, res) => {
   res.status(404).json({
     success: false,
     error: `API route ${req.originalUrl} not found`
   });
+});
+
+// SPA Fallback: send index.html for all client routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 // Global Error Handler

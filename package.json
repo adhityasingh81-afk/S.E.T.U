@@ -7,7 +7,9 @@
     "dev": "concurrently -k -n \"SERVER,CLIENT\" -c \"blue,green\" \"node server/index.js\" \"vite\"",
     "dev:client": "vite",
     "server": "node server/index.js",
+    "start": "node server/index.js",
     "build": "vite build",
+    "render-build": "npm install && npm run build",
     "preview": "vite preview"
   },
   "dependencies": {
