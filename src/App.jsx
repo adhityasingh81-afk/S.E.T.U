@@ -17,6 +17,7 @@ import { CRISIS_SCENARIOS } from './data/scenariosData';
 import { simulateRippleEffect } from './engine/rippleSimulation';
 import { calculateResilienceScore } from './engine/resilienceCalculator';
 import { generateRecoveryStrategies } from './engine/recoveryOptimizer';
+import { nexusApi } from './api/nexusApi';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
@@ -28,6 +29,14 @@ export default function App() {
   const [activeStrategy, setActiveStrategy] = useState(null);
   const [activePersona, setActivePersona] = useState('exec');
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [backendOnline, setBackendOnline] = useState(true);
+
+  // Check backend health on mount
+  useEffect(() => {
+    nexusApi.checkHealth().then(res => {
+      setBackendOnline(res?.status === 'healthy');
+    }).catch(() => setBackendOnline(false));
+  }, []);
 
   // Run initial simulation for Taiwan Semiconductor 40% fracture
   const [simulationResult, setSimulationResult] = useState(() => {
@@ -43,34 +52,54 @@ export default function App() {
   const resilienceScore = calculateResilienceScore(activeStrategy, isDisrupted, simulationResult?.severityPct || 40);
 
   // Scenario launcher
-  const handleSelectScenario = (scenario) => {
+  const handleSelectScenario = async (scenario) => {
     setActiveScenario(scenario);
     setIsDisrupted(true);
     setActiveStrategy(null);
-    const result = simulateRippleEffect(
-      scenario.affectedNodeId,
-      scenario.severityPct,
-      scenario.durationDays,
-      scenario.eventType
-    );
-    setSimulationResult(result);
+    try {
+      const result = await nexusApi.runSimulation(
+        scenario.affectedNodeId,
+        scenario.severityPct,
+        scenario.durationDays,
+        scenario.eventType
+      );
+      setSimulationResult(result);
+    } catch {
+      const fallbackResult = simulateRippleEffect(
+        scenario.affectedNodeId,
+        scenario.severityPct,
+        scenario.durationDays,
+        scenario.eventType
+      );
+      setSimulationResult(fallbackResult);
+    }
   };
 
   // Custom simulation trigger
-  const handleRunCustomSimulation = (nodeId, severity, duration, eventType) => {
+  const handleRunCustomSimulation = async (nodeId, severity, duration, eventType) => {
     setIsDisrupted(true);
     setActiveStrategy(null);
-    const result = simulateRippleEffect(nodeId, severity, duration, eventType);
-    setSimulationResult(result);
+    try {
+      const result = await nexusApi.runSimulation(nodeId, severity, duration, eventType);
+      setSimulationResult(result);
+    } catch {
+      const fallbackResult = simulateRippleEffect(nodeId, severity, duration, eventType);
+      setSimulationResult(fallbackResult);
+    }
   };
 
   // Reset network to baseline nominal
-  const handleResetNetwork = () => {
+  const handleResetNetwork = async () => {
     setIsDisrupted(false);
     setActiveStrategy(null);
     setActiveScenario(null);
-    const nominalResult = simulateRippleEffect('sup-taiwan-semi', 0, 0, 'Nominal Baseline');
-    setSimulationResult(nominalResult);
+    try {
+      const nominalResult = await nexusApi.runSimulation('sup-taiwan-semi', 0, 0, 'Nominal Baseline');
+      setSimulationResult(nominalResult);
+    } catch {
+      const nominalResult = simulateRippleEffect('sup-taiwan-semi', 0, 0, 'Nominal Baseline');
+      setSimulationResult(nominalResult);
+    }
   };
 
   // Apply a recovery strategy

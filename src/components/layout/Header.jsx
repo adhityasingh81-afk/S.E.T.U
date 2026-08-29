@@ -589,6 +589,15 @@ export function Header({
 
       {/* Center: Compact Live Disruption / Recovery Status Indicator */}
       <div className="hidden lg:flex items-center gap-2 shrink-0">
+        {/* Backend API Server Status Pill */}
+        <div 
+          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border bg-slate-50 text-slate-600 border-slate-200"
+          title="Node.js Express Server on port 5000"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+          <span className="font-mono">API:5000</span>
+        </div>
+
         {/* Compact Disruption Status Pill */}
         <div 
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all ${

@@ -4,14 +4,20 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -k -n \"SERVER,CLIENT\" -c \"blue,green\" \"node server/index.js\" \"vite\"",
+    "dev:client": "vite",
+    "server": "node server/index.js",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "concurrently": "^10.0.5",
+    "cors": "^2.8.6",
     "d3-geo": "^3.1.1",
+    "express": "^5.2.1",
     "lucide-react": "^1.16.0",
+    "morgan": "^1.12.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.13.0",
