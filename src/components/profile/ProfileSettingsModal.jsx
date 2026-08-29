@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   User, 
   Camera, 
@@ -80,6 +81,30 @@ export function ProfileSettingsModal({
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
+  // Sync state whenever modal opens or currentUser updates
+  useEffect(() => {
+    if (isOpen && currentUser) {
+      setName(currentUser.name || 'Authorized Operator');
+      setEmail(currentUser.email || 'operator@nexus.ai');
+      setRole(currentUser.role || 'Chief Supply Chain Officer');
+      setClearance(currentUser.clearance || 'Tier-1 Command');
+      setQuote(currentUser.quote || 'Autonomous resilience operational. Zero-defect supply chain protocol active.');
+      setAvatar(currentUser.avatar || PRESET_AVATARS[0].url);
+      setCustomUrlInput('');
+      setSavedSuccess(false);
+    }
+  }, [isOpen, currentUser]);
+
+  // Handle escape key to close
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleFileUpload = (e) => {
@@ -128,7 +153,7 @@ export function ProfileSettingsModal({
     try {
       await nexusApi.updateProfile(updatedUser);
     } catch {
-      // Local fallback
+      // Fallback to local
     }
 
     // Save locally
@@ -142,17 +167,25 @@ export function ProfileSettingsModal({
     setTimeout(() => {
       setSavedSuccess(false);
       onClose();
-    }, 600);
+    }, 500);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-      <div className="extej-card p-6 sm:p-8 max-w-2xl w-full bg-white shadow-2xl space-y-6 my-auto animate-fade-in-up text-slate-800 border border-slate-200/80">
-        
+  const modalContent = (
+    <div 
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-[99999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      style={{ isolation: 'isolate' }}
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200/90 p-6 sm:p-8 space-y-6 my-auto text-slate-800 animate-fade-in-up"
+      >
         {/* Modal Top Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-orange-100 border border-orange-200 flex items-center justify-center text-brand-600">
+            <div className="w-10 h-10 rounded-2xl bg-orange-100 border border-orange-200 flex items-center justify-center text-brand-600 shrink-0">
               <User className="w-5 h-5" />
             </div>
             <div>
@@ -171,8 +204,10 @@ export function ProfileSettingsModal({
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-full bg-slate-100 text-slate-400 hover:text-slate-800 hover:bg-slate-200 transition-all cursor-pointer"
+            className="p-2 rounded-full bg-slate-100 text-slate-400 hover:text-slate-800 hover:bg-slate-200 transition-all cursor-pointer shrink-0"
+            title="Close"
           >
             <X className="w-4 h-4" />
           </button>
@@ -419,4 +454,8 @@ export function ProfileSettingsModal({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined'
+    ? createPortal(modalContent, document.body)
+    : modalContent;
 }
