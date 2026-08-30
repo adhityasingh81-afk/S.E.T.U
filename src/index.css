@@ -74,6 +74,27 @@ body {
   transform: translateY(1px);
 }
 
+/* Next-Step Flow Action Button (#6B00D7) */
+.btn-purple-pill {
+  background: linear-gradient(135deg, #8B25F0 0%, #6B00D7 100%);
+  color: #ffffff;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 14px 0 rgba(107, 0, 215, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.btn-purple-pill:hover {
+  background: linear-gradient(135deg, #9C3CF5 0%, #7609E8 100%);
+  box-shadow: 0 6px 20px 0 rgba(107, 0, 215, 0.48);
+  transform: translateY(-1px);
+}
+
+.btn-purple-pill:active {
+  transform: translateY(1px);
+}
+
 /* Secondary Smooth Pill */
 .btn-secondary-pill {
   background: #f8fafc;
@@ -257,3 +278,51 @@ body {
   stroke-dasharray: 6, 6;
   animation: flowDash 0.6s linear infinite;
 }
+
+/* Timeline Flow & Shockwave Animations */
+@keyframes laserFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.timeline-laser-flow {
+  background: linear-gradient(90deg, #f43f5e 0%, #f97316 25%, #eab308 50%, #f43f5e 75%, #e11d48 100%);
+  background-size: 200% 100%;
+  animation: laserFlow 2.5s linear infinite;
+}
+
+@keyframes shockwavePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 16px rgba(225, 29, 72, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(225, 29, 72, 0);
+  }
+}
+
+.animate-shockwave-pulse {
+  animation: shockwavePulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes radarFlash {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+}
+
+.animate-radar-flash {
+  animation: radarFlash 1.8s ease-in-out infinite;
+}
+

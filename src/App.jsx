@@ -82,14 +82,14 @@ export default function App() {
   };
 
   // Custom simulation trigger
-  const handleRunCustomSimulation = async (nodeId, severity, duration, eventType) => {
+  const handleRunCustomSimulation = async (nodeId, severity, duration, eventType, fractureType = 'capacity', activeContainmentIds = []) => {
     setIsDisrupted(true);
     setActiveStrategy(null);
     try {
-      const result = await nexusApi.runSimulation(nodeId, severity, duration, eventType);
+      const result = await nexusApi.runSimulation(nodeId, severity, duration, eventType, fractureType, activeContainmentIds);
       setSimulationResult(result);
     } catch {
-      const fallbackResult = simulateRippleEffect(nodeId, severity, duration, eventType);
+      const fallbackResult = simulateRippleEffect(nodeId, severity, duration, eventType, fractureType, activeContainmentIds);
       setSimulationResult(fallbackResult);
     }
   };

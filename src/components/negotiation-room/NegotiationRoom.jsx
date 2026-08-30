@@ -320,7 +320,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
                 }
                 if (onSignTermSheet) onSignTermSheet(activeNegotiation);
               }}
-              className="w-full btn-orange-pill py-3 px-4 text-xs font-bold flex items-center justify-center gap-2"
+              className="w-full btn-purple-pill py-3.5 px-4 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:scale-[1.01] transition-transform cursor-pointer"
             >
               <FileText className="w-4 h-4" />
               <span>{isSigned ? '✓ Term Sheet Executed' : 'Generate & Execute Binding MOU'}</span>

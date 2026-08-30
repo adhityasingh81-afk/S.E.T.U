@@ -8,15 +8,7 @@ import {
   GitCompare, 
   SlidersHorizontal,
   ChevronRight,
-  Shield,
-  Layers,
-  FileText,
-  HelpCircle,
-  TrendingDown,
-  Clock,
-  Sparkles,
-  Building2,
-  Award
+  Building2
 } from 'lucide-react';
 
 export function Sidebar({ 
@@ -36,7 +28,6 @@ export function Sidebar({
           id: 'command-center',
           label: 'Command Center',
           icon: LayoutDashboard,
-          count: '1',
         },
         {
           id: 'digital-twin',
@@ -48,25 +39,22 @@ export function Sidebar({
           id: 'fracture-mode',
           label: 'Fracture Mode',
           icon: Flame,
-          count: isDisrupted ? '!' : '0',
+          count: isDisrupted ? '!' : null,
         },
         {
           id: 'recovery-cockpit',
           label: 'Recovery Cockpit',
           icon: Compass,
-          count: '3',
         },
         {
           id: 'negotiation-room',
           label: 'Negotiation Room',
           icon: MessageSquareCode,
-          count: '2',
         },
         {
           id: 'counterfactual',
           label: 'Counterfactual & ROI',
           icon: GitCompare,
-          count: '4',
         },
       ]
     },
@@ -77,7 +65,6 @@ export function Sidebar({
           id: 'resilience-planner',
           label: 'Resilience Planner',
           icon: SlidersHorizontal,
-          count: 'ROI',
         },
       ]
     }
@@ -139,13 +126,17 @@ export function Sidebar({
                   </div>
 
                   <div className="flex items-center gap-1.5">
-                    <span className={`text-[11px] font-semibold px-1.5 py-0.2 rounded-md ${
-                      isActive
-                        ? 'bg-white/20 text-white'
-                        : 'text-slate-400 group-hover:text-slate-600'
-                    }`}>
-                      {item.count}
-                    </span>
+                    {item.count != null && (
+                      <span className={`text-[11px] font-semibold px-1.5 py-0.2 rounded-md ${
+                        item.id === 'fracture-mode' && isDisrupted
+                          ? 'bg-rose-500 text-white font-extrabold px-2 py-0.5 animate-pulse shadow-sm'
+                          : isActive
+                          ? 'bg-white/20 text-white'
+                          : 'text-slate-400 group-hover:text-slate-600'
+                      }`}>
+                        {item.count}
+                      </span>
+                    )}
                     <ChevronRight className={`w-3.5 h-3.5 transition-transform ${
                       isActive ? 'text-white translate-x-0.5' : 'text-slate-400 group-hover:translate-x-0.5'
                     }`} />

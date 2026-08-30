@@ -1,26 +1,9 @@
 import React, { useState } from 'react';
 import { 
-  ShieldCheck, 
-  AlertTriangle, 
-  TrendingDown, 
   Zap, 
-  ArrowUpRight, 
-  CheckCircle2, 
   Activity, 
-  Layers, 
-  MapPin, 
-  ArrowRight,
-  TrendingUp,
-  BarChart3,
-  Sliders,
-  Sparkles,
-  ChevronDown,
-  Plus,
-  ArrowRightLeft,
-  Send,
-  CreditCard,
-  Building,
-  Check
+  AlertTriangle,
+  ChevronDown
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { CRISIS_SCENARIOS } from '../../data/scenariosData';
@@ -419,118 +402,6 @@ export function CommandCenter({
               />
             </AreaChart>
           </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* BOTTOM SECTION: "My Strategic Hub Cards" */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold text-slate-900 font-sans">
-            Strategic Facility & Sourcing Hubs
-          </h3>
-          <button
-            onClick={() => onNavigateToTab('digital-twin')}
-            className="btn-orange-pill px-3.5 py-1 text-xs font-bold flex items-center gap-1 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>View All 15 Hubs</span>
-          </button>
-        </div>
-
-        {/* 3 Facility Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Card 1 */}
-          <div 
-            onClick={() => onNavigateToTab('digital-twin')}
-            className="facility-card-orange p-5 rounded-2xl space-y-4 relative shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-[1.01]"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center -space-x-2">
-                <div className="w-6 h-6 rounded-full bg-rose-500 opacity-90"></div>
-                <div className="w-6 h-6 rounded-full bg-amber-400 opacity-90"></div>
-              </div>
-              <span className="w-5 h-5 rounded-full bg-brand-500 text-white flex items-center justify-center text-[11px] font-bold">
-                ✓
-              </span>
-            </div>
-
-            <div className="font-mono text-base font-bold text-slate-800 tracking-wider">
-              HUB-7740 9921 4410 0192
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-orange-200/50">
-              <div>
-                <span className="block text-[9px] uppercase tracking-wider text-slate-400">Facility Director</span>
-                <span className="font-bold text-slate-800">KARTHIK SUBRAMANIAN</span>
-              </div>
-              <div className="text-right">
-                <span className="block text-[9px] uppercase tracking-wider text-slate-400">Class</span>
-                <span className="font-bold text-brand-600 font-mono">CHENNAI PLANT 1</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2 */}
-          <div 
-            onClick={() => onNavigateToTab('digital-twin')}
-            className="facility-card-bg p-5 rounded-2xl border border-slate-200/80 space-y-4 relative shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-[1.01]"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center -space-x-2">
-                <div className="w-6 h-6 rounded-full bg-rose-500 opacity-90"></div>
-                <div className="w-6 h-6 rounded-full bg-amber-400 opacity-90"></div>
-              </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
-                ACTIVE
-              </span>
-            </div>
-
-            <div className="font-mono text-base font-bold text-slate-800 tracking-wider">
-              HUB-4444 3333 2222 1111
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100">
-              <div>
-                <span className="block text-[9px] uppercase tracking-wider text-slate-400">Facility Director</span>
-                <span className="font-bold text-slate-800">SARAH JENKINS</span>
-              </div>
-              <div className="text-right">
-                <span className="block text-[9px] uppercase tracking-wider text-slate-400">Class</span>
-                <span className="font-bold text-slate-700 font-mono">APEX SILICON USA</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3 */}
-          <div 
-            onClick={() => onNavigateToTab('digital-twin')}
-            className="facility-card-bg p-5 rounded-2xl border border-slate-200/80 space-y-4 relative shadow-sm hover:shadow-md transition-all cursor-pointer hover:scale-[1.01]"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center -space-x-2">
-                <div className="w-6 h-6 rounded-full bg-rose-500 opacity-90"></div>
-                <div className="w-6 h-6 rounded-full bg-amber-400 opacity-90"></div>
-              </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                FORTIFIED
-              </span>
-            </div>
-
-            <div className="font-mono text-base font-bold text-slate-800 tracking-wider">
-              HUB-1111 2222 3333 4444
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100">
-              <div>
-                <span className="block text-[9px] uppercase tracking-wider text-slate-400">Facility Director</span>
-                <span className="font-bold text-slate-800">CHERYL NG</span>
-              </div>
-              <div className="text-right">
-                <span className="block text-[9px] uppercase tracking-wider text-slate-400">Class</span>
-                <span className="font-bold text-slate-700 font-mono">SINGAPORE HUB</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

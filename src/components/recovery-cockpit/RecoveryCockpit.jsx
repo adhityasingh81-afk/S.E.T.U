@@ -20,6 +20,49 @@ import {
 import { generateRecoveryStrategies } from '../../engine/recoveryOptimizer';
 import { nexusApi } from '../../api/nexusApi';
 
+const CONTAINMENT_ACTIONS = [
+  {
+    id: 'activate-backup',
+    title: 'Activate Secondary Supplier',
+    hub: 'Kyoto Microelectronics & Apex Silicon',
+    mitigation: '42% Risk Reduction',
+    reductionFactor: 0.42,
+    timeframe: 'Day 2 Injection',
+    impact: 'Failover 40,000 monthly SoC units to qualified secondary foundries.',
+    cost: '₹1.2 Cr Re-tooling Fee'
+  },
+  {
+    id: 'reserve-buffer',
+    title: 'Reserve Emergency Buffer',
+    hub: 'Jurong Global Hub (Singapore)',
+    mitigation: '24% Risk Reduction',
+    reductionFactor: 0.24,
+    timeframe: 'Day 2 Injection',
+    impact: 'Lock 15,000 safety stock units exclusively for Tier-1 assembly lines.',
+    cost: '₹45 Lakhs Holding Cost'
+  },
+  {
+    id: 'prioritize-sla',
+    title: 'Prioritize High-Margin SLAs',
+    hub: 'Enterprise Cloud & Mobility',
+    mitigation: '18% Risk Reduction',
+    reductionFactor: 0.18,
+    timeframe: 'Day 3 Injection',
+    impact: 'Reallocate 85% of available inventory to Apex HyperScale to avert ₹65L/day penalty.',
+    cost: '₹0 Penalty Avoided'
+  },
+  {
+    id: 'expedite-freight',
+    title: 'Expedite Charter Air Freight',
+    hub: 'Frankfurt & Singapore Air Corridors',
+    mitigation: '16% Risk Reduction',
+    reductionFactor: 0.16,
+    timeframe: 'Day 1 Injection',
+    impact: 'Bypass congested ocean routes via dedicated Boeing 777F cargo flights.',
+    cost: '₹85 Lakhs Air Charter'
+  }
+];
+
 export function RecoveryCockpit({
   simulationResult,
   activeStrategy,
@@ -34,10 +77,31 @@ export function RecoveryCockpit({
     resilienceWeight: 30,
   });
 
+  const [activeContainment, setActiveContainment] = useState(['activate-backup', 'reserve-buffer']);
   const [selectedStrategyForDetails, setSelectedStrategyForDetails] = useState(null);
   const [showExplanationModal, setShowExplanationModal] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [strategies, setStrategies] = useState(() => generateRecoveryStrategies(simulationResult, resilienceBudget));
+
+  const toggleContainment = (actionId) => {
+    setActiveContainment(prev => 
+      prev.includes(actionId) 
+        ? prev.filter(id => id !== actionId) 
+        : [...prev, actionId]
+    );
+  };
+
+  const uncontainedExposure = simulationResult?.metrics?.uncontainedTotalRiskCr || simulationResult?.metrics?.totalRevenueAtRiskCr || 18.7;
+  let totalMitigation = 0;
+  activeContainment.forEach(id => {
+    const found = CONTAINMENT_ACTIONS.find(a => a.id === id);
+    if (found) totalMitigation += found.reductionFactor;
+  });
+  totalMitigation = Math.min(0.82, totalMitigation);
+
+  const containedExposure = Math.round((uncontainedExposure * (1 - totalMitigation)) * 10) / 10;
+  const capitalSaved = Math.round((uncontainedExposure - containedExposure) * 10) / 10;
+  const containedSites = Math.max(2, Math.round(9 * (1 - totalMitigation)));
 
   // Sync recovery strategies with backend API
   React.useEffect(() => {
@@ -313,17 +377,18 @@ export function RecoveryCockpit({
             </h3>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={onNavigateToNegotiation}
-              className="btn-orange-pill px-3.5 py-1.5 text-xs font-bold flex items-center gap-1.5 shadow-sm"
+              className="btn-purple-pill px-5 py-2.5 text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md hover:scale-[1.02] transition-transform cursor-pointer"
             >
-              <MessageSquareCode className="w-3.5 h-3.5" />
+              <MessageSquareCode className="w-4 h-4" />
               <span>Simulate Negotiation</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={onNavigateToCounterfactual}
-              className="btn-secondary-pill px-3.5 py-1.5 text-xs font-bold flex items-center gap-1"
+              className="btn-secondary-pill px-4 py-2.5 text-xs font-bold flex items-center gap-1.5 hover:bg-slate-100"
             >
               <span>Compare Counterfactual</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -353,6 +418,128 @@ export function RecoveryCockpit({
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* FRACTURE CONTAINMENT SANDBOX (In-Flight Autonomous Mitigation) */}
+      <div className="extej-card p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+              <h3 className="text-base font-extrabold text-slate-900 font-sans">
+                Fracture Containment & In-Flight Interventions
+              </h3>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono">
+                {activeContainment.length} Active Interventions
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium">
+              Intervene during cascade propagation to lock emergency safety stock, route backup capacity, and avert SLA breaches.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              +{Math.round(totalMitigation * 100)}% Risk Mitigated
+            </span>
+          </div>
+        </div>
+
+        {/* Live Before vs After Containment Telemetry Card */}
+        <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white shadow-lg grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Uncontained Risk
+            </span>
+            <div className="text-2xl font-black font-mono text-rose-400 line-through">
+              ₹{uncontainedExposure} Cr
+            </div>
+            <span className="text-[10px] text-slate-400">Without in-flight actions</span>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+              Contained Risk (Live)
+            </span>
+            <div className="text-2xl font-black font-mono text-emerald-400">
+              ₹{containedExposure} Cr
+            </div>
+            <span className="text-[10px] text-slate-400">With {activeContainment.length} interventions</span>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">
+              Capital Safeguarded
+            </span>
+            <div className="text-2xl font-black font-mono text-amber-300">
+              +₹{capitalSaved} Cr
+            </div>
+            <span className="text-[10px] text-slate-400">({Math.round(totalMitigation * 100)}% Protected)</span>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider">
+              Contained Blast Radius
+            </span>
+            <div className="text-2xl font-black font-mono text-sky-300">
+              {containedSites} <span className="text-sm font-semibold text-slate-300">Sites</span>
+            </div>
+            <span className="text-[10px] text-slate-400">Reduced from 9 sites</span>
+          </div>
+        </div>
+
+        {/* Interactive Intervention Toggles */}
+        <div className="space-y-3">
+          <label className="text-xs font-bold text-slate-700">Deployable Containment Actions</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {CONTAINMENT_ACTIONS.map((action) => {
+              const isActive = activeContainment.includes(action.id);
+              return (
+                <div
+                  key={action.id}
+                  onClick={() => toggleContainment(action.id)}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
+                    isActive
+                      ? 'bg-emerald-50/80 border-emerald-400 shadow-sm ring-2 ring-emerald-200'
+                      : 'bg-[#f8fafc] border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold ${
+                        isActive ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {isActive ? '✓' : '+'}
+                      </span>
+                      <h4 className="text-xs font-extrabold text-slate-900 font-sans">
+                        {action.title}
+                      </h4>
+                      <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                        {action.mitigation}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 font-medium pl-7">
+                      {action.impact}
+                    </p>
+                    <div className="flex items-center gap-3 text-[10px] text-slate-400 font-mono pl-7 pt-1">
+                      <span>{action.timeframe}</span>
+                      <span>•</span>
+                      <span>Cost: {action.cost}</span>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 pt-1">
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${
+                      isActive ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
+                    }`}>
+                      {isActive ? 'ACTIVE' : 'DEPLOY'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 

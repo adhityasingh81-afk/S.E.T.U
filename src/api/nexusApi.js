@@ -105,14 +105,14 @@ export const nexusApi = {
   /**
    * Deterministic Ripple Simulation
    */
-  async runSimulation(affectedNodeId, severityPct, durationDays, eventType) {
+  async runSimulation(affectedNodeId, severityPct, durationDays, eventType, fractureType = 'capacity', activeContainmentIds = []) {
     return fetchWithFallback(
       '/simulate/ripple',
       {
         method: 'POST',
-        body: JSON.stringify({ affectedNodeId, severityPct, durationDays, eventType })
+        body: JSON.stringify({ affectedNodeId, severityPct, durationDays, eventType, fractureType, activeContainmentIds })
       },
-      () => simulateRippleEffect(affectedNodeId, severityPct, durationDays, eventType)
+      () => simulateRippleEffect(affectedNodeId, severityPct, durationDays, eventType, fractureType, activeContainmentIds)
     );
   },
 

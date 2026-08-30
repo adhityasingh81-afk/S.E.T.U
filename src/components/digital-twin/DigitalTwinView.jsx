@@ -1146,7 +1146,7 @@ export function DigitalTwinView({
               <div className="pt-1">
                 <button
                   onClick={() => onTriggerDisruption(selectedNode.id)}
-                  className="w-full btn-orange-pill py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 shadow-sm cursor-pointer hover:shadow-md transition-all"
+                  className="w-full btn-purple-pill py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer hover:scale-[1.01] transition-all"
                 >
                   <Zap className="w-4 h-4 animate-pulse" />
                   <span>Simulate Fracture on {selectedNode.name.split('(')[0]}</span>

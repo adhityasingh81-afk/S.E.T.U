@@ -29,7 +29,7 @@ export function getScenarioById(req, res) {
 
 export function runSimulation(req, res) {
   try {
-    const { affectedNodeId, severityPct, durationDays, eventType } = req.body;
+    const { affectedNodeId, severityPct, durationDays, eventType, fractureType, activeContainmentIds } = req.body;
     
     if (!affectedNodeId) {
       return res.status(400).json({ success: false, error: 'affectedNodeId is required' });
@@ -39,7 +39,9 @@ export function runSimulation(req, res) {
       affectedNodeId,
       severityPct !== undefined ? severityPct : 40,
       durationDays !== undefined ? durationDays : 45,
-      eventType || 'Supplier Capacity Drop'
+      eventType || 'Supplier Capacity Drop',
+      fractureType || 'capacity',
+      activeContainmentIds || []
     );
 
     // Persist simulation result to database
