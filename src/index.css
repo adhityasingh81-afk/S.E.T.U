@@ -10,6 +10,8 @@
   --border-light: rgba(226, 232, 240, 0.8);
   --brand-orange: #ff6b00;
   --brand-gradient: linear-gradient(135deg, #ff7a1a 0%, #ff5500 100%);
+  --mouse-x: 0.5;
+  --mouse-y: 0.5;
 }
 
 body {

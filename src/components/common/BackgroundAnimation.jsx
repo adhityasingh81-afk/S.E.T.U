@@ -4,6 +4,7 @@ export function BackgroundAnimation() {
   const canvasRef = useRef(null);
 
   useEffect(() => {
+    const root = document.documentElement;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -12,41 +13,48 @@ export function BackgroundAnimation() {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
-    // Mouse tracking with gentle smoothing
-    let mouse = { x: width / 2, y: height / 3, targetX: width / 2, targetY: height / 3 };
+    // Mouse tracking with gentle smoothing & CSS variable sync
+    const mouse = {
+      x: width / 2,
+      y: height / 2,
+      targetX: width / 2,
+      targetY: height / 2,
+      radius: 175,
+      isHovered: true,
+    };
 
-    // Subtle Node Beacons (low quantity, gentle movement)
-    const beaconCount = 18;
-    const beacons = [];
-    const colorPalette = [
-      { core: 'rgba(255, 107, 0, 0.45)', glow: 'rgba(255, 107, 0, 0.08)' },
-      { core: 'rgba(255, 149, 0, 0.35)', glow: 'rgba(255, 149, 0, 0.06)' },
-      { core: 'rgba(14, 165, 233, 0.35)', glow: 'rgba(14, 165, 233, 0.06)' },
-      { core: 'rgba(139, 92, 246, 0.3)', glow: 'rgba(139, 92, 246, 0.05)' },
-    ];
+    // Generate small orange and black dots
+    const dotCount = Math.min(100, Math.floor((width * height) / 14000));
+    const dots = [];
 
-    for (let i = 0; i < beaconCount; i++) {
-      const col = colorPalette[i % colorPalette.length];
-      beacons.push({
+    for (let i = 0; i < dotCount; i++) {
+      const isOrange = i % 2 === 0;
+      const baseRadius = Math.random() * 1.6 + 1.2; // Small 1.2px - 2.8px dots
+
+      dots.push({
         x: Math.random() * width,
         y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: (Math.random() - 0.5) * 0.25,
-        baseRadius: Math.random() * 2 + 1.2,
-        color: col.core,
-        glowColor: col.glow,
+        baseX: Math.random() * width,
+        baseY: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.45,
+        vy: (Math.random() - 0.5) * 0.45,
+        baseRadius,
+        currentRadius: baseRadius,
+        isOrange,
+        color: isOrange ? 'rgba(255, 107, 0, 0.85)' : 'rgba(15, 23, 42, 0.70)',
+        glowColor: isOrange ? 'rgba(255, 107, 0, 0.25)' : 'rgba(15, 23, 42, 0.12)',
         pulseOffset: Math.random() * Math.PI * 2,
       });
     }
 
-    // Soft Harmonic Energy Waves (very low contrast)
-    const waveDefs = [
-      { amplitude: 35, frequency: 0.0018, speed: 0.008, yOffsetRatio: 0.25, color: 'rgba(255, 107, 0, 0.07)' },
-      { amplitude: 45, frequency: 0.0012, speed: -0.006, yOffsetRatio: 0.55, color: 'rgba(14, 165, 233, 0.06)' },
-      { amplitude: 40, frequency: 0.0016, speed: 0.009, yOffsetRatio: 0.80, color: 'rgba(255, 149, 0, 0.05)' },
-    ];
-
     const handleMouseMove = (e) => {
+      const normX = e.clientX / window.innerWidth;
+      const normY = e.clientY / window.innerHeight;
+
+      // Sync CSS variables to root as requested
+      root.style.setProperty('--mouse-x', normX.toFixed(4));
+      root.style.setProperty('--mouse-y', normY.toFixed(4));
+
       mouse.targetX = e.clientX;
       mouse.targetY = e.clientY;
     };
@@ -62,81 +70,104 @@ export function BackgroundAnimation() {
     let time = 0;
 
     const render = () => {
-      time += 0.8;
+      time += 0.02;
       ctx.clearRect(0, 0, width, height);
 
       // Smooth mouse lerp
-      mouse.x += (mouse.targetX - mouse.x) * 0.04;
-      mouse.y += (mouse.targetY - mouse.y) * 0.04;
+      mouse.x += (mouse.targetX - mouse.x) * 0.08;
+      mouse.y += (mouse.targetY - mouse.y) * 0.08;
 
-      // 1. Ultra-subtle Mouse Ambient Spotlight
-      const mouseGrad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 320);
-      mouseGrad.addColorStop(0, 'rgba(255, 122, 26, 0.04)');
-      mouseGrad.addColorStop(0.6, 'rgba(14, 165, 233, 0.015)');
-      mouseGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = mouseGrad;
+      // 1. Dynamic Cursor Spotlight Glow
+      const spotGrad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 280);
+      spotGrad.addColorStop(0, 'rgba(255, 107, 0, 0.06)');
+      spotGrad.addColorStop(0.5, 'rgba(15, 23, 42, 0.02)');
+      spotGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = spotGrad;
       ctx.fillRect(0, 0, width, height);
 
-      // 2. Subtle Flowing Ambient Waves
-      waveDefs.forEach((wave) => {
-        const baseY = height * wave.yOffsetRatio;
-
-        ctx.beginPath();
-        for (let x = 0; x <= width; x += 16) {
-          const y = baseY + 
-            Math.sin(x * wave.frequency + time * wave.speed) * wave.amplitude +
-            Math.cos(x * 0.0008 + time * 0.004) * (wave.amplitude * 0.3);
-
-          if (x === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-
-        ctx.strokeStyle = wave.color;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      });
-
-      // 3. Gentle Connection Lines between Close Beacons
-      const maxDist = 140;
-      for (let i = 0; i < beacons.length; i++) {
-        for (let j = i + 1; j < beacons.length; j++) {
-          const dx = beacons[i].x - beacons[j].x;
-          const dy = beacons[i].y - beacons[j].y;
+      // 2. Connecting Lines between Nearby Dots
+      const maxDist = 110;
+      for (let i = 0; i < dots.length; i++) {
+        for (let j = i + 1; j < dots.length; j++) {
+          const dx = dots[i].x - dots[j].x;
+          const dy = dots[i].y - dots[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < maxDist) {
-            const alpha = (1 - dist / maxDist) * 0.12;
+            const alpha = (1 - dist / maxDist) * 0.15;
+            const isMixed = dots[i].isOrange !== dots[j].isOrange;
+
             ctx.beginPath();
-            ctx.moveTo(beacons[i].x, beacons[i].y);
-            ctx.lineTo(beacons[j].x, beacons[j].y);
-            ctx.strokeStyle = `rgba(255, 122, 26, ${alpha})`;
+            ctx.moveTo(dots[i].x, dots[i].y);
+            ctx.lineTo(dots[j].x, dots[j].y);
+            ctx.strokeStyle = isMixed
+              ? `rgba(255, 122, 26, ${alpha})`
+              : dots[i].isOrange
+              ? `rgba(255, 107, 0, ${alpha * 1.2})`
+              : `rgba(15, 23, 42, ${alpha * 0.8})`;
             ctx.lineWidth = 0.8;
             ctx.stroke();
           }
         }
       }
 
-      // 4. Subtle Drifting Beacons
-      beacons.forEach((b) => {
-        b.x += b.vx;
-        b.y += b.vy;
+      // 3. Update & Draw Dynamic Orange & Black Dots
+      dots.forEach((dot) => {
+        // Natural ambient drift
+        dot.x += dot.vx;
+        dot.y += dot.vy;
 
-        if (b.x < 0 || b.x > width) b.vx *= -1;
-        if (b.y < 0 || b.y > height) b.vy *= -1;
+        // Wrap or bounce around edges
+        if (dot.x < -20) dot.x = width + 20;
+        if (dot.x > width + 20) dot.x = -20;
+        if (dot.y < -20) dot.y = height + 20;
+        if (dot.y > height + 20) dot.y = -20;
 
-        const pulse = Math.sin(time * 0.025 + b.pulseOffset) * 0.25 + 0.85;
-        const radius = b.baseRadius * pulse;
+        // Interactive Cursor Physics
+        const dx = mouse.x - dot.x;
+        const dy = mouse.y - dot.y;
+        const distToMouse = Math.sqrt(dx * dx + dy * dy);
 
-        // Subtle glow ring
+        let activeRadius = dot.baseRadius;
+        let fillStyle = dot.color;
+        let glowRadius = 0;
+
+        if (distToMouse < mouse.radius) {
+          const proximity = 1 - distToMouse / mouse.radius;
+          const pushForce = proximity * 2.8;
+
+          // Interactive push/orbit away from moving cursor
+          dot.x -= (dx / distToMouse) * pushForce;
+          dot.y -= (dy / distToMouse) * pushForce;
+
+          // Dynamic size and glow changes with cursor
+          activeRadius = dot.baseRadius + proximity * 2.2;
+          glowRadius = activeRadius * 2.5;
+
+          if (dot.isOrange) {
+            fillStyle = `rgba(255, 107, 0, ${0.85 + proximity * 0.15})`;
+          } else {
+            // Dark dots transition to warm amber-tinted slate near cursor
+            fillStyle = `rgba(${Math.round(15 + proximity * 180)}, ${Math.round(23 + proximity * 60)}, ${Math.round(42 - proximity * 20)}, ${0.75 + proximity * 0.2})`;
+          }
+        } else {
+          // Subtle natural breathing pulse
+          const pulse = Math.sin(time * 2 + dot.pulseOffset) * 0.2 + 1;
+          activeRadius = dot.baseRadius * pulse;
+        }
+
+        // Draw Dot Glow (if close to cursor or pulsing orange)
+        if (glowRadius > 0 || dot.isOrange) {
+          ctx.beginPath();
+          ctx.arc(dot.x, dot.y, glowRadius || activeRadius * 1.8, 0, Math.PI * 2);
+          ctx.fillStyle = dot.glowColor;
+          ctx.fill();
+        }
+
+        // Draw Small Dot Core
         ctx.beginPath();
-        ctx.arc(b.x, b.y, radius * 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = b.glowColor;
-        ctx.fill();
-
-        // Tiny core
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = b.color;
+        ctx.arc(dot.x, dot.y, Math.max(0.8, activeRadius), 0, Math.PI * 2);
+        ctx.fillStyle = fillStyle;
         ctx.fill();
       });
 
@@ -154,18 +185,24 @@ export function BackgroundAnimation() {
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 select-none">
-      {/* Soft Ambient Ethereal Glow (Ultra Subtle) */}
-      <div className="absolute -top-[10%] -left-[10%] w-[55vw] h-[55vw] rounded-full bg-gradient-to-br from-orange-400/8 via-amber-300/5 to-transparent blur-[120px] animate-float-slow transform-gpu"></div>
-      
-      <div className="absolute top-[35%] -right-[15%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-bl from-sky-400/6 via-orange-300/4 to-transparent blur-[120px] animate-float-reverse transform-gpu"></div>
-      
-      <div className="absolute -bottom-[10%] left-[25%] w-[45vw] h-[45vw] rounded-full bg-gradient-to-tr from-brand-500/6 via-purple-300/4 to-transparent blur-[120px] animate-pulse-slow transform-gpu"></div>
+      {/* CSS-Variable-driven dynamic radial spotlight tracking the cursor */}
+      <div 
+        className="absolute inset-0 transition-opacity duration-300 opacity-60 pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(circle 600px at calc(var(--mouse-x, 0.5) * 100%) calc(var(--mouse-y, 0.5) * 100%), rgba(255, 107, 0, 0.045) 0%, rgba(15, 23, 42, 0.015) 45%, transparent 70%)`
+        }}
+      />
 
-      {/* Subtle Canvas Animation (Low Opacity, Clean & Non-Intrusive) */}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-60" />
+      {/* Ambient Floating Color Blobs */}
+      <div className="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-orange-400/10 via-amber-300/6 to-transparent blur-[120px] animate-float-slow transform-gpu"></div>
+      
+      <div className="absolute top-[40%] -right-[10%] w-[45vw] h-[45vw] rounded-full bg-gradient-to-bl from-slate-900/5 via-orange-400/5 to-transparent blur-[120px] animate-float-reverse transform-gpu"></div>
 
-      {/* Very Soft Dot Matrix Texture */}
-      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_0.8px,transparent_0.8px)] [background-size:32px_32px] opacity-15"></div>
+      {/* Interactive Canvas with Small Orange & Black Dots */}
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-80" />
+
+      {/* Subtle Dot Matrix Background Texture */}
+      <div className="absolute inset-0 bg-[radial-gradient(#94a3b8_0.9px,transparent_0.9px)] [background-size:30px_30px] opacity-20"></div>
     </div>
   );
 }
