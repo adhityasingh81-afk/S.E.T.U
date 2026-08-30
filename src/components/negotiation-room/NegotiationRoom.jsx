@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   MessageSquareCode, 
   Send, 
@@ -13,7 +13,13 @@ import {
   Sparkles, 
   ShieldCheck,
   Check,
-  ChevronRight
+  ChevronRight,
+  X,
+  AlertTriangle,
+  ArrowRight,
+  ThumbsUp,
+  ThumbsDown,
+  RefreshCw
 } from 'lucide-react';
 import { NEGOTIATION_SUPPLIERS, getSupplierNegotiation } from '../../engine/negotiationEngine';
 import { nexusApi } from '../../api/nexusApi';
@@ -21,23 +27,63 @@ import { nexusApi } from '../../api/nexusApi';
 export function NegotiationRoom({ onSignTermSheet }) {
   const [selectedSupplierId, setSelectedSupplierId] = useState('sup-phoenix-semi');
   const [activeNegotiation, setActiveNegotiation] = useState(() => getSupplierNegotiation('sup-phoenix-semi'));
-  const [visibleMessagesCount, setVisibleMessagesCount] = useState(2);
+  
+  // Multi-round dialogue states
+  const [dialogueMessages, setDialogueMessages] = useState(() => {
+    const neg = getSupplierNegotiation('sup-phoenix-semi');
+    return neg.dialogueRounds ? [...neg.dialogueRounds[0]] : [...neg.dialogueScript];
+  });
+  const [visibleMessagesCount, setVisibleMessagesCount] = useState(4);
+  const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
+  const [currentOffer, setCurrentOffer] = useState(() => getSupplierNegotiation('sup-phoenix-semi').negotiatedOffer);
+  
   const [customOfferText, setCustomOfferText] = useState('');
   const [showTermSheet, setShowTermSheet] = useState(false);
   const [generatedMOU, setGeneratedMOU] = useState(null);
   const [isSigned, setIsSigned] = useState(false);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [isNegotiatingRound, setIsNegotiatingRound] = useState(false);
 
+  // Decision state: null | 'approved' | 'disapproved' | 'negotiating'
+  const [decisionStatus, setDecisionStatus] = useState(null);
+
+  // Toast notification state: null | { type: 'success' | 'danger' | 'info', title: string, message: string }
+  const [popupToast, setPopupToast] = useState(null);
+
+  const chatBottomRef = useRef(null);
+
+  // Reset when supplier changes
   useEffect(() => {
     const neg = getSupplierNegotiation(selectedSupplierId);
     setActiveNegotiation(neg);
-    setVisibleMessagesCount(2);
+    const initialMsgs = neg.dialogueRounds ? [...neg.dialogueRounds[0]] : [...neg.dialogueScript];
+    setDialogueMessages(initialMsgs);
+    setVisibleMessagesCount(initialMsgs.length);
+    setCurrentRoundIndex(0);
+    setCurrentOffer(neg.negotiatedOffer);
+    setDecisionStatus(null);
     setIsSigned(false);
     setGeneratedMOU(null);
+    setPopupToast(null);
   }, [selectedSupplierId]);
 
+  // Auto-scroll to bottom of chat when new messages appear
+  useEffect(() => {
+    if (chatBottomRef.current) {
+      chatBottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [dialogueMessages, visibleMessagesCount, decisionStatus]);
+
+  // Auto-dismiss toast after 4 seconds
+  useEffect(() => {
+    if (popupToast) {
+      const timer = setTimeout(() => setPopupToast(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [popupToast]);
+
   const handleNextMessage = () => {
-    if (visibleMessagesCount < activeNegotiation.dialogueScript.length) {
+    if (visibleMessagesCount < dialogueMessages.length) {
       setVisibleMessagesCount(prev => prev + 1);
     }
   };
@@ -46,34 +92,139 @@ export function NegotiationRoom({ onSignTermSheet }) {
     setIsAutoPlaying(true);
     let count = visibleMessagesCount;
     const interval = setInterval(() => {
-      if (count < activeNegotiation.dialogueScript.length) {
+      if (count < dialogueMessages.length) {
         count++;
         setVisibleMessagesCount(count);
       } else {
         clearInterval(interval);
         setIsAutoPlaying(false);
       }
-    }, 1200);
+    }, 1000);
   };
 
+  // 1. APPROVE ACTION
+  const handleApprove = () => {
+    setDecisionStatus('approved');
+    setPopupToast({
+      type: 'success',
+      title: 'Consensus finalised',
+      message: `Commercial terms with ${activeNegotiation.name} locked at ₹${currentOffer.unitPriceINR}/unit with ${currentOffer.leadTimeDays}-day delivery. Ready for binding MOU signature.`
+    });
+  };
+
+  // 2. DISAPPROVE ACTION
+  const handleDisapprove = () => {
+    setDecisionStatus('disapproved');
+    setPopupToast({
+      type: 'danger',
+      title: 'Strategy disapproved',
+      message: `Current supplier counter-proposal was rejected. You can negotiate further to demand deeper concessions or switch to another alternative supplier.`
+    });
+  };
+
+  // 3. NEGOTIATE FURTHER ACTION
+  const handleNegotiateFurther = () => {
+    setIsNegotiatingRound(true);
+    setDecisionStatus('negotiating');
+    setPopupToast({
+      type: 'info',
+      title: 'Executing Deeper Negotiation Round',
+      message: `NEXUS Agent is applying algorithmic bargaining leverage for lower unit costs and zero surcharges...`
+    });
+
+    const nextRound = currentRoundIndex + 1;
+
+    setTimeout(() => {
+      let newMessages = [];
+      let updatedOffer = { ...currentOffer };
+
+      if (activeNegotiation.dialogueRounds && nextRound < activeNegotiation.dialogueRounds.length) {
+        // Pre-scripted high-fidelity round
+        newMessages = [...activeNegotiation.dialogueRounds[nextRound]];
+        const lastMsg = newMessages[newMessages.length - 1];
+        if (lastMsg?.offerUpdate) {
+          updatedOffer = { ...lastMsg.offerUpdate };
+        }
+      } else {
+        // Dynamic continuous bargaining round
+        const roundNum = nextRound + 1;
+        const furtherDiscount = Math.round(currentOffer.unitPriceINR * 0.985);
+        const furtherSavings = Math.round((currentOffer.estimatedCostSavingsCr + 0.25) * 100) / 100;
+        
+        newMessages = [
+          {
+            id: `msg-dynamic-agent-${Date.now()}`,
+            round: roundNum,
+            speaker: 'nexus-agent',
+            speakerName: 'NEXUS Autonomous Procurement Agent',
+            avatar: 'NX',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            message: `${activeNegotiation.repName.split(' ')[0]}, we are close to consensus, but our procurement benchmarks require a unit price of ₹${furtherDiscount} and 100% absorption of freight demurrage to authorize immediate execution.`,
+            tag: `Round ${roundNum} High-Stakes Counter`,
+            metrics: { targetPrice: `₹${furtherDiscount}`, freight: '100% Absorbed' },
+          },
+          {
+            id: `msg-dynamic-supplier-${Date.now() + 1}`,
+            round: roundNum,
+            speaker: 'supplier',
+            speakerName: `${activeNegotiation.repName} (${activeNegotiation.name})`,
+            avatar: activeNegotiation.repAvatar,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            message: `Understood. After internal review with executive manufacturing control, ${activeNegotiation.name} agrees to adjust unit price to ₹${furtherDiscount}, waive all demurrage fees, and maintain express 3-day delivery.`,
+            tag: `Round ${roundNum} Concession Accepted`,
+            metrics: { price: `₹${furtherDiscount}`, leadTime: `${currentOffer.leadTimeDays} Days`, savings: `₹${furtherSavings} Cr` },
+          },
+          {
+            id: `msg-dynamic-summary-${Date.now() + 2}`,
+            round: roundNum,
+            speaker: 'nexus-agent',
+            speakerName: 'NEXUS Autonomous Procurement Agent',
+            avatar: 'NX',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            message: `Round ${roundNum} terms evaluated: Net savings increased to ₹${furtherSavings} Cr! Cost and delivery parameters optimized. Awaiting executive approval.`,
+            tag: `Round ${roundNum} Completed`,
+            metrics: { status: 'DEEPER SAVINGS', totalSavings: `₹${furtherSavings} Cr` },
+          }
+        ];
+
+        updatedOffer = {
+          ...currentOffer,
+          unitPriceINR: furtherDiscount,
+          rushSurchargePct: 0,
+          estimatedCostSavingsCr: furtherSavings,
+        };
+      }
+
+      setDialogueMessages(prev => [...prev, ...newMessages]);
+      setVisibleMessagesCount(prev => prev + newMessages.length);
+      setCurrentRoundIndex(nextRound);
+      setCurrentOffer(updatedOffer);
+      setIsNegotiatingRound(false);
+      setDecisionStatus(null); // Reset decision status so buttons appear below the new messages!
+    }, 1100);
+  };
+
+  // Custom User Input Proposal
   const handleSendCustomOffer = (e) => {
     e.preventDefault();
     if (!customOfferText.trim()) return;
 
+    const userText = customOfferText;
+    setCustomOfferText('');
+
     const newMsg = {
       id: `msg-custom-${Date.now()}`,
       speaker: 'nexus-agent',
-      speakerName: 'NEXUS Autonomous Procurement Agent (Human Instructed)',
+      speakerName: 'NEXUS Autonomous Procurement Agent (Human Direct Command)',
       avatar: 'NX',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-      message: customOfferText,
-      tag: 'Strategic Counter-Offer',
-      metrics: { status: 'Under Review' },
+      message: userText,
+      tag: 'Custom Human Directive',
+      metrics: { status: 'Direct Bid' },
     };
 
-    activeNegotiation.dialogueScript.splice(visibleMessagesCount, 0, newMsg);
+    setDialogueMessages(prev => [...prev, newMsg]);
     setVisibleMessagesCount(prev => prev + 1);
-    setCustomOfferText('');
 
     setTimeout(() => {
       const supplierResp = {
@@ -82,31 +233,78 @@ export function NegotiationRoom({ onSignTermSheet }) {
         speakerName: `${activeNegotiation.repName} (${activeNegotiation.name})`,
         avatar: activeNegotiation.repAvatar,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-        message: `We have reviewed your specific counter-proposal. We accept the requested terms: Unit price fixed at ₹${activeNegotiation.negotiatedOffer.unitPriceINR}, lead time 4 days.`,
-        tag: 'Offer Accepted',
-        metrics: { price: `₹${activeNegotiation.negotiatedOffer.unitPriceINR}`, leadTime: '4 Days' },
+        message: `We have reviewed your specific instruction: "${userText}". We can accommodate this request with our revised terms of ₹${currentOffer.unitPriceINR}/unit with priority factory queueing.`,
+        tag: 'Offer Revised',
+        metrics: { price: `₹${currentOffer.unitPriceINR}`, leadTime: `${currentOffer.leadTimeDays} Days` },
       };
-      activeNegotiation.dialogueScript.splice(visibleMessagesCount + 1, 0, supplierResp);
+      setDialogueMessages(prev => [...prev, supplierResp]);
       setVisibleMessagesCount(prev => prev + 1);
-    }, 1000);
+      setDecisionStatus(null);
+    }, 900);
   };
 
-  const isNegotiationFinished = visibleMessagesCount >= activeNegotiation.dialogueScript.length;
-
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-10 animate-fade-in-up">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-fade-in-up relative">
+      
+      {/* POPUP NOTIFICATION / TOAST BANNER */}
+      {popupToast && (
+        <div className="fixed top-6 right-6 z-50 max-w-md animate-fade-in-up">
+          <div className={`p-4 rounded-2xl shadow-2xl border flex items-start gap-3 backdrop-blur-md ${
+            popupToast.type === 'success'
+              ? 'bg-emerald-950/90 text-emerald-100 border-emerald-500/60 ring-2 ring-emerald-500/30'
+              : popupToast.type === 'danger'
+              ? 'bg-rose-950/90 text-rose-100 border-rose-500/60 ring-2 ring-rose-500/30'
+              : 'bg-slate-900/95 text-white border-orange-500/60 ring-2 ring-orange-500/30'
+          }`}>
+            <div className="shrink-0 mt-0.5">
+              {popupToast.type === 'success' && (
+                <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/40">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+              )}
+              {popupToast.type === 'danger' && (
+                <div className="w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center border border-rose-500/40">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+              )}
+              {popupToast.type === 'info' && (
+                <div className="w-8 h-8 rounded-full bg-orange-500/20 text-brand-400 flex items-center justify-center border border-orange-500/40">
+                  <MessageSquareCode className="w-5 h-5" />
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 space-y-0.5 pr-2">
+              <h4 className="text-xs font-black uppercase tracking-wider font-sans">
+                {popupToast.title}
+              </h4>
+              <p className="text-[11px] opacity-90 leading-relaxed font-medium">
+                {popupToast.message}
+              </p>
+            </div>
+
+            <button
+              onClick={() => setPopupToast(null)}
+              className="text-white/60 hover:text-white shrink-0 p-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="extej-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="p-2.5 rounded-2xl bg-orange-100 text-brand-600">
+          <div className="p-2.5 rounded-2xl bg-orange-100 text-brand-600 shadow-sm">
             <MessageSquareCode className="w-6 h-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-brand-700">
+              <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-brand-700 font-mono">
                 AI Negotiation Simulator
               </span>
-              <span className="text-xs text-slate-400 font-semibold">Autonomous Procurement Dialogue</span>
+              <span className="text-xs text-slate-400 font-semibold">• Autonomous Multi-Round Sourcing</span>
             </div>
             <h2 className="text-xl font-extrabold text-slate-900 mt-0.5 font-sans">
               Supplier Sourcing & Terms Negotiation Room
@@ -117,8 +315,8 @@ export function NegotiationRoom({ onSignTermSheet }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="bg-[#f8fafc] border border-slate-200 rounded-full px-3.5 py-1.5 text-xs flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="bg-[#f8fafc] border border-slate-200 rounded-full px-3.5 py-1.5 text-xs flex items-center gap-2 shadow-xs">
             <Building2 className="w-3.5 h-3.5 text-brand-500" />
             <select
               value={selectedSupplierId}
@@ -137,50 +335,49 @@ export function NegotiationRoom({ onSignTermSheet }) {
 
       {/* Main Grid: Chat Column + Live Term Sheet Column */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
         {/* Left 8 Cols: Dialogue Stream */}
-        <div className="lg:col-span-8 extej-card p-6 space-y-4 flex flex-col justify-between min-h-[580px]">
+        <div className="lg:col-span-8 extej-card p-6 space-y-4 flex flex-col justify-between min-h-[620px]">
+          
           {/* Dialogue Header */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 text-xs">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center font-bold text-brand-700">
+              <div className="w-9 h-9 rounded-full bg-orange-100 border border-orange-200 flex items-center justify-center font-bold text-brand-700 shadow-xs">
                 {activeNegotiation.repAvatar}
               </div>
               <div>
-                <span className="font-extrabold text-slate-900 block">{activeNegotiation.repName}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-extrabold text-slate-900">{activeNegotiation.repName}</span>
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                    Round {currentRoundIndex + 1}
+                  </span>
+                </div>
                 <span className="text-[10px] text-slate-400 font-medium">{activeNegotiation.repRole} • {activeNegotiation.name}</span>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              {!isNegotiationFinished && (
-                <>
-                  <button
-                    onClick={handleAutoPlay}
-                    disabled={isAutoPlaying}
-                    className="btn-secondary-pill px-3 py-1.5 text-[11px] font-bold flex items-center gap-1"
-                  >
-                    <Play className="w-3 h-3 text-brand-500" />
-                    <span>{isAutoPlaying ? 'Playing...' : 'Auto-Play'}</span>
-                  </button>
-                  <button
-                    onClick={handleNextMessage}
-                    className="btn-orange-pill px-3.5 py-1.5 text-[11px] font-bold"
-                  >
-                    Next Turn ➔
-                  </button>
-                </>
+              {decisionStatus === 'approved' && (
+                <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-extrabold flex items-center gap-1 border border-emerald-300">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" /> Consensus Finalised
+                </span>
               )}
-              {isNegotiationFinished && (
-                <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold flex items-center gap-1 border border-emerald-200">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Consensus Finalized
+              {decisionStatus === 'disapproved' && (
+                <span className="px-3 py-1 rounded-full bg-rose-100 text-rose-800 text-[11px] font-extrabold flex items-center gap-1 border border-rose-300">
+                  <AlertTriangle className="w-3.5 h-3.5 text-rose-700" /> Strategy Disapproved
+                </span>
+              )}
+              {decisionStatus === null && (
+                <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-800 text-[11px] font-bold flex items-center gap-1 border border-amber-200">
+                  <Clock className="w-3.5 h-3.5 text-amber-600" /> Pending Review
                 </span>
               )}
             </div>
           </div>
 
           {/* Messages Feed */}
-          <div className="space-y-3.5 flex-1 overflow-y-auto pr-1">
-            {activeNegotiation.dialogueScript.slice(0, visibleMessagesCount).map((msg) => {
+          <div className="space-y-3.5 flex-1 overflow-y-auto max-h-[460px] pr-1">
+            {dialogueMessages.slice(0, visibleMessagesCount).map((msg) => {
               const isAgent = msg.speaker === 'nexus-agent';
               return (
                 <div
@@ -190,15 +387,15 @@ export function NegotiationRoom({ onSignTermSheet }) {
                   }`}
                 >
                   {!isAgent && (
-                    <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-[10px] text-slate-700 shrink-0 mt-1">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-[10px] text-slate-700 shrink-0 mt-1 shadow-xs">
                       {msg.avatar}
                     </div>
                   )}
 
-                  <div className={`max-w-[82%] p-4 rounded-2xl space-y-2 ${
+                  <div className={`max-w-[84%] p-4 rounded-2xl space-y-2 ${
                     isAgent
-                      ? 'bg-orange-50/70 border border-orange-200 text-slate-800 rounded-tr-none shadow-sm'
-                      : 'bg-[#f8fafc] border border-slate-200/80 rounded-tl-none text-slate-800'
+                      ? 'bg-orange-50/70 border border-orange-200 text-slate-800 rounded-tr-none shadow-xs'
+                      : 'bg-[#f8fafc] border border-slate-200/80 rounded-tl-none text-slate-800 shadow-xs'
                   }`}>
                     <div className="flex items-center justify-between gap-2 text-[10px] border-b border-slate-200/60 pb-1">
                       <span className={`font-bold ${isAgent ? 'text-brand-700' : 'text-slate-600'}`}>
@@ -226,13 +423,79 @@ export function NegotiationRoom({ onSignTermSheet }) {
                 </div>
               );
             })}
+
+            {/* In-Flight Negotiating Animation Indicator */}
+            {isNegotiatingRound && (
+              <div className="p-3.5 rounded-2xl bg-orange-50 border border-orange-200 flex items-center gap-3 text-xs text-brand-800 animate-pulse">
+                <RefreshCw className="w-4 h-4 animate-spin text-brand-600" />
+                <span className="font-bold font-sans">
+                  NEXUS Procurement Agent is countering on Round {currentRoundIndex + 2} terms with {activeNegotiation.repName}...
+                </span>
+              </div>
+            )}
+
+            {/* THREE OPTION BUTTONS RIGHT BELOW THE FINAL MESSAGE */}
+            {!isNegotiatingRound && (
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-orange-50/40 border border-slate-200 shadow-sm space-y-2.5 animate-fade-in-up mt-3">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-brand-500" />
+                    <span className="font-extrabold text-slate-900 font-sans">
+                      Executive Procurement Decision (Round {currentRoundIndex + 1})
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold text-slate-400">
+                    ACTION REQUIRED
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2.5 flex-wrap pt-1">
+                  {/* 1. APPROVE BUTTON (Green) */}
+                  <button
+                    onClick={handleApprove}
+                    className={`px-4 py-2 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] ${
+                      decisionStatus === 'approved'
+                        ? 'bg-emerald-600 text-white ring-2 ring-emerald-300 shadow-md font-black'
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    }`}
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Approve</span>
+                  </button>
+
+                  {/* 2. DISAPPROVE BUTTON (Red) */}
+                  <button
+                    onClick={handleDisapprove}
+                    className={`px-4 py-2 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] ${
+                      decisionStatus === 'disapproved'
+                        ? 'bg-rose-600 text-white ring-2 ring-rose-300 shadow-md font-black'
+                        : 'bg-rose-600 hover:bg-rose-700 text-white'
+                    }`}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Disapprove</span>
+                  </button>
+
+                  {/* 3. NEGOTIATE FURTHER BUTTON (Orange theme) */}
+                  <button
+                    onClick={handleNegotiateFurther}
+                    className="btn-orange-pill px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-sm hover:scale-[1.02] transition-transform cursor-pointer"
+                  >
+                    <MessageSquareCode className="w-3.5 h-3.5" />
+                    <span>Negotiate Further ➔</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div ref={chatBottomRef} />
           </div>
 
           {/* User Custom Proposal Input */}
           <form onSubmit={handleSendCustomOffer} className="pt-3 border-t border-slate-100 flex items-center gap-2">
             <input
               type="text"
-              placeholder="Inject custom procurement instruction (e.g. 'Offer 6-month commitment for zero rush surcharge')..."
+              placeholder="Inject custom procurement instruction (e.g. 'Demand 0% rush fee and 6-month dual-sourcing')..."
               value={customOfferText}
               onChange={(e) => setCustomOfferText(e.target.value)}
               className="flex-1 bg-[#f8fafc] border border-slate-200 rounded-full px-4 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-brand-500 focus:bg-white shadow-inner font-medium"
@@ -250,14 +513,19 @@ export function NegotiationRoom({ onSignTermSheet }) {
         {/* Right 4 Cols: Live Concession & Term Sheet Card */}
         <div className="lg:col-span-4 extej-card p-6 space-y-5 flex flex-col justify-between">
           <div className="space-y-4">
-            <div className="pb-3 border-b border-slate-100">
-              <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-brand-500" />
-                Live Commercial Concessions
-              </h3>
-              <p className="text-xs text-slate-400">
-                Autonomous negotiation outcome delta
-              </p>
+            <div className="pb-3 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-brand-500" />
+                  Live Commercial Concessions
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Round {currentRoundIndex + 1} outcome delta
+                </p>
+              </div>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                ACTIVE
+              </span>
             </div>
 
             {/* Before vs After Concessions */}
@@ -265,33 +533,39 @@ export function NegotiationRoom({ onSignTermSheet }) {
               <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-200 space-y-1">
                 <div className="flex justify-between text-slate-500 text-[11px] font-medium">
                   <span>Unit Price per SoC:</span>
-                  <span className="text-emerald-600 font-bold font-mono">₹250 Savings / Unit</span>
+                  <span className="text-emerald-600 font-bold font-mono">
+                    ₹{activeNegotiation.initialOffer.unitPriceINR - currentOffer.unitPriceINR} Savings / Unit
+                  </span>
                 </div>
                 <div className="flex items-center justify-between font-mono font-extrabold pt-1">
                   <span className="text-slate-400 line-through">₹{activeNegotiation.initialOffer.unitPriceINR}</span>
-                  <span className="text-emerald-600 text-base">₹{activeNegotiation.negotiatedOffer.unitPriceINR}</span>
+                  <span className="text-emerald-600 text-base">₹{currentOffer.unitPriceINR}</span>
                 </div>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-200 space-y-1">
                 <div className="flex justify-between text-slate-500 text-[11px] font-medium">
                   <span>Delivery Lead Time:</span>
-                  <span className="text-amber-600 font-bold font-mono">-6 Days Compressed</span>
+                  <span className="text-amber-600 font-bold font-mono">
+                    -{activeNegotiation.initialOffer.leadTimeDays - currentOffer.leadTimeDays} Days Compressed
+                  </span>
                 </div>
                 <div className="flex items-center justify-between font-mono font-extrabold pt-1">
                   <span className="text-slate-400 line-through">{activeNegotiation.initialOffer.leadTimeDays} Days</span>
-                  <span className="text-amber-600 text-base">{activeNegotiation.negotiatedOffer.leadTimeDays} Days</span>
+                  <span className="text-amber-600 text-base">{currentOffer.leadTimeDays} Days</span>
                 </div>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-[#f8fafc] border border-slate-200 space-y-1">
                 <div className="flex justify-between text-slate-500 text-[11px] font-medium">
                   <span>Rush Surcharge:</span>
-                  <span className="text-brand-600 font-bold font-mono">75% Waived</span>
+                  <span className="text-brand-600 font-bold font-mono">
+                    {activeNegotiation.initialOffer.rushSurchargePct - currentOffer.rushSurchargePct}% Waived
+                  </span>
                 </div>
                 <div className="flex items-center justify-between font-mono font-extrabold pt-1">
                   <span className="text-slate-400 line-through">{activeNegotiation.initialOffer.rushSurchargePct}%</span>
-                  <span className="text-brand-600 text-base">{activeNegotiation.negotiatedOffer.rushSurchargePct}%</span>
+                  <span className="text-brand-600 text-base">{currentOffer.rushSurchargePct}%</span>
                 </div>
               </div>
 
@@ -300,7 +574,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
                   Total Cost Avoidance
                 </span>
                 <span className="text-2xl font-extrabold text-emerald-700 font-mono">
-                  ₹{activeNegotiation.negotiatedOffer.estimatedCostSavingsCr} Cr Net Savings
+                  ₹{currentOffer.estimatedCostSavingsCr} Cr Net Savings
                 </span>
               </div>
             </div>
@@ -313,7 +587,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
                 setShowTermSheet(true);
                 setIsSigned(true);
                 try {
-                  const mou = await nexusApi.generateMOU(selectedSupplierId, activeNegotiation.negotiatedOffer);
+                  const mou = await nexusApi.generateMOU(selectedSupplierId, currentOffer);
                   setGeneratedMOU(mou);
                 } catch {
                   // Fallback to local
@@ -341,7 +615,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
                 <div>
                   <h3 className="text-base font-extrabold text-slate-900">Commercial Term Sheet & MOU</h3>
                   <p className="text-xs text-slate-400 font-medium font-mono">
-                    Contract Ref: {generatedMOU?.documentId || 'NEXUS-MOU-2026-089-AZ'}
+                    Contract Ref: {generatedMOU?.documentId || `NEXUS-MOU-2026-R${currentRoundIndex + 1}-AZ`}
                   </p>
                 </div>
               </div>
@@ -360,15 +634,15 @@ export function NegotiationRoom({ onSignTermSheet }) {
                   <span>SELLER: {activeNegotiation.name}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2.5 text-slate-700 pt-1">
-                  <div>Committed Volume: <span className="text-slate-900 font-bold">{activeNegotiation.negotiatedOffer.capacityUnits.toLocaleString()} Units/mo</span></div>
-                  <div>Final Unit Price: <span className="text-emerald-600 font-bold">₹{activeNegotiation.negotiatedOffer.unitPriceINR} INR</span></div>
-                  <div>Lead Time: <span className="text-amber-600 font-bold">{activeNegotiation.negotiatedOffer.leadTimeDays} Days (Air Express)</span></div>
-                  <div>Contract Term: <span className="text-slate-900 font-bold">{activeNegotiation.negotiatedOffer.minimumContractMonths} Months Guaranteed</span></div>
+                  <div>Committed Volume: <span className="text-slate-900 font-bold">{currentOffer.capacityUnits.toLocaleString()} Units/mo</span></div>
+                  <div>Final Unit Price: <span className="text-emerald-600 font-bold">₹{currentOffer.unitPriceINR} INR</span></div>
+                  <div>Lead Time: <span className="text-amber-600 font-bold">{currentOffer.leadTimeDays} Days (Air Express)</span></div>
+                  <div>Contract Term: <span className="text-slate-900 font-bold">{currentOffer.minimumContractMonths} Months Guaranteed</span></div>
                 </div>
               </div>
 
               <div className="p-3.5 rounded-xl bg-orange-50/70 border border-orange-200 text-slate-700 text-[11px] leading-relaxed">
-                ✓ <strong>Legal Agreement:</strong> Seller guarantees Phoenix Line 4 priority allocation. Zero penalty applies to AURA in the event of upstream force majeure. Payment terms: Net 30 days.
+                ✓ <strong>Legal Agreement:</strong> Seller guarantees priority manufacturing line allocation. Zero penalty applies to AURA in the event of upstream force majeure. Payment terms: Net 30 days.
               </div>
             </div>
 
