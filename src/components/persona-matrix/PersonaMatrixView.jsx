@@ -204,33 +204,29 @@ export function PersonaMatrixView() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10 animate-fade-in-up">
       {/* Header Banner */}
-      <div className="extej-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="p-2.5 rounded-2xl bg-orange-100 text-brand-600">
-            <Award className="w-6 h-6" />
+      <div className="extej-card px-4 py-2.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-orange-100 text-brand-600">
+            <Award className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-orange-100 text-brand-700 font-mono">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-brand-700 font-mono">
                 SAP Hackfest 2026 Evaluation Framework
               </span>
-              <span className="text-xs text-slate-400 font-semibold">Criteria 1 to 4 Full Alignment</span>
+              <h2 className="text-sm font-extrabold text-slate-900 font-sans">
+                User Personas & Solution Alignment Matrix
+              </h2>
             </div>
-            <h2 className="text-xl font-extrabold text-slate-900 mt-1 font-sans">
-              User Personas, Problem Blueprint & Solution Alignment Matrix
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              Comprehensive empirical mapping of demographics, behaviors, pain points, and direct feature alignment for maximum hackathon scoring.
-            </p>
           </div>
         </div>
 
         {/* Tab Switcher Pills */}
-        <div className="flex items-center bg-slate-100 p-1 rounded-2xl text-xs font-bold text-slate-600 shrink-0">
+        <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-bold text-slate-600 shrink-0">
           <button
             onClick={() => setActiveTab('personas')}
-            className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer ${
-              activeTab === 'personas' ? 'btn-orange-pill text-white shadow-sm' : 'hover:text-slate-900'
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              activeTab === 'personas' ? 'btn-orange-pill text-white shadow-xs' : 'hover:text-slate-900'
             }`}
           >
             1. Personas (4 Roles)

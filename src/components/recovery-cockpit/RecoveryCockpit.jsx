@@ -140,31 +140,27 @@ export function RecoveryCockpit({
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10 animate-fade-in-up">
       {/* Header Banner */}
-      <div className="extej-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="p-2.5 rounded-2xl bg-orange-100 text-brand-600">
-            <Compass className="w-6 h-6" />
+      <div className="extej-card px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-orange-100 text-brand-600">
+            <Compass className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-brand-700">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-brand-700 font-mono">
                 Recovery Cockpit
               </span>
-              <span className="text-xs text-slate-400 font-semibold">Autonomous Decision Optimizer</span>
+              <h2 className="text-sm font-extrabold text-slate-900 font-sans">
+                AI Multi-Agent Recovery Strategies
+              </h2>
             </div>
-            <h2 className="text-xl font-extrabold text-slate-900 mt-0.5 font-sans">
-              AI Multi-Agent Recovery Strategies
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              Deterministic Pareto-optimal recovery pathways trading off expenditure, velocity, and future resilience.
-            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowExplanationModal(true)}
-            className="btn-secondary-pill px-4 py-2 text-xs font-bold flex items-center gap-1.5"
+            className="btn-secondary-pill px-3.5 py-1.5 text-xs font-bold flex items-center gap-1.5"
           >
             <Info className="w-3.5 h-3.5 text-brand-500" />
             <span>Explainable AI Rationale</span>

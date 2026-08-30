@@ -79,24 +79,20 @@ export function CounterfactualView({ simulationResult, onApplyStrategy, onNaviga
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10 animate-fade-in-up">
       {/* Header Banner */}
-      <div className="extej-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="p-2.5 rounded-2xl bg-orange-100 text-brand-600">
-            <GitCompare className="w-6 h-6" />
+      <div className="extej-card px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-orange-100 text-brand-600">
+            <GitCompare className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-brand-700">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-brand-700 font-mono">
                 Counterfactual Analysis
               </span>
-              <span className="text-xs text-slate-400 font-semibold">Business Outcome Projections</span>
+              <h2 className="text-sm font-extrabold text-slate-900 font-sans">
+                Comparative Scenario Decision Matrix
+              </h2>
             </div>
-            <h2 className="text-xl font-extrabold text-slate-900 mt-0.5 font-sans">
-              Comparative Scenario Decision Matrix
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              Auditable financial and operational outcomes across inaction vs. autonomous AI recovery plans.
-            </p>
           </div>
         </div>
       </div>

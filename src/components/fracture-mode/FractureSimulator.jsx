@@ -133,36 +133,32 @@ export function FractureSimulator({
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-fade-in-up">
       {/* Header Banner */}
-      <div className="extej-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="p-2.5 rounded-2xl bg-orange-100 text-brand-600 shadow-sm">
-            <Flame className="w-6 h-6" />
+      <div className="extej-card px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-orange-100 text-brand-600 shadow-xs">
+            <Flame className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-brand-700 font-mono">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-brand-700 font-mono">
                 Fracture Mode
               </span>
-              <span className="text-xs text-slate-400 font-semibold">• Deterministic Ripple Engine</span>
+              <h2 className="text-sm font-extrabold text-slate-900 font-sans">
+                Disruption Propagation & Ripple Effect Simulator
+              </h2>
             </div>
-            <h2 className="text-xl font-extrabold text-slate-900 mt-0.5 font-sans">
-              Disruption Propagation & Ripple Effect Simulator
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              Stress-test network resilience by simulating supply bottlenecks, corridor outages, and multi-tier cascades.
-            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button
             onClick={handleTriggerSim}
             disabled={isSimulating}
-            className={`btn-orange-pill px-5 py-2.5 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all ${
+            className={`btn-orange-pill px-4 py-1.5 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all ${
               justSimulated ? 'ring-4 ring-orange-300' : ''
             }`}
           >
-            <Play className={`w-4 h-4 ${isSimulating ? 'animate-spin' : ''}`} />
+            <Play className={`w-3.5 h-3.5 ${isSimulating ? 'animate-spin' : ''}`} />
             <span>{isSimulating ? 'Propagating Ripple...' : 'Simulate Fracture'}</span>
           </button>
         </div>

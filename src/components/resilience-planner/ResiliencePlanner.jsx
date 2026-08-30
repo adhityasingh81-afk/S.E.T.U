@@ -53,35 +53,31 @@ export function ResiliencePlanner() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10 animate-fade-in-up">
       {/* Header Banner */}
-      <div className="extej-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="p-2.5 rounded-2xl bg-orange-100 text-brand-600">
-            <SlidersHorizontal className="w-6 h-6" />
+      <div className="extej-card px-4 py-2.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-orange-100 text-brand-600">
+            <SlidersHorizontal className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-brand-700">
-                Resilience Planner (F11)
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-brand-700 font-mono">
+                Resilience Planner
               </span>
-              <span className="text-xs text-slate-400 font-semibold">Proactive Structural Hardening</span>
+              <h2 className="text-sm font-extrabold text-slate-900 font-sans">
+                Structural Vulnerability Analysis & Prevention ROI
+              </h2>
             </div>
-            <h2 className="text-xl font-extrabold text-slate-900 mt-0.5 font-sans">
-              Structural Vulnerability Analysis & Prevention ROI
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              Identify systemic supply-chain single points of failure before crises strike and calculate capital ROI on preemptive hardening.
-            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-[#f8fafc] px-4 py-2.5 rounded-2xl border border-slate-200 text-xs">
+        <div className="flex items-center gap-3 bg-[#f8fafc] px-3.5 py-1.5 rounded-xl border border-slate-200 text-xs">
           <div>
-            <span className="text-[10px] text-slate-400 font-bold block">Committed Upgrades</span>
+            <span className="text-[9px] text-slate-400 font-bold block">Committed Upgrades</span>
             <span className="font-extrabold text-brand-600 font-mono">{approvedUpgrades.length} / 3 Programs</span>
           </div>
-          <div className="h-6 w-px bg-slate-200"></div>
+          <div className="h-5 w-px bg-slate-200"></div>
           <div>
-            <span className="text-[10px] text-slate-400 font-bold block">Net ROI Gain</span>
+            <span className="text-[9px] text-slate-400 font-bold block">Net ROI Gain</span>
             <span className="font-extrabold text-emerald-600 font-mono">+₹{netProjectedBenefitCr} Cr</span>
           </div>
         </div>
