@@ -71,7 +71,7 @@ export function Sidebar({
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200/80 flex flex-col justify-between shrink-0 min-h-[calc(100vh-61px)] select-none shadow-[2px_0_12px_rgba(0,0,0,0.015)]">
+    <aside className="w-64 bg-white border-r border-slate-200/80 flex flex-col shrink-0 select-none shadow-[2px_0_12px_rgba(0,0,0,0.015)]">
       {/* Brand Header */}
       <div className="p-4 pt-5 pb-3 flex items-center gap-3 border-b border-slate-100">
         <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500 to-amber-400 p-0.5 shadow-md shadow-brand-500/20 flex items-center justify-center">
@@ -96,7 +96,7 @@ export function Sidebar({
       </div>
 
       {/* Navigation Sections */}
-      <div className="p-3.5 space-y-6 flex-1 overflow-y-auto">
+      <div className="p-3.5 space-y-4">
         {sections.map((section, sIdx) => (
           <div key={sIdx} className="space-y-1">
             <div className="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
@@ -148,8 +148,8 @@ export function Sidebar({
         ))}
       </div>
 
-      {/* Bottom Summary Widget */}
-      <div className="p-3.5 border-t border-slate-100 bg-[#fbfcfd]">
+      {/* Summary Widget (Placed upwards to align with right panes) */}
+      <div className="p-3.5 pt-1 border-t border-slate-100 bg-[#fbfcfd]">
         <div className="p-3 rounded-2xl bg-white border border-slate-200/70 shadow-sm space-y-2.5">
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-500 font-bold flex items-center gap-1.5">
