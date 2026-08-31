@@ -149,7 +149,7 @@ export function Sidebar({
       </div>
 
       {/* Summary Widget (Positioned at the exact level of the Digital Twin main pane) */}
-      <div className="p-3.5 mt-28 pt-1 border-t border-slate-100 bg-[#fbfcfd]">
+      <div className="p-3.5 mt-36 pt-1 border-t border-slate-100 bg-[#fbfcfd]">
         <div className="p-3 rounded-2xl bg-white border border-slate-200/70 shadow-sm space-y-2.5">
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-500 font-bold flex items-center gap-1.5">
