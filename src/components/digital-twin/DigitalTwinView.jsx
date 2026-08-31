@@ -878,32 +878,32 @@ export function DigitalTwinView({
         </div>
 
         {/* RIGHT COLUMN: Real-Time Node Telemetry & Global Intelligence Inspector */}
-        <div className="lg:col-span-4 extej-card p-5 sm:p-6 space-y-5 animate-fade-in-up">
+        <div className="lg:col-span-4 extej-card p-4 sm:p-5 space-y-4 animate-fade-in-up">
           {selectedNode ? (
             /* ================= STATE A: INTRICATE NODE TELEMETRY INSPECTOR ================= */
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               {/* Header with Coordinates & Actions */}
-              <div className="flex items-start justify-between pb-3 border-b border-slate-100 gap-2">
+              <div className="flex items-start justify-between pb-2.5 border-b border-slate-100 gap-2">
                 <div className="space-y-1 min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getNodeTypeMeta(selectedNode.type).color}`}>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getNodeTypeMeta(selectedNode.type).color}`}>
                       {getNodeTypeMeta(selectedNode.type).label}
                     </span>
                     {selectedNode.tier && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700">
                         Tier {selectedNode.tier}
                       </span>
                     )}
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-orange-50 text-brand-700 border border-orange-200/60">
+                    <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-full bg-orange-50 text-brand-700 border border-orange-200/60">
                       {selectedNode.category.split('&')[0]}
                     </span>
                   </div>
-                  <h3 className="text-base font-extrabold text-slate-900 font-sans mt-1 truncate">
+                  <h3 className="text-sm font-extrabold text-slate-900 font-sans mt-0.5 truncate">
                     {selectedNode.name}
                   </h3>
-                  <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
                     <span className="flex items-center gap-1 truncate">
-                      <MapPin className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                      <MapPin className="w-3 h-3 text-brand-500 shrink-0" />
                       {selectedNode.location}
                     </span>
                     <span className="text-[10px] font-mono text-slate-400 shrink-0">
@@ -918,77 +918,76 @@ export function DigitalTwinView({
                     className="p-1.5 rounded-lg text-brand-600 bg-orange-50 hover:bg-orange-100 transition-colors cursor-pointer"
                     title="Focus on Map"
                   >
-                    <LocateFixed className="w-4 h-4" />
+                    <LocateFixed className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => setSelectedNodeId(null)}
                     className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
                     title="Deselect node"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
-              {/* Status Barometer & Live Diagnosis */}
-              <div className={`p-3.5 rounded-2xl border space-y-2 ${
+              {/* 1. TOP ACTION BUTTON: SIMULATE FRACTURE (Visible at the very top without scrolling) */}
+              <button
+                onClick={() => onTriggerDisruption(selectedNode.id)}
+                className="w-full btn-purple-pill py-2.5 px-3 text-xs font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer hover:scale-[1.01] transition-all"
+              >
+                <Zap className="w-3.5 h-3.5 animate-pulse" />
+                <span>Simulate Fracture on {selectedNode.name.split('(')[0]}</span>
+              </button>
+
+              {/* 2. COMPACT STATUS BAROMETER & LIVE TELEMETRY STATE */}
+              <div className={`px-3 py-2 rounded-xl border flex items-center justify-between gap-2 text-xs ${
                 selectedNode.simulatedStatus === 'disrupted'
-                  ? 'bg-rose-50/70 border-rose-200 text-rose-950'
+                  ? 'bg-rose-50/80 border-rose-200 text-rose-950'
                   : selectedNode.simulatedStatus === 'impaired'
-                  ? 'bg-amber-50/70 border-amber-200 text-amber-950'
-                  : 'bg-emerald-50/60 border-emerald-200 text-emerald-950'
+                  ? 'bg-amber-50/80 border-amber-200 text-amber-950'
+                  : 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
               }`}>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold flex items-center gap-1.5">
-                    <span className={`w-2 h-2 rounded-full ${
-                      selectedNode.simulatedStatus === 'disrupted'
-                        ? 'bg-rose-500 animate-ping'
-                        : selectedNode.simulatedStatus === 'impaired'
-                        ? 'bg-amber-500'
-                        : 'bg-emerald-500'
-                    }`}></span>
-                    Telemetry State:
-                  </span>
-                  <span className={`font-black uppercase tracking-wider text-[11px] ${
-                    selectedNode.simulatedStatus === 'disrupted' 
-                      ? 'text-rose-700' 
-                      : selectedNode.simulatedStatus === 'impaired' 
-                      ? 'text-amber-700' 
-                      : 'text-emerald-700'
-                  }`}>
-                    {selectedNode.simulatedStatus === 'disrupted'
-                      ? 'CRITICAL DISRUPTION'
+                <div className="flex items-center gap-1.5 font-bold truncate">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${
+                    selectedNode.simulatedStatus === 'disrupted'
+                      ? 'bg-rose-500 animate-ping'
                       : selectedNode.simulatedStatus === 'impaired'
-                      ? 'DOWNSTREAM BOTTLENECK'
-                      : 'OPTIMAL SLA'}
+                      ? 'bg-amber-500'
+                      : 'bg-emerald-500'
+                  }`}></span>
+                  <span className="text-[11px] truncate">
+                    {selectedNode.impactNote ? selectedNode.impactNote.split('.')[0] : 'Telemetry: Operating Nominally'}
                   </span>
                 </div>
-                {selectedNode.impactNote ? (
-                  <p className="text-[11px] italic bg-white/80 p-2.5 rounded-xl border border-rose-200/60 font-medium leading-relaxed">
-                    "{selectedNode.impactNote}"
-                  </p>
-                ) : (
-                  <p className="text-[11px] text-emerald-800 font-medium">
-                    All outbound fulfillment shipments, telemetry feeds, and quality buffers are operating nominally.
-                  </p>
-                )}
+                <span className={`font-black uppercase tracking-wider text-[10px] shrink-0 font-mono ${
+                  selectedNode.simulatedStatus === 'disrupted' 
+                    ? 'text-rose-700' 
+                    : selectedNode.simulatedStatus === 'impaired' 
+                    ? 'text-amber-700' 
+                    : 'text-emerald-700'
+                }`}>
+                  {selectedNode.simulatedStatus === 'disrupted'
+                    ? 'FRACTURED'
+                    : selectedNode.simulatedStatus === 'impaired'
+                    ? 'IMPAIRED'
+                    : 'OPTIMAL'}
+                </span>
               </div>
 
-              {/* Operational Capacity Utilization Bar */}
+              {/* Operational Capacity Utilization Bar (Compact) */}
               {selectedNode.capacityUnitsPerMonth && (
-                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-600 font-bold flex items-center gap-1.5">
-                      <Activity className="w-3.5 h-3.5 text-brand-500" />
-                      Capacity Utilization
+                    <span className="text-slate-600 font-bold flex items-center gap-1.5 text-[11px]">
+                      <Activity className="w-3 h-3 text-brand-500" />
+                      Capacity Load: {selectedNode.currentUtilization || 85}%
                     </span>
-                    <span className="font-mono font-black text-slate-900">
-                      {selectedNode.currentUtilization || 85}% Load
+                    <span className="font-mono font-bold text-slate-700 text-[10px]">
+                      {selectedNode.capacityUnitsPerMonth.toLocaleString()} Units/mo
                     </span>
                   </div>
                   
-                  {/* Visual Progress Bar */}
-                  <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden flex">
+                  <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden flex">
                     <div 
                       className={`h-full rounded-full transition-all duration-700 ${
                         selectedNode.simulatedStatus === 'disrupted'
@@ -1000,183 +999,124 @@ export function DigitalTwinView({
                       style={{ width: `${selectedNode.currentUtilization || 85}%` }}
                     ></div>
                   </div>
-
-                  <div className="flex justify-between items-center text-[10px] text-slate-500 font-semibold pt-0.5">
-                    <span>Throughput: {selectedNode.capacityUnitsPerMonth.toLocaleString()} Units/mo</span>
-                    <span>Spare Buffer: {100 - (selectedNode.currentUtilization || 85)}%</span>
-                  </div>
                 </div>
               )}
 
-              {/* 4 Intricate Metric Diagnostic Tiles */}
-              <div className="grid grid-cols-2 gap-2.5 text-xs">
-                {/* Tile 1: Lead Time */}
-                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
-                  <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase">
-                    <span>Transit Lead Time</span>
-                    <Clock className="w-3 h-3 text-slate-400" />
+              {/* 4 Diagnostic Metric Tiles (Compact) */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="p-2.5 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-0.5">
+                  <div className="flex items-center justify-between text-slate-400 text-[9px] font-bold uppercase">
+                    <span>Lead Time</span>
+                    <Clock className="w-2.5 h-2.5 text-slate-400" />
                   </div>
-                  <div className="font-mono font-black text-slate-900 text-sm">
-                    {selectedNode.leadTimeDays || 14} <span className="text-xs font-sans font-semibold text-slate-500">Days</span>
-                  </div>
-                  <div className="text-[10px] text-slate-500 font-medium">
-                    {selectedNode.type === 'supplier' ? '✈️ Air Express Corridor' : '🚢 Maritime Route'}
+                  <div className="font-mono font-bold text-slate-900 text-xs">
+                    {selectedNode.leadTimeDays || 14} <span className="text-[10px] font-normal text-slate-500">Days</span>
                   </div>
                 </div>
 
-                {/* Tile 2: Reliability SLA */}
-                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
-                  <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase">
+                <div className="p-2.5 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-0.5">
+                  <div className="flex items-center justify-between text-slate-400 text-[9px] font-bold uppercase">
                     <span>Historical SLA</span>
-                    <Shield className="w-3 h-3 text-emerald-500" />
+                    <Shield className="w-2.5 h-2.5 text-emerald-500" />
                   </div>
-                  <div className="font-mono font-black text-emerald-600 text-sm">
-                    {selectedNode.reliabilityScore || 98}% <span className="text-xs font-sans font-semibold text-slate-500">Score</span>
-                  </div>
-                  <div className="text-[10px] text-emerald-700 font-medium">
-                    Tier-1 SLA Compliance
+                  <div className="font-mono font-bold text-emerald-600 text-xs">
+                    {selectedNode.reliabilityScore || 98}% <span className="text-[10px] font-normal text-slate-500">Score</span>
                   </div>
                 </div>
 
-                {/* Tile 3: Unit Cost */}
-                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
-                  <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase">
+                <div className="p-2.5 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-0.5">
+                  <div className="flex items-center justify-between text-slate-400 text-[9px] font-bold uppercase">
                     <span>Unit Baseline</span>
-                    <DollarSign className="w-3 h-3 text-brand-500" />
+                    <DollarSign className="w-2.5 h-2.5 text-brand-500" />
                   </div>
-                  <div className="font-mono font-black text-slate-900 text-sm">
+                  <div className="font-mono font-bold text-slate-900 text-xs">
                     ₹{selectedNode.unitCostINR ? selectedNode.unitCostINR.toLocaleString() : '4,200'}
                   </div>
-                  <div className="text-[10px] text-slate-500 font-medium truncate">
-                    {selectedNode.monthlyContractINR || '₹50.4 Cr Run-rate'}
-                  </div>
                 </div>
 
-                {/* Tile 4: Stockout Runway */}
-                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
-                  <div className="flex items-center justify-between text-slate-400 text-[10px] font-bold uppercase">
+                <div className="p-2.5 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-0.5">
+                  <div className="flex items-center justify-between text-slate-400 text-[9px] font-bold uppercase">
                     <span>Stockout Runway</span>
-                    <Boxes className="w-3 h-3 text-amber-500" />
+                    <Boxes className="w-2.5 h-2.5 text-amber-500" />
                   </div>
-                  <div className={`font-mono font-black text-sm ${
+                  <div className={`font-mono font-bold text-xs ${
                     (selectedNode.inventoryRunwayDays || selectedNode.inventoryBufferDays || 25) < 14
                       ? 'text-rose-600'
                       : 'text-amber-600'
                   }`}>
-                    {selectedNode.inventoryRunwayDays || selectedNode.inventoryBufferDays || 25} <span className="text-xs font-sans font-semibold text-slate-500">Days</span>
-                  </div>
-                  <div className="text-[10px] text-slate-500 font-medium">
-                    {(selectedNode.inventoryRunwayDays || selectedNode.inventoryBufferDays || 25) < 14 ? '⚠️ Critical Warning' : 'Safe Buffer Zone'}
+                    {selectedNode.inventoryRunwayDays || selectedNode.inventoryBufferDays || 25} <span className="text-[10px] font-normal text-slate-500">Days</span>
                   </div>
                 </div>
               </div>
 
-              {/* Interconnections & Redundancy Channels */}
-              <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 space-y-2.5 shadow-2xs">
-                <div className="text-[11px] font-bold text-slate-800 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Radio className="w-3.5 h-3.5 text-brand-500" />
+              {/* 3. COMPACT NETWORK INTERCONNECTIONS */}
+              <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 space-y-1.5 shadow-2xs text-xs">
+                <div className="text-[10px] font-bold text-slate-700 flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <Radio className="w-3 h-3 text-brand-500" />
                     Network Interconnections
                   </span>
-                  <span className="text-[10px] text-slate-400">Click to jump</span>
+                  <span className="text-[9px] text-slate-400">Click to focus</span>
                 </div>
 
-                {/* Upstream/Downstream Connected Nodes */}
-                {selectedNode.dependencies && selectedNode.dependencies.length > 0 && (
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Connected Nodes:</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedNode.dependencies.map((depId) => {
-                        const depNode = nodes.find(n => n.id === depId);
-                        if (!depNode) return null;
-                        return (
-                          <button
-                            key={depId}
-                            onClick={() => handleToggleNodeSelect(depId)}
-                            className="px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-orange-50 hover:text-brand-600 text-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
-                            <span>{depNode.name.split('(')[0]}</span>
-                            <ArrowRight className="w-2.5 h-2.5 opacity-60" />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                <div className="flex flex-wrap gap-1">
+                  {selectedNode.dependencies && selectedNode.dependencies.slice(0, 3).map((depId) => {
+                    const depNode = nodes.find(n => n.id === depId);
+                    if (!depNode) return null;
+                    return (
+                      <button
+                        key={depId}
+                        onClick={() => handleToggleNodeSelect(depId)}
+                        className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 hover:bg-orange-50 hover:text-brand-600 text-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
+                        <span>{depNode.name.split('(')[0]}</span>
+                        <ArrowRight className="w-2 h-2 opacity-60" />
+                      </button>
+                    );
+                  })}
 
-                {/* Alternative Qualified Backup Suppliers */}
-                {selectedNode.alternativeSuppliers && selectedNode.alternativeSuppliers.length > 0 && (
-                  <div className="space-y-1 pt-1 border-t border-slate-100">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Backup Redundancies:</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedNode.alternativeSuppliers.map((altId) => {
-                        const altNode = nodes.find(n => n.id === altId);
-                        if (!altNode) return null;
-                        return (
-                          <button
-                            key={altId}
-                            onClick={() => handleToggleNodeSelect(altId)}
-                            className="px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition-colors flex items-center gap-1 cursor-pointer border border-emerald-200/60"
-                          >
-                            <Shield className="w-2.5 h-2.5 text-emerald-600" />
-                            <span>{altNode.name.split('(')[0]} (Ready)</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Site Director / Contact Person */}
-                {(selectedNode.contactPerson || selectedNode.facilityManager) && (
-                  <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-400 font-semibold">Lead Contact:</span>
-                    <span className="font-bold text-slate-800">
-                      {selectedNode.contactPerson || selectedNode.facilityManager}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Direct Simulation Action */}
-              <div className="pt-1">
-                <button
-                  onClick={() => onTriggerDisruption(selectedNode.id)}
-                  className="w-full btn-purple-pill py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer hover:scale-[1.01] transition-all"
-                >
-                  <Zap className="w-4 h-4 animate-pulse" />
-                  <span>Simulate Fracture on {selectedNode.name.split('(')[0]}</span>
-                </button>
+                  {selectedNode.alternativeSuppliers && selectedNode.alternativeSuppliers.slice(0, 2).map((altId) => {
+                    const altNode = nodes.find(n => n.id === altId);
+                    if (!altNode) return null;
+                    return (
+                      <button
+                        key={altId}
+                        onClick={() => handleToggleNodeSelect(altId)}
+                        className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 transition-colors flex items-center gap-1 cursor-pointer border border-emerald-200/60"
+                      >
+                        <Shield className="w-2 h-2 text-emerald-600" />
+                        <span>{altNode.name.split('(')[0]} (Backup)</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           ) : (
-            /* ================= STATE B: INTRICATE GLOBAL NETWORK OVERVIEW ================= */
-            <div className="space-y-4.5">
+            /* ================= STATE B: INTRICATE GLOBAL NETWORK OVERVIEW (SHORTENED, NO QUICK INSPECTOR) ================= */
+            <div className="space-y-3.5">
               {/* Header */}
-              <div className="pb-3 border-b border-slate-100 space-y-1">
+              <div className="pb-2.5 border-b border-slate-100 space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold border bg-orange-50 text-brand-700 border-orange-200">
+                  <span className="px-2 py-0.2 rounded-full text-[10px] font-bold border bg-orange-50 text-brand-700 border-orange-200">
                     Global Mesh Telemetry
                   </span>
                   <span className="text-[10px] font-bold text-slate-400 font-mono">15 Active Nodes</span>
                 </div>
-                <h3 className="text-base font-extrabold text-slate-900 font-sans">
+                <h3 className="text-sm font-extrabold text-slate-900 font-sans">
                   AURA Global Supply Network
                 </h3>
-                <p className="text-xs text-slate-500 font-medium">
-                  Autonomous Multi-Tier Electronics Topology
-                </p>
               </div>
 
               {/* Composite Network Health Radar Card */}
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 text-white space-y-3 shadow-md">
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 text-white space-y-2.5 shadow-md">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Network Resilience Score</span>
-                    <div className="text-xl font-black font-sans flex items-center gap-2">
+                    <div className="text-lg font-black font-sans flex items-center gap-2">
                       <span>{isDisrupted ? '78% Health' : '94% Nominal'}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      <span className={`text-[10px] font-bold px-2 py-0.2 rounded-full ${
                         isDisrupted ? 'bg-rose-500/30 text-rose-300 border border-rose-500/50' : 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50'
                       }`}>
                         {isDisrupted ? 'Elevated Stress' : 'Optimal'}
@@ -1184,13 +1124,13 @@ export function DigitalTwinView({
                     </div>
                   </div>
 
-                  <div className="w-11 h-11 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
-                    <Activity className="w-5 h-5 text-amber-400" />
+                  <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center">
+                    <Activity className="w-4 h-4 text-amber-400" />
                   </div>
                 </div>
 
                 {/* Progress Bar */}
-                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                   <div 
                     className={`h-full rounded-full transition-all duration-700 ${
                       isDisrupted ? 'bg-gradient-to-r from-amber-400 to-rose-500' : 'bg-gradient-to-r from-emerald-400 to-brand-500'
@@ -1206,106 +1146,71 @@ export function DigitalTwinView({
               </div>
 
               {/* 4 Fleet-Wide Vital Metrics */}
-              <div className="grid grid-cols-2 gap-2.5 text-xs">
-                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
-                  <span className="text-slate-400 text-[10px] block font-bold uppercase">Revenue Risk</span>
-                  <span className={`font-black font-mono text-sm ${isDisrupted ? 'text-rose-600' : 'text-slate-900'}`}>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="p-2.5 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-0.5">
+                  <span className="text-slate-400 text-[9px] block font-bold uppercase">Revenue Risk</span>
+                  <span className={`font-black font-mono text-xs ${isDisrupted ? 'text-rose-600' : 'text-slate-900'}`}>
                     {isDisrupted ? '₹18.7 Cr' : '₹0.0 Cr'}
                   </span>
-                  <span className="text-[10px] text-slate-500 block font-medium">Taiwan Foundry Chokepoint</span>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
-                  <span className="text-slate-400 text-[10px] block font-bold uppercase">Avg Stockout Buffer</span>
-                  <span className="font-black font-mono text-slate-900 text-sm">
-                    19.4 <span className="text-xs font-sans font-semibold text-slate-500">Days</span>
+                <div className="p-2.5 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-0.5">
+                  <span className="text-slate-400 text-[9px] block font-bold uppercase">Avg Stockout Buffer</span>
+                  <span className="font-black font-mono text-slate-900 text-xs">
+                    19.4 <span className="text-[10px] font-normal text-slate-500">Days</span>
                   </span>
-                  <span className="text-[10px] text-amber-600 block font-medium">Min 9d (Chennai Line)</span>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
-                  <span className="text-slate-400 text-[10px] block font-bold uppercase">Fleet Availability</span>
-                  <span className="font-black font-mono text-emerald-600 text-sm">
+                <div className="p-2.5 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-0.5">
+                  <span className="text-slate-400 text-[9px] block font-bold uppercase">Fleet Availability</span>
+                  <span className="font-black font-mono text-emerald-600 text-xs">
                     {nodes.filter(n => !n.simulatedStatus || n.simulatedStatus === 'operational').length} / {nodes.length}
                   </span>
-                  <span className="text-[10px] text-slate-500 block font-medium">Operational Hubs</span>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-1">
-                  <span className="text-slate-400 text-[10px] block font-bold uppercase">Fleet SLA Reliability</span>
-                  <span className="font-black font-mono text-emerald-600 text-sm">
+                <div className="p-2.5 rounded-xl bg-[#f8fafc] border border-slate-200/70 space-y-0.5">
+                  <span className="text-slate-400 text-[9px] block font-bold uppercase">Fleet SLA</span>
+                  <span className="font-black font-mono text-emerald-600 text-xs">
                     96.8%
                   </span>
-                  <span className="text-[10px] text-slate-500 block font-medium">All Regional Corridors</span>
                 </div>
               </div>
 
               {/* Multi-Tier Pipeline Volume Distribution */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2.5">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-brand-500" />
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-2 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-800 flex items-center gap-1.5 text-[11px]">
+                    <Layers className="w-3 h-3 text-brand-500" />
                     Multi-Tier Volume Distribution
                   </span>
                   <span className="text-[10px] font-mono text-slate-500">100% Mesh</span>
                 </div>
 
                 {/* Segmented Bar */}
-                <div className="w-full h-2.5 rounded-full overflow-hidden flex bg-slate-200 gap-0.5">
+                <div className="w-full h-2 rounded-full overflow-hidden flex bg-slate-200 gap-0.5">
                   <div className="bg-brand-500 h-full w-[42%]" title="Tier-1 Silicon (42%)"></div>
                   <div className="bg-amber-500 h-full w-[28%]" title="Tier-2 Substrates (28%)"></div>
                   <div className="bg-purple-500 h-full w-[18%]" title="Assembly Plants (18%)"></div>
                   <div className="bg-emerald-500 h-full w-[12%]" title="Warehouses (12%)"></div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-600 font-semibold pt-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-brand-500 shrink-0"></span>
-                    <span>Tier-1 Silicon: 4 Hubs (42%)</span>
+                <div className="grid grid-cols-2 gap-1.5 text-[10px] text-slate-600 font-semibold pt-0.5">
+                  <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0"></span>
+                    <span>Tier-1: 4 Hubs (42%)</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
-                    <span>Tier-2 Passives: 4 Hubs (28%)</span>
+                  <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                    <span>Tier-2: 4 Hubs (28%)</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
-                    <span>Assembly Plants: 3 Hubs (18%)</span>
+                  <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0"></span>
+                    <span>Plants: 3 Hubs (18%)</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                    <span>Logistics Gateways: 4 Hubs (12%)</span>
+                  <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                    <span>Gateways: 4 Hubs (12%)</span>
                   </div>
-                </div>
-              </div>
-
-              {/* Interactive Quick-Jump Node Selector */}
-              <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 space-y-2 shadow-2xs">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-brand-500" />
-                    Quick Node Inspector
-                  </span>
-                  <span className="text-[10px] text-slate-400">Select any node</span>
-                </div>
-                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pt-1">
-                  {nodes.map((n) => (
-                    <button
-                      key={n.id}
-                      onClick={() => handleToggleNodeSelect(n.id)}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
-                        n.simulatedStatus === 'disrupted'
-                          ? 'bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100'
-                          : n.simulatedStatus === 'impaired'
-                          ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
-                          : 'bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-orange-50 hover:text-brand-600'
-                      }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        n.simulatedStatus === 'disrupted' ? 'bg-rose-500' : n.simulatedStatus === 'impaired' ? 'bg-amber-500' : 'bg-emerald-500'
-                      }`}></span>
-                      <span className="truncate max-w-[110px]">{n.name.split('(')[0]}</span>
-                    </button>
-                  ))}
                 </div>
               </div>
             </div>
