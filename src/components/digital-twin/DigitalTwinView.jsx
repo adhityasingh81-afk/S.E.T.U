@@ -323,6 +323,20 @@ export function DigitalTwinView({
     }
   };
 
+  const getSupplierConsignments = (nodeId) => {
+    const map = {
+      'sup-taiwan-semi': 1420,
+      'sup-kyoto-ceramic': 1180,
+      'sup-munich-sensors': 940,
+      'sup-phoenix-semi': 680,
+      'sup-bengaluru-pack': 1850,
+      'sup-seoul-mem': 1320,
+      'sup-shenzhen-conn': 2140,
+      'sup-nordic-power': 790,
+    };
+    return map[nodeId] ? map[nodeId].toLocaleString() : '1,150';
+  };
+
   const activeHighlightedId = selectedNode?.id || hoveredNode?.id;
 
   return (
@@ -973,6 +987,82 @@ export function DigitalTwinView({
                     : 'OPTIMAL'}
                 </span>
               </div>
+
+              {/* 3. SUPPLIER TRUST SCORE & RELIABILITY INDEX GAUGE (SUPPLIERS ONLY) */}
+              {selectedNode.type === 'supplier' && (
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-orange-50/60 via-white to-amber-50/40 border border-orange-200/80 shadow-2xs space-y-2">
+                  <div className="flex items-center justify-between text-xs pb-1 border-b border-orange-100/70">
+                    <span className="font-extrabold text-slate-800 flex items-center gap-1.5 text-[11px]">
+                      <Award className="w-3.5 h-3.5 text-brand-500" />
+                      Trust Score & Reliability Index
+                    </span>
+                    <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      Tier-{selectedNode.tier || 1} Verified
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {/* Semicircular Meter Gauge */}
+                    <div className="relative w-28 h-15 shrink-0 flex items-center justify-center">
+                      <svg viewBox="0 0 100 56" className="w-full h-full">
+                        <defs>
+                          <linearGradient id="trustMeterGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#ff7a1a" />
+                            <stop offset="60%" stopColor="#f59e0b" />
+                            <stop offset="100%" stopColor="#10b981" />
+                          </linearGradient>
+                        </defs>
+                        {/* Background Semicircle Arc */}
+                        <path
+                          d="M 12 48 A 38 38 0 0 1 88 48"
+                          fill="none"
+                          stroke="#e2e8f0"
+                          strokeWidth="7"
+                          strokeLinecap="round"
+                        />
+                        {/* Dynamic Active Arc */}
+                        <path
+                          d="M 12 48 A 38 38 0 0 1 88 48"
+                          fill="none"
+                          stroke="url(#trustMeterGrad)"
+                          strokeWidth="7"
+                          strokeLinecap="round"
+                          strokeDasharray="119.38"
+                          strokeDashoffset={119.38 * (1 - (selectedNode.reliabilityScore || 96) / 100)}
+                          className="transition-all duration-1000 ease-out"
+                        />
+                      </svg>
+
+                      {/* Center Numerical Score */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-end pb-0.5">
+                        <span className="font-black font-mono text-base text-slate-900 leading-none">
+                          {selectedNode.reliabilityScore || 96}%
+                        </span>
+                        <span className="text-[8px] font-extrabold uppercase text-slate-400 tracking-wider">
+                          Trust Index
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Historical Consignments & SLA Stats */}
+                    <div className="flex-1 space-y-1 text-xs">
+                      <div className="flex justify-between items-center bg-white px-2.5 py-1 rounded-lg border border-slate-200/70 shadow-2xs">
+                        <span className="text-[10px] text-slate-500 font-medium">Past Consignments:</span>
+                        <span className="font-mono font-black text-slate-900 text-xs">
+                          {getSupplierConsignments(selectedNode.id)} Batches
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center bg-white px-2.5 py-1 rounded-lg border border-slate-200/70 shadow-2xs">
+                        <span className="text-[10px] text-slate-500 font-medium">Fulfillment SLA:</span>
+                        <span className="font-mono font-black text-emerald-600 text-xs">
+                          {(selectedNode.reliabilityScore ? (selectedNode.reliabilityScore * 0.995 + 0.5).toFixed(1) : '98.8')}% On-Time
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Operational Capacity Utilization Bar (Compact) */}
               {selectedNode.capacityUnitsPerMonth && (
