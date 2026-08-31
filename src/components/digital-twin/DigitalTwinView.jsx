@@ -326,7 +326,7 @@ export function DigitalTwinView({
   const activeHighlightedId = selectedNode?.id || hoveredNode?.id;
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto pb-10 animate-fade-in-up">
+    <div className="space-y-4 max-w-7xl mx-auto animate-fade-in-up">
       {/* Top Filter Bar */}
       <div className="extej-card px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
