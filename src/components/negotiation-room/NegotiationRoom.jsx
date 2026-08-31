@@ -20,7 +20,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   RefreshCw,
-  FastForward
+  FastForward,
+  Award
 } from 'lucide-react';
 import { NEGOTIATION_SUPPLIERS, getSupplierNegotiation } from '../../engine/negotiationEngine';
 import { nexusApi } from '../../api/nexusApi';
@@ -572,15 +573,90 @@ export function NegotiationRoom({ onSignTermSheet }) {
         </div>
 
         {/* Right 4 Cols: Live Concession & Term Sheet Card */}
-        <div className="lg:col-span-4 extej-card p-5 space-y-4 flex flex-col justify-between">
+        <div className="lg:col-span-4 extej-card p-4 sm:p-5 space-y-3.5 flex flex-col justify-between">
           <div className="space-y-3">
-            <div className="pb-2.5 border-b border-slate-100 flex items-center justify-between">
+            {/* Supplier Trust & Reliability Index Card (Enlarged Gauge) */}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-orange-50/70 via-white to-amber-50/50 border border-orange-200/90 shadow-2xs space-y-2.5">
+              <div className="flex items-center justify-between text-xs pb-1.5 border-b border-orange-100/80">
+                <span className="font-extrabold text-slate-800 flex items-center gap-1.5 text-xs">
+                  <Award className="w-4 h-4 text-brand-500" />
+                  Supplier Reliability & Trust Index
+                </span>
+                <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  {activeNegotiation.reliabilityScore >= 97 ? 'Gold SLA' : 'Tier-1 Rated'}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3.5">
+                {/* Semicircular Meter Gauge (Enlarged) */}
+                <div className="relative w-32 h-18 shrink-0 flex items-center justify-center">
+                  <svg viewBox="0 0 120 68" className="w-full h-full">
+                    <defs>
+                      <linearGradient id="negTrustMeterGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#ff7a1a" />
+                        <stop offset="60%" stopColor="#f59e0b" />
+                        <stop offset="100%" stopColor="#10b981" />
+                      </linearGradient>
+                    </defs>
+                    {/* Background Semicircle Arc */}
+                    <path
+                      d="M 14 58 A 46 46 0 0 1 106 58"
+                      fill="none"
+                      stroke="#e2e8f0"
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                    />
+                    {/* Active Gradient Arc */}
+                    <path
+                      d="M 14 58 A 46 46 0 0 1 106 58"
+                      fill="none"
+                      stroke="url(#negTrustMeterGrad)"
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      strokeDasharray="144.5"
+                      strokeDashoffset={144.5 * (1 - (activeNegotiation.reliabilityScore || 95) / 100)}
+                      className="transition-all duration-1000 ease-out"
+                    />
+                  </svg>
+
+                  {/* Centered Score */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-end pb-1">
+                    <span className="font-black font-mono text-lg text-slate-900 leading-none">
+                      {activeNegotiation.reliabilityScore || 95}%
+                    </span>
+                    <span className="text-[8px] font-extrabold uppercase text-slate-400 tracking-wider">
+                      Trust Score
+                    </span>
+                  </div>
+                </div>
+
+                {/* Consignment Batches & Reliability Metrics */}
+                <div className="flex-1 space-y-1.5 text-xs">
+                  <div className="flex justify-between items-center bg-white px-2.5 py-1 rounded-lg border border-orange-100 shadow-2xs">
+                    <span className="text-[10px] text-slate-500 font-medium">Consignments:</span>
+                    <span className="font-mono font-black text-slate-900 text-xs">
+                      {(activeNegotiation.historicalConsignments || 1200).toLocaleString()} Batches
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center bg-white px-2.5 py-1 rounded-lg border border-orange-100 shadow-2xs">
+                    <span className="text-[10px] text-slate-500 font-medium">On-Time SLA:</span>
+                    <span className="font-mono font-black text-emerald-600 text-xs">
+                      {activeNegotiation.onTimeRate || 98.5}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Commercial Concessions Header */}
+            <div className="pb-1.5 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5 text-brand-500" />
                   Live Commercial Concessions
                 </h3>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[10px] text-slate-400">
                   Round {currentRoundIndex + 1} outcome delta
                 </p>
               </div>
@@ -590,51 +666,38 @@ export function NegotiationRoom({ onSignTermSheet }) {
             </div>
 
             {/* Before vs After Concessions */}
-            <div className="space-y-2 text-xs">
-              <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200 space-y-0.5">
+            <div className="space-y-1.5 text-xs">
+              <div className="p-2.5 rounded-xl bg-[#f8fafc] border border-slate-200 space-y-0.5">
                 <div className="flex justify-between text-slate-500 text-[10px] font-medium">
                   <span>Unit Price per SoC:</span>
                   <span className="text-emerald-600 font-bold font-mono">
                     ₹{activeNegotiation.initialOffer.unitPriceINR - currentOffer.unitPriceINR} Savings
                   </span>
                 </div>
-                <div className="flex items-center justify-between font-mono font-extrabold pt-0.5">
+                <div className="flex items-center justify-between font-mono font-extrabold">
                   <span className="text-slate-400 line-through text-xs">₹{activeNegotiation.initialOffer.unitPriceINR}</span>
                   <span className="text-emerald-600 text-sm">₹{currentOffer.unitPriceINR}</span>
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200 space-y-0.5">
+              <div className="p-2.5 rounded-xl bg-[#f8fafc] border border-slate-200 space-y-0.5">
                 <div className="flex justify-between text-slate-500 text-[10px] font-medium">
                   <span>Delivery Lead Time:</span>
                   <span className="text-amber-600 font-bold font-mono">
                     -{activeNegotiation.initialOffer.leadTimeDays - currentOffer.leadTimeDays}d Compressed
                   </span>
                 </div>
-                <div className="flex items-center justify-between font-mono font-extrabold pt-0.5">
+                <div className="flex items-center justify-between font-mono font-extrabold">
                   <span className="text-slate-400 line-through text-xs">{activeNegotiation.initialOffer.leadTimeDays} Days</span>
                   <span className="text-amber-600 text-sm">{currentOffer.leadTimeDays} Days</span>
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200 space-y-0.5">
-                <div className="flex justify-between text-slate-500 text-[10px] font-medium">
-                  <span>Rush Surcharge:</span>
-                  <span className="text-brand-600 font-bold font-mono">
-                    {activeNegotiation.initialOffer.rushSurchargePct - currentOffer.rushSurchargePct}% Waived
-                  </span>
-                </div>
-                <div className="flex items-center justify-between font-mono font-extrabold pt-0.5">
-                  <span className="text-slate-400 line-through text-xs">{activeNegotiation.initialOffer.rushSurchargePct}%</span>
-                  <span className="text-brand-600 text-sm">{currentOffer.rushSurchargePct}%</span>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-center space-y-0.5">
+              <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-center space-y-0.5">
                 <span className="text-[9px] text-emerald-800 font-extrabold uppercase tracking-wider block">
                   Total Cost Avoidance
                 </span>
-                <span className="text-xl font-extrabold text-emerald-700 font-mono">
+                <span className="text-lg font-extrabold text-emerald-700 font-mono">
                   ₹{currentOffer.estimatedCostSavingsCr} Cr Net Savings
                 </span>
               </div>
@@ -642,7 +705,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
           </div>
 
           {/* Action to Sign MOU (Clearly in Viewport) */}
-          <div className="pt-2 border-t border-slate-100">
+          <div className="pt-1.5 border-t border-slate-100">
             <button
               onClick={async () => {
                 setShowTermSheet(true);
@@ -655,7 +718,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
                 }
                 if (onSignTermSheet) onSignTermSheet(activeNegotiation);
               }}
-              className="w-full btn-purple-pill py-3 px-3 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:scale-[1.01] transition-transform cursor-pointer"
+              className="w-full btn-purple-pill py-2.5 px-3 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:scale-[1.01] transition-transform cursor-pointer"
             >
               <FileText className="w-4 h-4" />
               <span>{isSigned ? '✓ Term Sheet Executed' : 'Generate & Execute Binding MOU'}</span>
