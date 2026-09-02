@@ -46,6 +46,7 @@ import { geoMercator, geoPath, geoGraticule10 } from 'd3-geo';
 import worldAtlasData from 'world-atlas/countries-110m.json';
 import { NODES, LOGISTICS_ROUTES } from '../../data/auraSupplyChainData';
 import { voiceService } from '../../engine/voiceService';
+import { simulateRippleEffect } from '../../engine/rippleSimulation';
 
 export function DigitalTwinView({
   simulatedNodes,
@@ -948,8 +949,9 @@ export function DigitalTwinView({
               {/* 1. TOP ACTION BUTTON: SIMULATE FRACTURE (Visible at the very top without scrolling) */}
               <button
                 onClick={() => {
-                  const estRisk = selectedNode.tier === 1 ? '18.7' : selectedNode.type === 'supplier' ? '10.8' : '14.2';
-                  voiceService.announceFracture(selectedNode.name, estRisk);
+                  const sim = simulateRippleEffect(selectedNode.id, 45, 30, 'Simulated Node Fracture', 'capacity', []);
+                  const exactRisk = sim?.metrics?.totalRevenueAtRiskCr ?? 18.7;
+                  voiceService.announceFracture(selectedNode.name, exactRisk);
                   onTriggerDisruption(selectedNode.id);
                 }}
                 className="w-full btn-purple-pill py-2.5 px-3 text-xs font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer hover:scale-[1.01] transition-all"
