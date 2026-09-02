@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Flame, 
   Play, 
@@ -29,7 +29,9 @@ import {
   DollarSign,
   Boxes,
   HelpCircle,
-  Activity
+  Activity,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { NODES } from '../../data/auraSupplyChainData';
 import { CRISIS_SCENARIOS } from '../../data/scenariosData';
@@ -85,7 +87,7 @@ export function FractureSimulator({
   onNavigateToRecovery,
   isDisrupted
 }) {
-  const [selectedNodeId, setSelectedNodeId] = useState(activeScenario?.affectedNodeId || 'sup-taiwan-semi');
+  const [selectedNodeId, setSelectedNodeId] = useState(activeScenario?.affectedNodeId || simulationResult?.affectedNodeId || 'sup-taiwan-semi');
   const [severityPct, setSeverityPct] = useState(activeScenario?.severityPct || 40);
   const [durationDays, setDurationDays] = useState(activeScenario?.durationDays || 45);
   const [eventType, setEventType] = useState(activeScenario?.eventType || 'Supplier Capacity Cut / Geopolitical');
@@ -94,6 +96,18 @@ export function FractureSimulator({
   const [selectedTimelineNodeId, setSelectedTimelineNodeId] = useState('node-t0');
   const [isSimulating, setIsSimulating] = useState(false);
   const [justSimulated, setJustSimulated] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const revenueCardRef = useRef(null);
+
+  // Sync external scenario/simulation node selection
+  useEffect(() => {
+    if (activeScenario?.affectedNodeId) {
+      setSelectedNodeId(activeScenario.affectedNodeId);
+    } else if (simulationResult?.affectedNodeId) {
+      setSelectedNodeId(simulationResult.affectedNodeId);
+    }
+  }, [activeScenario?.affectedNodeId, simulationResult?.affectedNodeId]);
 
   // Compute local calculation
   const localCalculation = simulateRippleEffect(
@@ -114,18 +128,55 @@ export function FractureSimulator({
   // Selected timeline node drilldown
   const activeTimelineNode = cascadeNodes.find(n => n.id === selectedTimelineNodeId) || cascadeNodes[0];
 
-  const handleTriggerSim = () => {
+  const targetNode = NODES.find(n => n.id === selectedNodeId) || NODES[0];
+  const targetNodeName = targetNode ? targetNode.name.split('(')[0].trim() : 'Taiwan Micro Foundry';
+  const riskAmountCr = currentResult?.metrics?.totalRevenueAtRiskCr || 18.7;
+
+  // Voice Mode: Text-to-Speech Announcement
+  const triggerVoiceAnnouncement = (nodeName, riskAmount) => {
+    if (!voiceMode) return;
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const text = `Fracture simulation initiated at ${nodeName}, estimated revenue risk - ${riskAmount} crore`;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+
+      const voices = window.speechSynthesis.getVoices();
+      const naturalVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('Premium')));
+      if (naturalVoice) utterance.voice = naturalVoice;
+
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const handleTriggerSim = (shouldScroll = false) => {
     setIsSimulating(true);
     setJustSimulated(true);
+
+    // Speak Voice Announcement
+    triggerVoiceAnnouncement(targetNodeName, riskAmountCr);
+
+    // Run simulation callback
+    onRunSimulation(selectedNodeId, severityPct, durationDays, eventType, fractureType, []);
+
+    // Smoothly scroll up to the highlighted revenue risk exposure
+    if (shouldScroll && revenueCardRef.current) {
+      revenueCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     setTimeout(() => {
-      onRunSimulation(selectedNodeId, severityPct, durationDays, eventType, fractureType, []);
       setIsSimulating(false);
     }, 400);
   };
 
   useEffect(() => {
     if (justSimulated) {
-      const timer = setTimeout(() => setJustSimulated(false), 2400);
+      const timer = setTimeout(() => setJustSimulated(false), 3000);
       return () => clearTimeout(timer);
     }
   }, [justSimulated]);
@@ -151,8 +202,35 @@ export function FractureSimulator({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Voice Mode Toggle / Indicator */}
           <button
-            onClick={handleTriggerSim}
+            onClick={() => {
+              if (isSpeaking) {
+                window.speechSynthesis.cancel();
+                setIsSpeaking(false);
+              } else if (voiceMode) {
+                triggerVoiceAnnouncement(targetNodeName, riskAmountCr);
+              } else {
+                setVoiceMode(true);
+              }
+            }}
+            className={`px-3 py-1.5 text-xs font-bold rounded-full border flex items-center gap-1.5 transition-all cursor-pointer ${
+              isSpeaking
+                ? 'bg-orange-500 text-white border-orange-600 shadow-sm animate-pulse'
+                : voiceMode
+                ? 'bg-orange-50 text-brand-700 border-orange-200 hover:bg-orange-100'
+                : 'bg-slate-100 text-slate-500 border-slate-200'
+            }`}
+            title={voiceMode ? 'Voice Mode Active (Click to replay announcement)' : 'Enable Voice Mode'}
+          >
+            {voiceMode ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">
+              {isSpeaking ? 'Announcing...' : voiceMode ? 'Voice Mode' : 'Voice Off'}
+            </span>
+          </button>
+
+          <button
+            onClick={() => handleTriggerSim(true)}
             disabled={isSimulating}
             className={`btn-orange-pill px-4 py-1.5 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all ${
               justSimulated ? 'ring-4 ring-orange-300' : ''
@@ -312,11 +390,17 @@ export function FractureSimulator({
               </div>
             </div>
 
+            {/* Orange Simulate Fracture Button with Voice & Auto-Scroll */}
             <button
-              onClick={handleTriggerSim}
-              className="w-full btn-secondary-pill py-2.5 text-xs font-bold cursor-pointer"
+              onClick={() => handleTriggerSim(true)}
+              disabled={isSimulating}
+              className={`w-full btn-orange-pill py-3 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md hover:scale-[1.01] transition-all ${
+                justSimulated ? 'ring-4 ring-orange-300' : ''
+              }`}
             >
-              Apply & Recalculate Ripple
+              <Play className={`w-3.5 h-3.5 ${isSimulating ? 'animate-spin' : ''}`} />
+              <span>{isSimulating ? 'Propagating Ripple...' : 'Simulate Fracture'}</span>
+              <Volume2 className="w-3.5 h-3.5 opacity-80" />
             </button>
           </div>
 
@@ -447,12 +531,17 @@ export function FractureSimulator({
         <div className="lg:col-span-7 space-y-5">
           
           {/* TOP RIGHT HERO CARD: Revenue Exposure Meter + DIRECT QUICK-ACCESS RECOVERY BUTTON */}
-          <div className={`extej-card p-6 space-y-4 transition-all duration-500 relative overflow-hidden ${
-            justSimulated ? 'ring-2 ring-rose-500 animate-shockwave-pulse' : ''
-          }`}>
+          <div 
+            ref={revenueCardRef}
+            className={`extej-card p-6 space-y-4 transition-all duration-500 relative overflow-hidden ${
+              justSimulated 
+                ? 'ring-4 ring-orange-500/90 shadow-2xl scale-[1.01] bg-gradient-to-br from-orange-50/70 via-white to-rose-50/40 animate-shockwave-pulse' 
+                : 'hover:border-slate-300'
+            }`}
+          >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
               <div className="space-y-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-extrabold text-rose-600 uppercase tracking-wider flex items-center gap-1.5">
                     <span className="p-1 rounded-md bg-rose-100 text-rose-600">
                       <Activity className="w-3.5 h-3.5" />
@@ -462,10 +551,22 @@ export function FractureSimulator({
                   <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200 font-mono">
                     {durationDays}d Horizon
                   </span>
+                  {justSimulated && (
+                    <span className="px-2 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-black uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-sm">
+                      <Sparkles className="w-3 h-3" />
+                      Updated Exposure
+                    </span>
+                  )}
+                  {isSpeaking && (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-bold flex items-center gap-1 animate-pulse">
+                      <Volume2 className="w-3 h-3 text-brand-600" />
+                      Announcing
+                    </span>
+                  )}
                 </div>
 
                 <div className="text-3xl sm:text-4xl font-black text-rose-600 tracking-tight font-sans">
-                  ₹{currentResult?.metrics?.totalRevenueAtRiskCr || 18.7} <span className="text-base text-rose-500 font-bold">Cr</span>
+                  ₹{riskAmountCr} <span className="text-base text-rose-500 font-bold">Cr</span>
                 </div>
                 <p className="text-xs text-slate-500 font-medium">
                   Daily loss rate: <strong className="text-slate-800 font-mono">₹{currentResult?.metrics?.dailyLossRateCr || 1.25} Cr/day</strong> • Downtime: <strong className="text-amber-600 font-mono">{currentResult?.metrics?.unassistedRecoveryDays || 27} Days</strong>
