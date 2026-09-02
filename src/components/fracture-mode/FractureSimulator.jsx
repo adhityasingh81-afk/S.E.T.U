@@ -99,6 +99,7 @@ export function FractureSimulator({
   const [justSimulated, setJustSimulated] = useState(false);
   const [voiceMode, setVoiceMode] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const topContainerRef = useRef(null);
   const revenueCardRef = useRef(null);
 
   const isFractureActive = Boolean(isDisrupted && activeScenario !== null);
@@ -169,9 +170,15 @@ export function FractureSimulator({
     // Run simulation callback
     onRunSimulation(selectedNodeId, severityPct, durationDays, eventType, fractureType, []);
 
-    // Smoothly scroll up to the highlighted revenue risk exposure
-    if (shouldScroll && revenueCardRef.current) {
-      revenueCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Smoothly scroll more upwards to the very top so the user sees the entire thing
+    if (shouldScroll) {
+      const scrollableParent = revenueCardRef.current?.closest('main');
+      if (scrollableParent && typeof scrollableParent.scrollTo === 'function') {
+        scrollableParent.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      if (topContainerRef.current && typeof topContainerRef.current.scrollIntoView === 'function') {
+        topContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     setTimeout(() => {
@@ -187,7 +194,7 @@ export function FractureSimulator({
   }, [justSimulated]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-fade-in-up">
+    <div ref={topContainerRef} className="space-y-6 max-w-7xl mx-auto pb-12 animate-fade-in-up">
       {/* Header Banner */}
       <div className="extej-card px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
