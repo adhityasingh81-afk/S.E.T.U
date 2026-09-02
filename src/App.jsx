@@ -88,6 +88,7 @@ export default function App() {
     setIsDisrupted(true);
     setActiveStrategy(null);
     const now = Date.now();
+    const targetNode = NODES.find(n => n.id === nodeId);
     const customScenario = {
       id: `fracture-${nodeId}-${now}`,
       title: `Fracture: ${targetNode ? targetNode.name.split('(')[0].trim() : nodeId}`,
