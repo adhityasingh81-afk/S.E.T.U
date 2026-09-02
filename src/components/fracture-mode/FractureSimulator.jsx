@@ -36,6 +36,7 @@ import {
 import { NODES } from '../../data/auraSupplyChainData';
 import { CRISIS_SCENARIOS } from '../../data/scenariosData';
 import { simulateRippleEffect } from '../../engine/rippleSimulation';
+import { voiceService } from '../../engine/voiceService';
 
 const FRACTURE_TYPES = [
   {
@@ -141,23 +142,11 @@ export function FractureSimulator({
   // Voice Mode: Text-to-Speech Announcement
   const triggerVoiceAnnouncement = (nodeName, riskAmount) => {
     if (!voiceMode) return;
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const text = `Fracture simulation initiated at ${nodeName}, estimated revenue risk - ${riskAmount} crore`;
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.95;
-      utterance.pitch = 1.0;
-
-      const voices = window.speechSynthesis.getVoices();
-      const naturalVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('Premium')));
-      if (naturalVoice) utterance.voice = naturalVoice;
-
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
-
-      window.speechSynthesis.speak(utterance);
-    }
+    voiceService.announceFracture(nodeName, riskAmount, {
+      onStart: () => setIsSpeaking(true),
+      onEnd: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false)
+    });
   };
 
   const handleTriggerSim = (shouldScroll = false) => {
@@ -229,7 +218,7 @@ export function FractureSimulator({
           <button
             onClick={() => {
               if (isSpeaking) {
-                window.speechSynthesis.cancel();
+                voiceService.stop();
                 setIsSpeaking(false);
               } else if (voiceMode) {
                 triggerVoiceAnnouncement(targetNodeName, riskAmountCr);

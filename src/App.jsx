@@ -18,6 +18,7 @@ import { CRISIS_SCENARIOS } from './data/scenariosData';
 import { simulateRippleEffect } from './engine/rippleSimulation';
 import { calculateResilienceScore } from './engine/resilienceCalculator';
 import { generateRecoveryStrategies } from './engine/recoveryOptimizer';
+import { voiceService } from './engine/voiceService';
 import { nexusApi } from './api/nexusApi';
 
 export default function App() {
@@ -111,12 +112,8 @@ export default function App() {
     setIsDisrupted(false);
     setActiveStrategy(null);
     setActiveScenario(null);
-    if (speak && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance("Simulation reset.");
-      utterance.rate = 0.95;
-      utterance.pitch = 1.0;
-      window.speechSynthesis.speak(utterance);
+    if (speak) {
+      voiceService.announceReset();
     }
     try {
       const nominalResult = await nexusApi.runSimulation('sup-taiwan-semi', 0, 0, 'Nominal Baseline');

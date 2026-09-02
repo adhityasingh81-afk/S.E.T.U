@@ -45,6 +45,7 @@ import { feature } from 'topojson-client';
 import { geoMercator, geoPath, geoGraticule10 } from 'd3-geo';
 import worldAtlasData from 'world-atlas/countries-110m.json';
 import { NODES, LOGISTICS_ROUTES } from '../../data/auraSupplyChainData';
+import { voiceService } from '../../engine/voiceService';
 
 export function DigitalTwinView({
   simulatedNodes,
@@ -947,15 +948,8 @@ export function DigitalTwinView({
               {/* 1. TOP ACTION BUTTON: SIMULATE FRACTURE (Visible at the very top without scrolling) */}
               <button
                 onClick={() => {
-                  const cleanName = selectedNode.name.split('(')[0].trim();
                   const estRisk = selectedNode.tier === 1 ? '18.7' : selectedNode.type === 'supplier' ? '10.8' : '14.2';
-                  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                    const text = `Fracture simulation initiated at ${cleanName}, estimated revenue risk - ${estRisk} crore`;
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.rate = 0.95;
-                    window.speechSynthesis.speak(utterance);
-                  }
+                  voiceService.announceFracture(selectedNode.name, estRisk);
                   onTriggerDisruption(selectedNode.id);
                 }}
                 className="w-full btn-purple-pill py-2.5 px-3 text-xs font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer hover:scale-[1.01] transition-all"
