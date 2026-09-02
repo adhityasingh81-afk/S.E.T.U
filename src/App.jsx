@@ -87,15 +87,16 @@ export default function App() {
   const handleRunCustomSimulation = async (nodeId, severity = 45, duration = 30, eventType = 'Simulated Node Fracture', fractureType = 'capacity', activeContainmentIds = []) => {
     setIsDisrupted(true);
     setActiveStrategy(null);
-    const targetNode = NODES.find(n => n.id === nodeId);
+    const now = Date.now();
     const customScenario = {
-      id: `fracture-${nodeId}`,
+      id: `fracture-${nodeId}-${now}`,
       title: `Fracture: ${targetNode ? targetNode.name.split('(')[0].trim() : nodeId}`,
       affectedNodeId: nodeId,
       severityPct: severity,
       durationDays: duration,
       eventType: eventType,
       fractureType: fractureType,
+      simulatedAt: now
     };
     setActiveScenario(customScenario);
     try {

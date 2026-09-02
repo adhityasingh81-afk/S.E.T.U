@@ -124,6 +124,18 @@ export function FractureSimulator({
       if (activeScenario.fractureType) setFractureType(activeScenario.fractureType);
       if (activeScenario.eventType) setEventType(activeScenario.eventType);
     }
+
+    // Trigger highlight glow animation when fracture is simulated from Digital Twin or external trigger
+    if (activeScenario?.simulatedAt && (Date.now() - activeScenario.simulatedAt < 10000)) {
+      setJustSimulated(true);
+      const scrollTimer = setTimeout(() => {
+        const scrollableParent = revenueCardRef.current?.closest('main');
+        if (scrollableParent && typeof scrollableParent.scrollTo === 'function') {
+          scrollableParent.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 60);
+      return () => clearTimeout(scrollTimer);
+    }
   }, [activeScenario]);
 
   // Compute local calculation
