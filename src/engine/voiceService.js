@@ -1,10 +1,26 @@
 /**
  * Centralized Voice Service for Nexus Resilience Platform
- * Provides consistent, natural, executive AI narration across all modules.
+ * Provides consistent, natural, executive AI narration across all modules,
+ * with system-wide enable/mute control.
  */
 
 let selectedVoice = null;
 let voicesLoaded = false;
+
+// Global Voice State with localStorage persistence
+let isVoiceEnabled = true;
+try {
+  const saved = localStorage.getItem('nexus_voice_enabled');
+  if (saved !== null) isVoiceEnabled = JSON.parse(saved);
+} catch {}
+
+const listeners = new Set();
+
+function notifyListeners() {
+  listeners.forEach(cb => {
+    try { cb(isVoiceEnabled); } catch {}
+  });
+}
 
 // Curated list of premium, natural-sounding English voice models
 const PREFERRED_VOICE_NAMES = [
@@ -75,6 +91,43 @@ if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
 
 export const voiceService = {
   /**
+   * Check if system-wide voice mode is enabled
+   */
+  isEnabled() {
+    return isVoiceEnabled;
+  },
+
+  /**
+   * Set system-wide voice state
+   */
+  setEnabled(enabled) {
+    isVoiceEnabled = Boolean(enabled);
+    try {
+      localStorage.setItem('nexus_voice_enabled', JSON.stringify(isVoiceEnabled));
+    } catch {}
+    if (!isVoiceEnabled) {
+      this.stop();
+    }
+    notifyListeners();
+    return isVoiceEnabled;
+  },
+
+  /**
+   * Toggle system-wide voice state
+   */
+  toggle() {
+    return this.setEnabled(!isVoiceEnabled);
+  },
+
+  /**
+   * Subscribe to global voice state changes
+   */
+  subscribe(listener) {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  },
+
+  /**
    * Get the active curated voice model
    */
   getVoice() {
@@ -88,6 +141,8 @@ export const voiceService = {
    * Speak a text phrase with consistent executive audio characteristics
    */
   speak(text, { onStart, onEnd, onError, rate = 0.98, pitch = 1.0 } = {}) {
+    // If voice mode is globally disabled, silently ignore
+    if (!isVoiceEnabled) return;
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
 
     try {
@@ -107,6 +162,8 @@ export const voiceService = {
       if (voice) {
         utterance.voice = voice;
         utterance.lang = voice.lang || 'en-US';
+      } else {
+        utterance.lang = 'en-US';
       }
 
       utterance.rate = rate;     // Natural, composed cadence
@@ -137,6 +194,7 @@ export const voiceService = {
    * Standardized Fracture Mode speech announcement
    */
   announceFracture(nodeName, riskAmountCr, callbacks = {}) {
+    if (!isVoiceEnabled) return;
     const cleanName = (nodeName || 'Target Node').split('(')[0].trim();
     const cleanRisk = typeof riskAmountCr === 'number' ? riskAmountCr.toFixed(1) : riskAmountCr;
     const text = `Fracture simulation initiated at ${cleanName}, estimated revenue risk - ${cleanRisk} crore`;
@@ -147,6 +205,7 @@ export const voiceService = {
    * Standardized Simulation Reset speech announcement
    */
   announceReset(callbacks = {}) {
+    if (!isVoiceEnabled) return;
     this.speak('Simulation reset.', callbacks);
   }
 };

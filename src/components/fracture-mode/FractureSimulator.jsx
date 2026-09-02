@@ -98,10 +98,20 @@ export function FractureSimulator({
   const [selectedTimelineNodeId, setSelectedTimelineNodeId] = useState('node-t0');
   const [isSimulating, setIsSimulating] = useState(false);
   const [justSimulated, setJustSimulated] = useState(false);
-  const [voiceMode, setVoiceMode] = useState(true);
+  const [voiceMode, setVoiceMode] = useState(() => voiceService.isEnabled());
   const [isSpeaking, setIsSpeaking] = useState(false);
   const topContainerRef = useRef(null);
   const revenueCardRef = useRef(null);
+
+  // Sync with global system-wide voice state
+  useEffect(() => {
+    return voiceService.subscribe((enabled) => {
+      setVoiceMode(enabled);
+      if (!enabled) {
+        setIsSpeaking(false);
+      }
+    });
+  }, []);
 
   const isFractureActive = Boolean(isDisrupted && activeScenario !== null);
 

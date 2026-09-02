@@ -34,11 +34,14 @@ import {
   CornerDownLeft,
   Camera,
   User as UserIcon,
-  Edit3
+  Edit3,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { CRISIS_SCENARIOS } from '../../data/scenariosData';
 import { NODES } from '../../data/auraSupplyChainData';
 import { ProfileSettingsModal } from '../profile/ProfileSettingsModal';
+import { voiceService } from '../../engine/voiceService';
 
 export function Header({
   activeScenario,
@@ -62,6 +65,15 @@ export function Header({
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('all');
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(() => voiceService.isEnabled());
+
+  // Listen for external / system-wide voice state changes
+  useEffect(() => {
+    return voiceService.subscribe((enabled) => {
+      setIsVoiceEnabled(enabled);
+    });
+  }, []);
+
   const [selectedIndex, setSelectedIndex] = useState(0);
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -675,9 +687,33 @@ export function Header({
         )}
       </div>
 
-      {/* Right: Notifications, Messages, Profile & Executive Briefing */}
-      <div className="flex items-center gap-2.5 sm:gap-3.5">
+      {/* Right: Voice Toggle, Notifications, Messages, Profile & Executive Briefing */}
+      <div className="flex items-center gap-2 sm:gap-2.5">
         
+        {/* ================= GLOBAL SYSTEM-WIDE VOICE MODE TOGGLE BUTTON ================= */}
+        <button
+          onClick={() => {
+            const next = voiceService.toggle();
+            setIsVoiceEnabled(next);
+          }}
+          className={`relative p-2 rounded-full transition-all cursor-pointer flex items-center justify-center ${
+            isVoiceEnabled
+              ? 'text-brand-600 bg-orange-50 hover:bg-orange-100 hover:text-brand-700'
+              : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
+          }`}
+          title={isVoiceEnabled ? 'Voice Mode: Active (Click to turn off voice mode system-wide)' : 'Voice Mode: Muted (Click to turn on voice mode)'}
+          aria-label={isVoiceEnabled ? 'Turn off voice mode' : 'Turn on voice mode'}
+        >
+          {isVoiceEnabled ? (
+            <Volume2 className="w-4 h-4" />
+          ) : (
+            <VolumeX className="w-4 h-4" />
+          )}
+          <span className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ring-2 ring-white ${
+            isVoiceEnabled ? 'bg-emerald-500' : 'bg-slate-400'
+          }`} />
+        </button>
+
         {/* ================= NOTIFICATION BELL BUTTON & DROPDOWN ================= */}
         <div className="relative">
           <button 
