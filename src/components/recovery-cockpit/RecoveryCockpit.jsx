@@ -19,6 +19,35 @@ import {
 } from 'lucide-react';
 import { generateRecoveryStrategies } from '../../engine/recoveryOptimizer';
 import { nexusApi } from '../../api/nexusApi';
+import { voiceService } from '../../engine/voiceService';
+
+function getStrategyVoiceDescriptor(strat) {
+  if (!strat) return 'Speed optimised';
+  const id = (strat.id || '').toLowerCase();
+  const title = (strat.title || '').toLowerCase();
+  if (id.includes('speed') || title.includes('speed')) return 'Speed optimised';
+  if (id.includes('cost') || title.includes('cost')) return 'Cost optimised';
+  if (id.includes('resilience') || title.includes('resilience')) return 'Resilience first';
+  return strat.name || 'Recovery';
+}
+
+function normalizeStrategies(list, budget) {
+  if (!Array.isArray(list)) return [];
+  const maxCost = budget?.maxCostPct ?? 4.0;
+  return list.map((strat, index) => {
+    const rawScore = strat.compositeRankScore ?? strat.compositeScore ?? 85;
+    const within = strat.withinBudget !== undefined
+      ? strat.withinBudget
+      : (strat.costPercentageOfAnnual <= maxCost);
+    return {
+      ...strat,
+      compositeRankScore: rawScore,
+      compositeScore: rawScore,
+      withinBudget: within,
+      isRecommended: strat.isRecommended !== undefined ? strat.isRecommended : (strat.paretoRank === 1 || index === 0)
+    };
+  });
+}
 
 const CONTAINMENT_ACTIONS = [
   {
@@ -81,7 +110,9 @@ export function RecoveryCockpit({
   const [selectedStrategyForDetails, setSelectedStrategyForDetails] = useState(null);
   const [showExplanationModal, setShowExplanationModal] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
-  const [strategies, setStrategies] = useState(() => generateRecoveryStrategies(simulationResult, resilienceBudget));
+  const [strategies, setStrategies] = useState(() => 
+    normalizeStrategies(generateRecoveryStrategies(simulationResult, resilienceBudget), resilienceBudget)
+  );
 
   const toggleContainment = (actionId) => {
     setActiveContainment(prev => 
@@ -109,13 +140,14 @@ export function RecoveryCockpit({
     nexusApi.getRecoveryStrategies(simulationResult, resilienceBudget)
       .then(res => {
         if (isMounted) {
-          const list = Array.isArray(res) ? res : (res?.strategies || generateRecoveryStrategies(simulationResult, resilienceBudget));
-          setStrategies(list);
+          const rawList = Array.isArray(res) ? res : (res?.strategies || generateRecoveryStrategies(simulationResult, resilienceBudget));
+          setStrategies(normalizeStrategies(rawList, resilienceBudget));
         }
       })
       .catch(() => {
         if (isMounted) {
-          setStrategies(generateRecoveryStrategies(simulationResult, resilienceBudget));
+          const fallback = generateRecoveryStrategies(simulationResult, resilienceBudget);
+          setStrategies(normalizeStrategies(fallback, resilienceBudget));
         }
       });
 
@@ -131,6 +163,8 @@ export function RecoveryCockpit({
 
   const handleApply = (strat) => {
     setIsApplying(true);
+    const descriptor = getStrategyVoiceDescriptor(strat);
+    voiceService.speak(`${descriptor} strategy approved.`);
     setTimeout(() => {
       onApplyStrategy(strat);
       setIsApplying(false);
@@ -288,7 +322,7 @@ export function RecoveryCockpit({
                     <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md font-mono ${
                       strategy.isRecommended ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
                     }`}>
-                      {strategy.compositeRankScore}% Match
+                      {strategy.compositeRankScore ?? strategy.compositeScore ?? 85}% Match
                     </span>
                   </div>
                 </div>

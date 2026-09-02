@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { NEGOTIATION_SUPPLIERS, getSupplierNegotiation } from '../../engine/negotiationEngine';
 import { nexusApi } from '../../api/nexusApi';
+import { voiceService } from '../../engine/voiceService';
 
 export function NegotiationRoom({ onSignTermSheet }) {
   const [selectedSupplierId, setSelectedSupplierId] = useState('sup-phoenix-semi');
@@ -106,6 +107,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
   };
 
   const handleStartFullNegotiation = () => {
+    voiceService.speak("Starting auto negotiation simulator.");
     setIsAutoPlaying(true);
     let count = visibleMessagesCount;
     const interval = setInterval(() => {
@@ -121,6 +123,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
 
   // 1. APPROVE ACTION
   const handleApprove = () => {
+    voiceService.speak("Negotiation approved.");
     setDecisionStatus('approved');
     setPopupToast({
       type: 'success',
@@ -150,6 +153,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
     });
 
     const nextRound = currentRoundIndex + 1;
+    const prevCount = dialogueMessages.length;
 
     setTimeout(() => {
       let newMessages = [];
@@ -212,14 +216,24 @@ export function NegotiationRoom({ onSignTermSheet }) {
         };
       }
 
-      const newTotal = dialogueMessages.length + newMessages.length;
+      const targetTotal = prevCount + newMessages.length;
       setDialogueMessages(prev => [...prev, ...newMessages]);
-      setVisibleMessagesCount(newTotal);
       setCurrentRoundIndex(nextRound);
       setCurrentOffer(updatedOffer);
-      setIsNegotiatingRound(false);
       setDecisionStatus(null);
-    }, 1000);
+
+      // Play new messages one by one sequentially like a chat
+      let currentShown = prevCount;
+      const interval = setInterval(() => {
+        if (currentShown < targetTotal) {
+          currentShown++;
+          setVisibleMessagesCount(currentShown);
+        } else {
+          clearInterval(interval);
+          setIsNegotiatingRound(false);
+        }
+      }, 800);
+    }, 900);
   };
 
   // Custom User Input Proposal
@@ -779,6 +793,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
               </button>
               <button
                 onClick={() => {
+                  voiceService.speak("EDI transmission initiated.");
                   alert("MOU Successfully Transmitted to Procurement ERP & Supplier EDI Gateway.");
                   setShowTermSheet(false);
                 }}

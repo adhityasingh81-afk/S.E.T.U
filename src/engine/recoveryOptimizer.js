@@ -1,8 +1,10 @@
 // Recovery Strategy Optimizer & Multi-Agent Engine
 
 export function generateRecoveryStrategies(disruptionState, resilienceBudget = { maxCostPct: 4, costWeight: 30, speedWeight: 40, resilienceWeight: 30 }) {
-  const { metrics, affectedNode, severityPct } = disruptionState;
+  const { metrics = {}, affectedNode, severityPct = 40 } = disruptionState || {};
   const revAtRisk = metrics?.totalRevenueAtRiskCr || 18.7;
+  const unassistedDays = metrics?.unassistedRecoveryDays || 27;
+  const nexusDays = metrics?.nexusRecoveryDays || 3.2;
 
   // Base Strategies with deterministic scaling
   const strategies = [
@@ -15,7 +17,7 @@ export function generateRecoveryStrategies(disruptionState, resilienceBudget = {
       badgeColor: "emerald",
       costCr: Math.round((revAtRisk * 0.165) * 10) / 10, // ~₹3.1 Cr
       costPercentageOfAnnual: 0.68,
-      recoveryTimeDays: Math.max(7, Math.round(metrics.unassistedRecoveryDays * 0.58)), // ~11 days
+      recoveryTimeDays: Math.max(7, Math.round(unassistedDays * 0.58)), // ~11 days
       revenueProtectedPct: 71,
       revenueProtectedCr: Math.round((revAtRisk * 0.71) * 10) / 10,
       resilienceGain: 5,
@@ -65,7 +67,7 @@ export function generateRecoveryStrategies(disruptionState, resilienceBudget = {
       badgeColor: "brand",
       costCr: Math.round((revAtRisk * 0.256) * 10) / 10, // ~₹4.8 Cr
       costPercentageOfAnnual: 1.06,
-      recoveryTimeDays: Math.max(4, Math.round(metrics.unassistedRecoveryDays * 0.26)), // ~5 days
+      recoveryTimeDays: Math.max(4, Math.round(unassistedDays * 0.26)), // ~5 days
       revenueProtectedPct: 94,
       revenueProtectedCr: Math.round((revAtRisk * 0.94) * 10) / 10,
       resilienceGain: 7,
@@ -115,7 +117,7 @@ export function generateRecoveryStrategies(disruptionState, resilienceBudget = {
       badgeColor: "amber",
       costCr: Math.round((revAtRisk * 0.288) * 10) / 10, // ~₹5.4 Cr
       costPercentageOfAnnual: 1.2,
-      recoveryTimeDays: Math.max(3, Math.round(metrics.nexusRecoveryDays)), // ~3.2 days
+      recoveryTimeDays: Math.max(3, Math.round(nexusDays)), // ~3.2 days
       revenueProtectedPct: 96,
       revenueProtectedCr: Math.round((revAtRisk * 0.96) * 10) / 10,
       resilienceGain: 10,
@@ -187,9 +189,11 @@ export function generateRecoveryStrategies(disruptionState, resilienceBudget = {
       compositeRankScore = compositeRankScore * 0.45; // 55% penalty for exceeding budget cap
     }
 
+    const finalScore = Math.max(10, Math.min(99, Math.round(compositeRankScore)));
     return {
       ...strat,
-      compositeRankScore: Math.max(10, Math.min(99, Math.round(compositeRankScore))),
+      compositeRankScore: finalScore,
+      compositeScore: finalScore,
       withinBudget,
       costSubScore: Math.round(costSubScore),
       speedSubScore: Math.round(speedSubScore),

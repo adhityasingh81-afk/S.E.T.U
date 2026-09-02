@@ -162,21 +162,30 @@ export function generateStrategies(disruptionState, weights = { costWeight: 30, 
   ];
 
   // Calculate weighted Pareto score for each strategy
-  const { costWeight = 30, speedWeight = 40, resilienceWeight = 30 } = weights;
+  const { costWeight = 30, speedWeight = 40, resilienceWeight = 30, maxCostPct = 4.0 } = weights;
   const scoredStrategies = strategies.map(s => {
     const costScore = Math.max(0, 100 - (s.costCr / revAtRisk) * 200);
     const speedScore = Math.max(0, 100 - (s.recoveryTimeDays / unassistedDays) * 100);
     const resilienceScore = s.revenueProtectedPct + s.resilienceGain * 2;
 
-    const compositeScore = Math.round(
+    let compositeScore = Math.round(
       (costScore * (costWeight / 100)) +
       (speedScore * (speedWeight / 100)) +
       (resilienceScore * (resilienceWeight / 100))
     );
 
+    const withinBudget = s.costPercentageOfAnnual <= maxCostPct;
+    if (!withinBudget) {
+      compositeScore = Math.round(compositeScore * 0.45);
+    }
+    const finalScore = Math.max(10, Math.min(99, compositeScore));
+
     return {
       ...s,
-      compositeScore,
+      compositeScore: finalScore,
+      compositeRankScore: finalScore,
+      withinBudget,
+      isRecommended: false,
       paretoRank: 0
     };
   });
@@ -184,6 +193,7 @@ export function generateStrategies(disruptionState, weights = { costWeight: 30, 
   scoredStrategies.sort((a, b) => b.compositeScore - a.compositeScore);
   scoredStrategies.forEach((s, idx) => {
     s.paretoRank = idx + 1;
+    s.isRecommended = idx === 0;
   });
 
   return {
