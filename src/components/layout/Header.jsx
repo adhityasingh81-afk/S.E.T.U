@@ -709,9 +709,6 @@ export function Header({
           ) : (
             <VolumeX className="w-4 h-4" />
           )}
-          <span className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full ring-2 ring-white ${
-            isVoiceEnabled ? 'bg-emerald-500' : 'bg-slate-400'
-          }`} />
         </button>
 
         {/* ================= NOTIFICATION BELL BUTTON & DROPDOWN ================= */}
