@@ -12,6 +12,7 @@ import { ExecutiveReportModal } from './components/executive-report/ExecutiveRep
 import { LoginPage } from './components/auth/LoginPage';
 import { BackgroundAnimation } from './components/common/BackgroundAnimation';
 import { DEMO_USERS } from './data/usersData';
+import { NODES } from './data/auraSupplyChainData';
 
 import { CRISIS_SCENARIOS } from './data/scenariosData';
 import { simulateRippleEffect } from './engine/rippleSimulation';
@@ -82,9 +83,20 @@ export default function App() {
   };
 
   // Custom simulation trigger
-  const handleRunCustomSimulation = async (nodeId, severity, duration, eventType, fractureType = 'capacity', activeContainmentIds = []) => {
+  const handleRunCustomSimulation = async (nodeId, severity = 45, duration = 30, eventType = 'Simulated Node Fracture', fractureType = 'capacity', activeContainmentIds = []) => {
     setIsDisrupted(true);
     setActiveStrategy(null);
+    const targetNode = NODES.find(n => n.id === nodeId);
+    const customScenario = {
+      id: `fracture-${nodeId}`,
+      title: `Fracture: ${targetNode ? targetNode.name.split('(')[0].trim() : nodeId}`,
+      affectedNodeId: nodeId,
+      severityPct: severity,
+      durationDays: duration,
+      eventType: eventType,
+      fractureType: fractureType,
+    };
+    setActiveScenario(customScenario);
     try {
       const result = await nexusApi.runSimulation(nodeId, severity, duration, eventType, fractureType, activeContainmentIds);
       setSimulationResult(result);
@@ -95,10 +107,17 @@ export default function App() {
   };
 
   // Reset network to baseline nominal
-  const handleResetNetwork = async () => {
+  const handleResetNetwork = async (speak = true) => {
     setIsDisrupted(false);
     setActiveStrategy(null);
     setActiveScenario(null);
+    if (speak && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance("Simulation reset.");
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
     try {
       const nominalResult = await nexusApi.runSimulation('sup-taiwan-semi', 0, 0, 'Nominal Baseline');
       setSimulationResult(nominalResult);
@@ -198,6 +217,7 @@ export default function App() {
               simulationResult={simulationResult}
               onNavigateToRecovery={() => setActiveTab('recovery-cockpit')}
               isDisrupted={isDisrupted}
+              onResetNetwork={handleResetNetwork}
             />
           )}
 

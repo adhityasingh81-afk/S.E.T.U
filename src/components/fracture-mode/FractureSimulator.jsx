@@ -85,13 +85,14 @@ export function FractureSimulator({
   activeScenario,
   simulationResult,
   onNavigateToRecovery,
-  isDisrupted
+  isDisrupted,
+  onResetNetwork
 }) {
   const [selectedNodeId, setSelectedNodeId] = useState(activeScenario?.affectedNodeId || simulationResult?.affectedNodeId || 'sup-taiwan-semi');
   const [severityPct, setSeverityPct] = useState(activeScenario?.severityPct || 40);
   const [durationDays, setDurationDays] = useState(activeScenario?.durationDays || 45);
   const [eventType, setEventType] = useState(activeScenario?.eventType || 'Supplier Capacity Cut / Geopolitical');
-  const [fractureType, setFractureType] = useState('capacity');
+  const [fractureType, setFractureType] = useState(activeScenario?.fractureType || 'capacity');
   const [activeRightTab, setActiveRightTab] = useState('timeline'); // 'timeline' | 'blast-radius'
   const [selectedTimelineNodeId, setSelectedTimelineNodeId] = useState('node-t0');
   const [isSimulating, setIsSimulating] = useState(false);
@@ -100,14 +101,18 @@ export function FractureSimulator({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const revenueCardRef = useRef(null);
 
+  const isFractureActive = Boolean(isDisrupted && activeScenario !== null);
+
   // Sync external scenario/simulation node selection
   useEffect(() => {
     if (activeScenario?.affectedNodeId) {
       setSelectedNodeId(activeScenario.affectedNodeId);
-    } else if (simulationResult?.affectedNodeId) {
-      setSelectedNodeId(simulationResult.affectedNodeId);
+      if (activeScenario.severityPct) setSeverityPct(activeScenario.severityPct);
+      if (activeScenario.durationDays) setDurationDays(activeScenario.durationDays);
+      if (activeScenario.fractureType) setFractureType(activeScenario.fractureType);
+      if (activeScenario.eventType) setEventType(activeScenario.eventType);
     }
-  }, [activeScenario?.affectedNodeId, simulationResult?.affectedNodeId]);
+  }, [activeScenario]);
 
   // Compute local calculation
   const localCalculation = simulateRippleEffect(
@@ -191,8 +196,19 @@ export function FractureSimulator({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-brand-700 font-mono">
-                Fracture Mode
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full font-mono flex items-center gap-1 ${
+                isFractureActive
+                  ? 'bg-orange-100 text-brand-700'
+                  : 'bg-emerald-100 text-emerald-800'
+              }`}>
+                {isFractureActive ? (
+                  'Fracture Mode: Active Disruption'
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    Nominal: No Ongoing Fractures
+                  </>
+                )}
               </span>
               <h2 className="text-sm font-extrabold text-slate-900 font-sans">
                 Disruption Propagation & Ripple Effect Simulator
@@ -492,35 +508,42 @@ export function FractureSimulator({
             </div>
 
             <div className="space-y-2.5">
-              {whatBreaksFirst.map((item, idx) => (
-                <div 
-                  key={idx}
-                  className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200 flex items-start justify-between gap-3 text-xs"
-                >
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="w-4 h-4 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-black">
-                        {item.order}
-                      </span>
-                      <h4 className="font-extrabold text-slate-900 font-sans">
-                        {item.name.split('(')[0]}
-                      </h4>
+              {isFractureActive ? (
+                whatBreaksFirst.map((item, idx) => (
+                  <div 
+                    key={idx}
+                    className="p-3 rounded-xl bg-[#f8fafc] border border-slate-200 flex items-start justify-between gap-3 text-xs"
+                  >
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-black">
+                          {item.order}
+                        </span>
+                        <h4 className="font-extrabold text-slate-900 font-sans">
+                          {item.name.split('(')[0]}
+                        </h4>
+                      </div>
+                      <p className="text-[11px] text-slate-500 font-medium pl-6">
+                        {item.impact}
+                      </p>
                     </div>
-                    <p className="text-[11px] text-slate-500 font-medium pl-6">
-                      {item.impact}
-                    </p>
-                  </div>
 
-                  <div className="shrink-0 text-right">
-                    <span className="font-mono font-bold text-rose-600 text-xs block">
-                      {item.estimatedDays}
-                    </span>
-                    <span className="text-[9px] text-slate-400 font-mono">
-                      ({item.hours}h)
-                    </span>
+                    <div className="shrink-0 text-right">
+                      <span className="font-mono font-bold text-rose-600 text-xs block">
+                        {item.estimatedDays}
+                      </span>
+                      <span className="text-[9px] text-slate-400 font-mono">
+                        ({item.hours}h)
+                      </span>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="p-4 text-center rounded-xl bg-[#f8fafc] border border-slate-200 text-xs text-slate-500 font-medium flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>Zero line-stop risks predicted in nominal state.</span>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -542,15 +565,32 @@ export function FractureSimulator({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-extrabold text-rose-600 uppercase tracking-wider flex items-center gap-1.5">
-                    <span className="p-1 rounded-md bg-rose-100 text-rose-600">
-                      <Activity className="w-3.5 h-3.5" />
-                    </span>
-                    Total Revenue Risk Exposure
-                  </span>
-                  <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200 font-mono">
-                    {durationDays}d Horizon
-                  </span>
+                  {isFractureActive ? (
+                    <>
+                      <span className="text-xs font-extrabold text-rose-600 uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="p-1 rounded-md bg-rose-100 text-rose-600">
+                          <Activity className="w-3.5 h-3.5" />
+                        </span>
+                        Total Revenue Risk Exposure
+                      </span>
+                      <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200 font-mono">
+                        {durationDays}d Horizon
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="p-1 rounded-md bg-emerald-100 text-emerald-600">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                        </span>
+                        Total Revenue Risk Exposure
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 font-mono">
+                        No Ongoing Fractures
+                      </span>
+                    </>
+                  )}
+
                   {justSimulated && (
                     <span className="px-2 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-black uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-sm">
                       <Sparkles className="w-3 h-3" />
@@ -565,23 +605,45 @@ export function FractureSimulator({
                   )}
                 </div>
 
-                <div className="text-3xl sm:text-4xl font-black text-rose-600 tracking-tight font-sans">
-                  ₹{riskAmountCr} <span className="text-base text-rose-500 font-bold">Cr</span>
+                <div className={`text-3xl sm:text-4xl font-black tracking-tight font-sans ${
+                  isFractureActive ? 'text-rose-600' : 'text-emerald-600'
+                }`}>
+                  ₹{isFractureActive ? riskAmountCr : '0.00'} <span className={`text-base font-bold ${isFractureActive ? 'text-rose-500' : 'text-emerald-500'}`}>Cr</span>
                 </div>
                 <p className="text-xs text-slate-500 font-medium">
-                  Daily loss rate: <strong className="text-slate-800 font-mono">₹{currentResult?.metrics?.dailyLossRateCr || 1.25} Cr/day</strong> • Downtime: <strong className="text-amber-600 font-mono">{currentResult?.metrics?.unassistedRecoveryDays || 27} Days</strong>
+                  {isFractureActive ? (
+                    <>
+                      Daily loss rate: <strong className="text-slate-800 font-mono">₹{currentResult?.metrics?.dailyLossRateCr || 1.25} Cr/day</strong> • Downtime: <strong className="text-amber-600 font-mono">{currentResult?.metrics?.unassistedRecoveryDays || 27} Days</strong>
+                    </>
+                  ) : (
+                    <>
+                      All 15 operational hubs operating at nominal capacity • <strong className="text-emerald-700">Zero active fractures</strong>
+                    </>
+                  )}
                 </p>
               </div>
 
-              {/* DIRECT QUICK ACCESS BUTTON RIGHT BESIDE THE TOTAL REVENUE METER */}
-              <div className="self-start sm:self-center shrink-0">
+              {/* ACTION BUTTONS: OPEN RECOVERY COCKPIT + RESET SIMULATION */}
+              <div className="self-start sm:self-center shrink-0 flex flex-col gap-2 w-full sm:w-auto">
                 <button
                   onClick={onNavigateToRecovery}
-                  className="btn-purple-pill px-4 py-3 text-xs font-bold flex items-center gap-2 cursor-pointer shadow-md hover:scale-[1.02] transition-transform"
+                  className="w-full btn-purple-pill px-4 py-2.5 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md hover:scale-[1.02] transition-transform"
                 >
                   <Compass className="w-4 h-4" />
                   <span>Open Recovery Cockpit</span>
                   <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Additional Reset Button placed right under Open Recovery Cockpit */}
+                <button
+                  onClick={() => {
+                    if (onResetNetwork) onResetNetwork(true);
+                  }}
+                  className="w-full btn-secondary-pill px-4 py-2 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-xs hover:bg-slate-200 transition-all text-slate-700"
+                  title="Reset simulation to nominal baseline"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Reset Simulation</span>
                 </button>
               </div>
             </div>
@@ -590,15 +652,21 @@ export function FractureSimulator({
             <div className="grid grid-cols-3 gap-3 text-xs font-mono">
               <div className="p-2.5 rounded-xl bg-[#f8fafc] border border-slate-100">
                 <span className="text-[10px] text-slate-400 font-sans font-semibold block">Factory Drop:</span>
-                <span className="font-bold text-rose-600">-{100 - (currentResult?.metrics?.factoryProductionAfter || 38)}%</span>
+                <span className={`font-bold ${isFractureActive ? 'text-rose-600' : 'text-emerald-600'}`}>
+                  {isFractureActive ? `-${100 - (currentResult?.metrics?.factoryProductionAfter || 38)}%` : '0%'}
+                </span>
               </div>
               <div className="p-2.5 rounded-xl bg-[#f8fafc] border border-slate-100">
                 <span className="text-[10px] text-slate-400 font-sans font-semibold block">Runway Left:</span>
-                <span className="font-bold text-amber-600">{currentResult?.metrics?.inventoryDepletionDays || 8} Days</span>
+                <span className={`font-bold ${isFractureActive ? 'text-amber-600' : 'text-emerald-600'}`}>
+                  {isFractureActive ? `${currentResult?.metrics?.inventoryDepletionDays || 8} Days` : '>90 Days'}
+                </span>
               </div>
               <div className="p-2.5 rounded-xl bg-[#f8fafc] border border-slate-100">
                 <span className="text-[10px] text-slate-400 font-sans font-semibold block">SLA Fill Rate:</span>
-                <span className="font-bold text-slate-800">{currentResult?.metrics?.customerFulfillmentAfter || 42.5}%</span>
+                <span className={`font-bold ${isFractureActive ? 'text-slate-800' : 'text-emerald-600'}`}>
+                  {isFractureActive ? `${currentResult?.metrics?.customerFulfillmentAfter || 42.5}%` : '100%'}
+                </span>
               </div>
             </div>
           </div>
@@ -639,10 +707,11 @@ export function FractureSimulator({
 
             {/* TAB 1: VERTICAL CONNECTED NODE / LINKED LIST TIMELINE */}
             {activeRightTab === 'timeline' && (
-              <div className="space-y-4">
-                {/* Vertical Timeline Container with Connecting Flow Line */}
-                <div className="relative pl-6 space-y-4 before:absolute before:left-3 before:top-4 before:bottom-4 before:w-1 before:timeline-laser-flow before:rounded-full">
-                  {cascadeNodes.map((item, idx) => {
+              isFractureActive ? (
+                <div className="space-y-4">
+                  {/* Vertical Timeline Container with Connecting Flow Line */}
+                  <div className="relative pl-6 space-y-4 before:absolute before:left-3 before:top-4 before:bottom-4 before:w-1 before:timeline-laser-flow before:rounded-full">
+                    {cascadeNodes.map((item, idx) => {
                     const isSelected = selectedTimelineNodeId === item.id;
                     const isTerminal = item.isTerminalRed || idx === cascadeNodes.length - 1;
 
@@ -749,68 +818,95 @@ export function FractureSimulator({
                   </div>
                 )}
               </div>
+            ) : (
+                <div className="p-10 text-center rounded-2xl bg-[#f8fafc] border border-slate-200/80 space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-extrabold text-slate-900 font-sans">No Ongoing Fractures</h4>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto font-medium">
+                      All supply chain hubs are operating nominally with zero active disruptions. Select a target node in the left pane and click <strong className="text-brand-600">Simulate Fracture</strong> to model cascade exposure.
+                    </p>
+                  </div>
+                </div>
+              )
             )}
 
             {/* TAB 2: BLAST RADIUS & MULTI-TIER HIERARCHY */}
             {activeRightTab === 'blast-radius' && (
-              <div className="space-y-4">
-                {/* TIER 1 */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-pulse"></span>
-                    <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
-                      Tier 1: Directly Impacted (Epicenter & Manufacturing)
-                    </h4>
+              isFractureActive ? (
+                <div className="space-y-4">
+                  {/* TIER 1 */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-pulse"></span>
+                      <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
+                        Tier 1: Directly Impacted (Epicenter & Manufacturing)
+                      </h4>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {blastRadius.tier1Direct?.map(node => (
+                        <div key={node.id} className="p-3 rounded-xl bg-rose-50/70 border border-rose-200 text-xs space-y-1">
+                          <div className="font-extrabold text-slate-900 truncate">{node.name}</div>
+                          <div className="text-rose-600 font-mono font-bold">{node.impactPct}</div>
+                          <div className="text-[10px] text-slate-500 font-mono">{node.runway}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    {blastRadius.tier1Direct?.map(node => (
-                      <div key={node.id} className="p-3 rounded-xl bg-rose-50/50 border border-rose-200 text-xs space-y-1">
-                        <div className="font-extrabold text-slate-900 truncate">{node.name}</div>
-                        <div className="text-rose-600 font-mono font-bold">{node.impairedPct}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">{node.runway}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
-                {/* TIER 2 */}
-                <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                    <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
-                      Tier 2: Secondary Impact (Logistics & Distribution Warehouses)
-                    </h4>
+                  {/* TIER 2 */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                      <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
+                        Tier 2: Assembly Line Starvation & Buffers
+                      </h4>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {blastRadius.tier2Secondary?.map(node => (
+                        <div key={node.id} className="p-3 rounded-xl bg-amber-50/50 border border-amber-200 text-xs space-y-1">
+                          <div className="font-extrabold text-slate-900 truncate">{node.name}</div>
+                          <div className="text-amber-600 font-mono font-bold">{node.delayDays}</div>
+                          <div className="text-[10px] text-slate-500 font-mono">{node.runway}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    {blastRadius.tier2Secondary?.map(node => (
-                      <div key={node.id} className="p-3 rounded-xl bg-amber-50/50 border border-amber-200 text-xs space-y-1">
-                        <div className="font-extrabold text-slate-900 truncate">{node.name}</div>
-                        <div className="text-amber-700 font-mono font-bold">{node.impairedPct}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">{node.runway}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
-                {/* TIER 3 */}
-                <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
-                    <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
-                      Tier 3: Tertiary Impact (Enterprise Clients & SLAs)
-                    </h4>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    {blastRadius.tier3Tertiary?.map(node => (
-                      <div key={node.id} className="p-3 rounded-xl bg-sky-50/50 border border-sky-200 text-xs space-y-1">
-                        <div className="font-extrabold text-slate-900 truncate">{node.name}</div>
-                        <div className="text-rose-600 font-mono font-bold">{node.impairedPct}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">{node.runway}</div>
-                      </div>
-                    ))}
+                  {/* TIER 3 */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+                      <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">
+                        Tier 3: Customer Hubs & Order Backlogs
+                      </h4>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {blastRadius.tier3Tertiary?.map(node => (
+                        <div key={node.id} className="p-3 rounded-xl bg-sky-50/50 border border-sky-200 text-xs space-y-1">
+                          <div className="font-extrabold text-slate-900 truncate">{node.name}</div>
+                          <div className="text-rose-600 font-mono font-bold">{node.impairedPct}</div>
+                          <div className="text-[10px] text-slate-500 font-mono">{node.runway}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-10 text-center rounded-2xl bg-[#f8fafc] border border-slate-200/80 space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-extrabold text-slate-900 font-sans">No Ongoing Fractures</h4>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto font-medium">
+                      Blast radius is 0 sites affected in nominal state.
+                    </p>
+                  </div>
+                </div>
+              )
             )}
           </div>
         </div>
