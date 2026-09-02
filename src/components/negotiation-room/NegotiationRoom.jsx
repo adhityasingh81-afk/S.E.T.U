@@ -794,7 +794,11 @@ export function NegotiationRoom({ onSignTermSheet }) {
               <button
                 onClick={() => {
                   voiceService.speak("EDI transmission initiated.");
-                  alert("MOU Successfully Transmitted to Procurement ERP & Supplier EDI Gateway.");
+                  setPopupToast({
+                    type: 'success',
+                    title: 'EDI Transmission Initiated',
+                    message: `Binding MOU & procurement order successfully transmitted to ERP & ${activeNegotiation.name} EDI Gateway.`
+                  });
                   setShowTermSheet(false);
                 }}
                 className="btn-orange-pill px-4 py-2 text-xs font-bold flex items-center gap-1.5 cursor-pointer"

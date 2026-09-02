@@ -149,10 +149,12 @@ export const voiceService = {
       // Cancel any ongoing speech to avoid overlapping
       window.speechSynthesis.cancel();
 
-      // Clean up text formatting for natural speech synthesis
+      // Clean up text formatting and normalize phonetics for natural speech synthesis
       const cleaned = text
         .replace(/₹/g, '')
         .replace(/\bCr\b/g, 'crore')
+        .replace(/\boptimised\b/gi, 'optimized')
+        .replace(/\bEDI\b/g, 'E D I')
         .replace(/[-–—]/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();

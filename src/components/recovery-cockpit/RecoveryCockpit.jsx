@@ -22,11 +22,11 @@ import { nexusApi } from '../../api/nexusApi';
 import { voiceService } from '../../engine/voiceService';
 
 function getStrategyVoiceDescriptor(strat) {
-  if (!strat) return 'Speed optimised';
+  if (!strat) return 'Speed optimized';
   const id = (strat.id || '').toLowerCase();
   const title = (strat.title || '').toLowerCase();
-  if (id.includes('speed') || title.includes('speed')) return 'Speed optimised';
-  if (id.includes('cost') || title.includes('cost')) return 'Cost optimised';
+  if (id.includes('speed') || title.includes('speed')) return 'Speed optimized';
+  if (id.includes('cost') || title.includes('cost')) return 'Cost optimized';
   if (id.includes('resilience') || title.includes('resilience')) return 'Resilience first';
   return strat.name || 'Recovery';
 }
