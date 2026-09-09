@@ -36,12 +36,14 @@ import {
   User as UserIcon,
   Edit3,
   Volume2,
-  VolumeX
+  VolumeX,
+  Radio
 } from 'lucide-react';
 import { CRISIS_SCENARIOS } from '../../data/scenariosData';
 import { NODES } from '../../data/auraSupplyChainData';
 import { ProfileSettingsModal } from '../profile/ProfileSettingsModal';
 import { voiceService } from '../../engine/voiceService';
+import { notificationService } from '../../services/notificationService';
 
 export function Header({
   activeScenario,
@@ -113,73 +115,17 @@ export function Header({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Notification items state for MDoNER
-  const [notifications, setNotifications] = useState([
-    {
-      id: 'notif-1',
-      title: 'Active Landslide Severance: NH-6 Sonapur Pass',
-      desc: '75% flow disruption in East Jaintia Hills. Agartala & Aizawl medical oxygen runway down to 2.2 days.',
-      time: '2m ago',
-      type: 'crisis',
-      unread: true,
-      actionTab: 'fracture-mode',
-      actionLabel: 'View Cascade Ripple'
-    },
-    {
-      id: 'notif-2',
-      title: 'NFR Freight Green Corridor Finalised',
-      desc: 'North East Frontier Railway locked 2 dedicated Ro-Ro trains through Badarpur siding within 48 hours.',
-      time: '14m ago',
-      type: 'negotiation',
-      unread: true,
-      actionTab: 'negotiation-room',
-      actionLabel: 'Open Negotiation Room'
-    },
-    {
-      id: 'notif-3',
-      title: 'Multimodal Failover Protocol Active',
-      desc: 'Strategy C (Balanced Tri-Modal) computed +₹20.8 Cr net economic & relief value preserved.',
-      time: '35m ago',
-      type: 'recovery',
-      unread: false,
-      actionTab: 'recovery-cockpit',
-      actionLabel: 'Inspect Strategy'
-    },
-  ]);
+  // Notification items & Supplier Messages synchronized with centralized notificationService
+  const [notifications, setNotifications] = useState(() => notificationService.getNotifications());
+  const [messages, setMessages] = useState(() => notificationService.getMessages());
 
-  // Supplier / Inter-Agency Messages state
-  const [messages, setMessages] = useState([
-    {
-      id: 'msg-1',
-      sender: 'Col. Vikramaditya Rathore (BRO Task Force)',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-      subject: 'Sonapur Pass 120-ft Bailey Bridge Deployment',
-      preview: 'Double-single military Bailey bridge launched. Single-lane emergency convoy passage opens in 36 hours.',
-      time: '10:20 AM',
-      unread: true,
-      actionTab: 'negotiation-room',
-    },
-    {
-      id: 'msg-2',
-      sender: 'Sanjay K. Barua, IRTS (NFR Maligaon)',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-      subject: 'Emergency Rake Allocation: Lumding-Badarpur',
-      preview: '14 flat-car wagons allocated for cryogenic oxygen tankers. Green corridor clear signal authorized.',
-      time: '09:45 AM',
-      unread: true,
-      actionTab: 'recovery-cockpit',
-    },
-    {
-      id: 'msg-3',
-      sender: 'Pranab Bordoloi (IWAI Pandu Port)',
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80',
-      subject: 'NW-2 River Barge Flotilla En Route',
-      preview: '4 self-propelled 200-tonne river barges departed Pandu for Dhubri/Jogighopa along National Waterway 2.',
-      time: '08:20 AM',
-      unread: false,
-      actionTab: 'digital-twin',
-    },
-  ]);
+  // Subscribe to real-time additions (e.g. SOS dispatches and field alerts)
+  useEffect(() => {
+    return notificationService.subscribe(({ notifications: nextNotifs, messages: nextMsgs }) => {
+      setNotifications(nextNotifs);
+      setMessages(nextMsgs);
+    });
+  }, []);
 
   // Search Items Registry with all features, actions, scenarios, and hubs
   const searchItems = useMemo(() => {
@@ -410,25 +356,33 @@ export function Header({
   const unreadMsgCount = messages.filter(m => m.unread).length;
 
   const markAllNotifsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, unread: false })));
+    notificationService.markAllNotifsRead();
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
   };
 
   const markAllMessagesRead = () => {
-    setMessages(messages.map(m => ({ ...m, unread: false })));
+    notificationService.markAllMessagesRead();
+    setMessages(prev => prev.map(m => ({ ...m, unread: false })));
   };
 
   const handleNotificationClick = (notif) => {
-    setNotifications(notifications.map(n => n.id === notif.id ? { ...n, unread: false } : n));
+    notificationService.markNotifRead(notif.id);
+    setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, unread: false } : n));
     setIsNotificationsOpen(false);
-    if (onNavigateToTab && notif.actionTab) {
+    if (notif.actionTab === 'sos' && onNavigateSos) {
+      onNavigateSos();
+    } else if (onNavigateToTab && notif.actionTab) {
       onNavigateToTab(notif.actionTab);
     }
   };
 
   const handleMessageClick = (msg) => {
-    setMessages(messages.map(m => m.id === msg.id ? { ...m, unread: false } : m));
+    notificationService.markMessageRead(msg.id);
+    setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, unread: false } : m));
     setIsMessagesOpen(false);
-    if (onNavigateToTab && msg.actionTab) {
+    if (msg.actionTab === 'sos' && onNavigateSos) {
+      onNavigateSos();
+    } else if (onNavigateToTab && msg.actionTab) {
       onNavigateToTab(msg.actionTab);
     }
   };
@@ -725,7 +679,9 @@ export function Header({
           >
             <Bell className="w-4 h-4" />
             {unreadNotifCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-brand-500 ring-2 ring-white animate-pulse"></span>
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] font-black flex items-center justify-center ring-2 ring-white shadow-xs animate-pulse">
+                {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
+              </span>
             )}
           </button>
 
@@ -736,7 +692,7 @@ export function Header({
                 <div className="flex items-center gap-2">
                   <span className="font-extrabold text-sm text-slate-900 font-sans">Crisis Alerts</span>
                   {unreadNotifCount > 0 && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-brand-700">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
                       {unreadNotifCount} New
                     </span>
                   )}
@@ -756,14 +712,22 @@ export function Header({
                     key={notif.id}
                     onClick={() => handleNotificationClick(notif)}
                     className={`p-3 rounded-xl border text-xs space-y-1.5 cursor-pointer transition-all ${
-                      notif.unread
+                      notif.isSos
+                        ? notif.unread
+                          ? 'bg-red-50/90 border-red-300 hover:bg-red-50 shadow-xs'
+                          : 'bg-slate-50 border-slate-200/80 hover:bg-slate-100/70'
+                        : notif.unread
                         ? 'bg-orange-50/40 border-brand-200 hover:bg-orange-50/70'
                         : 'bg-[#f8fafc] border-slate-200/70 hover:bg-slate-50'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-1.5 font-bold text-slate-900 font-sans">
-                        {notif.type === 'crisis' ? (
+                      <div className="flex items-center gap-1.5 font-bold text-slate-900 font-sans min-w-0">
+                        {notif.isSos ? (
+                          <div className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0">
+                            <Radio className="w-3 h-3 animate-pulse" />
+                          </div>
+                        ) : notif.type === 'crisis' ? (
                           <AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                         ) : notif.type === 'negotiation' ? (
                           <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
@@ -779,9 +743,23 @@ export function Header({
                       {notif.desc}
                     </p>
 
+                    {/* SOS Special Badges */}
+                    {notif.isSos && (
+                      <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                        <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-red-100 text-red-800 border border-red-200">
+                          {notif.status === 'dispatched' ? 'GATEWAY CONFIRMED ✅' : 'OFFLINE QUEUED ⏳'}
+                        </span>
+                        {notif.smsSid && (
+                          <span className="text-[9px] font-mono text-slate-500">
+                            Ref: {notif.smsSid}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex justify-end pt-1">
                       <span className="text-[10px] font-bold text-brand-600 flex items-center gap-1">
-                        {notif.actionLabel}
+                        {notif.actionLabel || (notif.isSos ? 'View SOS Alert' : 'View Details')}
                         <ArrowRight className="w-3 h-3" />
                       </span>
                     </div>
