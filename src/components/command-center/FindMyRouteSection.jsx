@@ -19,11 +19,16 @@ import {
   Send,
   Check,
   ChevronDown,
+  ChevronUp,
   Info,
   Radio,
-  ExternalLink
+  ExternalLink,
+  Map,
+  Layers,
+  Zap
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { RouteMapCanvas } from './RouteMapCanvas';
 
 // Preset strategic origins across North Eastern Region
 export const ROUTE_ORIGINS = [
@@ -234,6 +239,8 @@ export function FindMyRouteSection({ isDisrupted, timeRange, setTimeRange, activ
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [hasSearched, setHasSearched] = useState(true);
   const [dispatchedSuccess, setDispatchedSuccess] = useState(false);
+  const [routeViewMode, setRouteViewMode] = useState('map'); // 'map' | 'cards' | 'intel'
+  const [showDetailedIntel, setShowDetailedIntel] = useState(false);
 
   // Selected Objects
   const origin = useMemo(() => ROUTE_ORIGINS.find(o => o.id === selectedOriginId) || ROUTE_ORIGINS[0], [selectedOriginId]);
@@ -525,195 +532,340 @@ export function FindMyRouteSection({ isDisrupted, timeRange, setTimeRange, activ
             </div>
           )}
 
-          {/* ROUTE COMPARISON RESULTS: AFFECTED ROUTE vs SAFE ROUTE */}
+          {/* ROUTE COMPARISON RESULTS: MAP VIEW & SIMPLIFIED ROUTE INTELLIGENCE */}
           {hasSearched && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <Activity className="w-4 h-4 text-brand-600" />
-                  Corridor Comparison: {origin.code} ➔ {destination.code} (~{currentRouteData.distanceKm} km)
-                </span>
-                <span className="text-slate-500 font-medium">
-                  Identified 1 Affected Chokepoint Route • 1 Safe Multi-Modal Alternative
-                </span>
+              {/* Header & View Mode Switcher */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-extrabold text-slate-800 uppercase tracking-wider text-xs flex items-center gap-1.5">
+                    <Activity className="w-4 h-4 text-brand-600" />
+                    Corridor Comparison: {origin.code} ➔ {destination.code} (~{currentRouteData.distanceKm} km)
+                  </span>
+                  <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
+                    • 1 Blocked Chokepoint vs 1 Safe Multi-Modal Bypass
+                  </span>
+                </div>
+
+                {/* View Switcher: Interactive Map vs Simplified Cards vs Full Intel */}
+                <div className="flex items-center bg-slate-100 p-1 rounded-xl text-[11px] font-bold text-slate-600 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setRouteViewMode('map')}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                      routeViewMode === 'map'
+                        ? 'bg-white text-slate-900 shadow-xs border border-slate-200 font-black'
+                        : 'hover:text-slate-900 text-slate-600'
+                    }`}
+                  >
+                    <Map className="w-3.5 h-3.5 text-brand-600" />
+                    <span>Map View</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRouteViewMode('cards')}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                      routeViewMode === 'cards'
+                        ? 'bg-white text-slate-900 shadow-xs border border-slate-200 font-black'
+                        : 'hover:text-slate-900 text-slate-600'
+                    }`}
+                  >
+                    <Layers className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Simplified Cards</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRouteViewMode('intel')}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                      routeViewMode === 'intel'
+                        ? 'bg-white text-slate-900 shadow-xs border border-slate-200 font-black'
+                        : 'hover:text-slate-900 text-slate-600'
+                    }`}
+                  >
+                    <Info className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Detailed Intel</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                {/* 1. 🛑 AFFECTED ROUTE CARD */}
-                <div className="p-5 rounded-2xl bg-rose-50/40 border-2 border-rose-200 shadow-xs space-y-4 flex flex-col justify-between">
-                  <div className="space-y-3">
-                    {/* Badge & Title */}
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-600 text-white flex items-center gap-1 shadow-xs">
-                        <ShieldAlert className="w-3 h-3" />
-                        <span>{currentRouteData.affectedRoute.status}</span>
-                      </span>
-                      <span className="text-xs font-mono font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-200">
-                        Risk: {currentRouteData.affectedRoute.riskScore}/100
-                      </span>
-                    </div>
-
-                    <div>
-                      <h4 className="text-sm font-black text-slate-900 leading-snug">
-                        {currentRouteData.affectedRoute.name}
-                      </h4>
-                      <p className="text-xs font-extrabold text-rose-700 mt-1 flex items-center gap-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-                        <span>{currentRouteData.affectedRoute.delayNotice}</span>
-                      </p>
-                    </div>
-
-                    {/* Hazard Breakdown Box */}
-                    <div className="p-3 rounded-xl bg-white border border-rose-200 text-xs space-y-2">
-                      <p className="text-slate-700 text-[11px] leading-relaxed font-medium">
-                        {currentRouteData.affectedRoute.blockadeReason}
-                      </p>
-
-                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-rose-100 text-[11px]">
-                        <div>
-                          <span className="text-slate-400 block text-[10px]">Transit Duration</span>
-                          <span className="font-mono font-bold text-rose-700">{currentRouteData.affectedRoute.estTime}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 block text-[10px]">Stranded Assets</span>
-                          <span className="font-mono font-bold text-slate-800">{currentRouteData.affectedRoute.strandedCount}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Corridor Segments with Status Pills */}
-                    <div className="space-y-1.5 pt-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                        Waypoints & Road Segment Health:
-                      </span>
-                      <div className="space-y-1.5 text-xs">
-                        {currentRouteData.affectedRoute.segments.map((seg, idx) => (
-                          <div
-                            key={idx}
-                            className={`p-2 rounded-lg border flex items-center justify-between ${
-                              seg.status === 'blocked'
-                                ? 'bg-rose-100/70 border-rose-300 text-rose-950 font-bold'
-                                : seg.status === 'congested'
-                                ? 'bg-amber-50 border-amber-200 text-amber-900 font-semibold'
-                                : 'bg-slate-50 border-slate-200 text-slate-700'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className={`w-2 h-2 rounded-full ${
-                                seg.status === 'blocked' ? 'bg-rose-600 animate-ping' : seg.status === 'congested' ? 'bg-amber-500' : 'bg-emerald-500'
-                              }`} />
-                              <span className="text-[11px]">{seg.from} ➔ {seg.to}</span>
-                            </div>
-                            <span className="text-[10px] font-mono text-slate-500">{seg.distance} ({seg.mode})</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Warning Footer Notice */}
-                  <div className="p-3 rounded-xl bg-rose-100/60 border border-rose-200 text-[11px] text-rose-900 font-medium">
-                    ⚠️ <strong>Advisory:</strong> {currentRouteData.affectedRoute.advisory}
-                  </div>
+              {/* 1. INTERACTIVE MAP VIEW (Default) */}
+              {(routeViewMode === 'map') && (
+                <div className="space-y-4 animate-fade-in-up">
+                  {/* Interactive SVG GIS Map Canvas */}
+                  <RouteMapCanvas
+                    origin={origin}
+                    destination={destination}
+                    routeData={currentRouteData}
+                    isDisrupted={isDisrupted}
+                    onAuthorizeSafeConvoy={handleDispatchSafeConvoy}
+                  />
                 </div>
+              )}
 
-                {/* 2. 🟢 SAFE / ALTERNATIVE ROUTE CARD */}
-                <div className="p-5 rounded-2xl bg-emerald-50/40 border-2 border-emerald-300 shadow-sm space-y-4 flex flex-col justify-between relative overflow-hidden">
-                  <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-200/30 rounded-full blur-xl pointer-events-none" />
-
-                  <div className="space-y-3">
-                    {/* Badge & Title */}
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white flex items-center gap-1 shadow-xs">
-                        <CheckCircle2 className="w-3 h-3" />
-                        <span>{currentRouteData.safeRoute.status}</span>
-                      </span>
-                      <span className="text-xs font-mono font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
-                        {currentRouteData.safeRoute.timeSaved}
-                      </span>
-                    </div>
-
-                    <div>
-                      <h4 className="text-sm font-black text-slate-900 leading-snug">
-                        {currentRouteData.safeRoute.name}
-                      </h4>
-                      <p className="text-xs font-extrabold text-emerald-700 mt-1 flex items-center gap-1.5">
-                        <ShieldCheck className="w-3.5 h-3.5 flex-shrink-0" />
-                        <span>Est. Transit: {currentRouteData.safeRoute.estTime} • {currentRouteData.safeRoute.reliabilityScore} Reliability</span>
-                      </p>
-                    </div>
-
-                    {/* Operational Advantages Box */}
-                    <div className="p-3 rounded-xl bg-white border border-emerald-200 text-xs space-y-2">
-                      <div className="grid grid-cols-2 gap-2 text-[11px]">
-                        <div>
-                          <span className="text-slate-400 block text-[10px]">Clearance Protocol</span>
-                          <span className="font-bold text-slate-800">{currentRouteData.safeRoute.clearanceAuthority}</span>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 block text-[10px]">Allocated Capacity</span>
-                          <span className="font-bold text-slate-800">{currentRouteData.safeRoute.capacityDetails}</span>
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-emerald-100 space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">
-                          Autonomous Failover Advantages:
+              {/* 2. SIMPLIFIED, EASILY-SCANNABLE COMPARISON CARDS */}
+              {(routeViewMode === 'map' || routeViewMode === 'cards') && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-fade-in-up">
+                  {/* 🛑 AFFECTED CHOKEPOINT ROUTE (SIMPLIFIED & CLEAR) */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-rose-50/50 border-2 border-rose-300 shadow-xs space-y-3.5 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      {/* Status Header */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-600 text-white flex items-center gap-1 shadow-xs">
+                          <ShieldAlert className="w-3 h-3" />
+                          <span>{currentRouteData.affectedRoute.status}</span>
                         </span>
-                        <ul className="space-y-1 text-[11px] text-slate-700">
-                          {currentRouteData.safeRoute.advantages.map((adv, idx) => (
-                            <li key={idx} className="flex items-start gap-1.5">
-                              <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                              <span>{adv}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        <span className="text-xs font-mono font-bold text-rose-700 bg-rose-100 px-2.5 py-0.5 rounded-full border border-rose-200">
+                          Risk: {currentRouteData.affectedRoute.riskScore}/100
+                        </span>
+                      </div>
+
+                      {/* Route Title & Hazard */}
+                      <div>
+                        <h4 className="text-sm font-black text-slate-900 leading-snug">
+                          {currentRouteData.affectedRoute.name}
+                        </h4>
+                        <p className="text-xs font-bold text-rose-700 mt-1 flex items-center gap-1.5">
+                          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 text-rose-600" />
+                          <span>{currentRouteData.affectedRoute.delayNotice}</span>
+                        </p>
+                      </div>
+
+                      {/* 3 High-Impact Scannable Metric Tiles */}
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="p-2.5 rounded-xl bg-white border border-rose-200 shadow-2xs">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Transit Time</span>
+                          <span className="text-xs font-black text-rose-700 font-mono block mt-0.5">
+                            {currentRouteData.affectedRoute.estTime.split(' ')[0]}h
+                          </span>
+                          <span className="text-[9px] text-rose-600 font-bold block">(+38h Delay)</span>
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-white border border-rose-200 shadow-2xs">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Chokepoint</span>
+                          <span className="text-xs font-black text-slate-800 block mt-0.5">Sonapur Pass</span>
+                          <span className="text-[9px] text-rose-600 font-bold block">250m Mudslide</span>
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-white border border-rose-200 shadow-2xs">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Stranded</span>
+                          <span className="text-xs font-black text-rose-700 font-mono block mt-0.5">34 Units</span>
+                          <span className="text-[9px] text-slate-500 font-medium block">Tankers Queued</span>
+                        </div>
+                      </div>
+
+                      {/* Clean Segment Breadcrumbs */}
+                      <div className="space-y-1 pt-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                          Segment Trajectory:
+                        </span>
+                        <div className="p-2.5 rounded-xl bg-white border border-rose-200 text-xs flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-700">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                            <span>{origin.name.split(' ')[0]}</span>
+                          </div>
+                          <span className="text-slate-400 text-xs">➔</span>
+                          <div className="flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-md border border-rose-300">
+                            <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
+                            <span>Sonapur (⛔ BLOCKED)</span>
+                          </div>
+                          <span className="text-slate-400 text-xs">➔</span>
+                          <div className="flex items-center gap-1 text-[11px] font-semibold text-amber-700">
+                            <span className="w-2 h-2 rounded-full bg-amber-500" />
+                            <span>{destination.name.split(' ')[0]}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Safe Corridor Segments */}
-                    <div className="space-y-1.5 pt-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                        Safe Segment Routing Breakdown:
-                      </span>
-                      <div className="space-y-1.5 text-xs">
-                        {currentRouteData.safeRoute.segments.map((seg, idx) => (
-                          <div
-                            key={idx}
-                            className="p-2 rounded-lg bg-emerald-100/50 border border-emerald-200/80 text-emerald-950 font-semibold flex items-center justify-between"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                              <span className="text-[11px]">{seg.from} ➔ {seg.to}</span>
-                            </div>
-                            <span className="text-[10px] font-mono text-emerald-800 font-bold">{seg.distance} ({seg.mode})</span>
-                          </div>
-                        ))}
-                      </div>
+                    {/* Concise Warning Badge */}
+                    <div className="p-2.5 rounded-xl bg-rose-100/70 border border-rose-200 text-[11px] text-rose-950 font-semibold flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                      <span>Single-lane Bailey bridge under assembly by BRO. Non-emergency heavy convoys prohibited.</span>
                     </div>
                   </div>
 
-                  {/* Dispatch Action Button */}
-                  <div className="pt-2 space-y-2">
-                    <button
-                      type="button"
-                      onClick={handleDispatchSafeConvoy}
-                      className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md shadow-emerald-600/25 transition-all cursor-pointer hover:scale-[1.01]"
-                    >
-                      <Truck className="w-4 h-4" />
-                      <span>Authorize Convoy via Safe Route</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                  {/* 🟢 RECOMMENDED SAFE BYPASS (SIMPLIFIED & CLEAR) */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/50 border-2 border-emerald-400 shadow-xs space-y-3.5 flex flex-col justify-between relative overflow-hidden">
+                    <div className="absolute -right-6 -top-6 w-28 h-28 bg-emerald-200/40 rounded-full blur-xl pointer-events-none" />
 
-                    <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
-                      <span className="flex items-center gap-1">
-                        <Radio className="w-3 h-3 text-emerald-600 animate-pulse" />
-                        Continuous GPS AIS-140 feed active
-                      </span>
-                      <span className="font-mono font-bold text-slate-700">Ref: SETU-NFR-REROUTE</span>
+                    <div className="space-y-3">
+                      {/* Status Header */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white flex items-center gap-1 shadow-xs">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>{currentRouteData.safeRoute.status}</span>
+                        </span>
+                        <span className="text-xs font-mono font-black text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 shadow-2xs">
+                          ⚡ {currentRouteData.safeRoute.timeSaved}
+                        </span>
+                      </div>
+
+                      {/* Route Title & Highlights */}
+                      <div>
+                        <h4 className="text-sm font-black text-slate-900 leading-snug">
+                          {currentRouteData.safeRoute.name}
+                        </h4>
+                        <p className="text-xs font-bold text-emerald-700 mt-1 flex items-center gap-1.5">
+                          <ShieldCheck className="w-3.5 h-3.5 flex-shrink-0 text-emerald-600" />
+                          <span>Est. Transit: {currentRouteData.safeRoute.estTime} • {currentRouteData.safeRoute.reliabilityScore} Guaranteed</span>
+                        </p>
+                      </div>
+
+                      {/* 3 High-Impact Scannable Metric Tiles */}
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="p-2.5 rounded-xl bg-white border border-emerald-200 shadow-2xs">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Delivery Time</span>
+                          <span className="text-xs font-black text-emerald-700 font-mono block mt-0.5">
+                            {currentRouteData.safeRoute.estTime.split(' ')[0]}h
+                          </span>
+                          <span className="text-[9px] text-emerald-600 font-bold block">Fast Express</span>
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-white border border-emerald-200 shadow-2xs">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Primary Mode</span>
+                          <span className="text-xs font-black text-slate-800 block mt-0.5">Ro-Ro Rail</span>
+                          <span className="text-[9px] text-emerald-600 font-bold block">Lumding Section</span>
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-white border border-emerald-200 shadow-2xs">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Time Saved</span>
+                          <span className="text-xs font-black text-emerald-700 font-mono block mt-0.5">
+                            {currentRouteData.safeRoute.timeSaved.split(' ')[0]}h
+                          </span>
+                          <span className="text-[9px] text-emerald-600 font-bold block">Vs Mountain Road</span>
+                        </div>
+                      </div>
+
+                      {/* Clean Segment Breadcrumbs */}
+                      <div className="space-y-1 pt-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                          Safe Segment Conduit:
+                        </span>
+                        <div className="p-2.5 rounded-xl bg-white border border-emerald-200 text-xs flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-700">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                            <span>{origin.name.split(' ')[0]}</span>
+                          </div>
+                          <span className="text-emerald-500 text-xs">➔</span>
+                          <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-300">
+                            <Train className="w-3 h-3 text-emerald-700" />
+                            <span>Lumding Ro-Ro Rail (🟢 100% CLEAR)</span>
+                          </div>
+                          <span className="text-emerald-500 text-xs">➔</span>
+                          <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                            <span>{destination.name.split(' ')[0]}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dispatch Safe Convoy Action Button */}
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={handleDispatchSafeConvoy}
+                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                      >
+                        <Truck className="w-4 h-4" />
+                        <span>Authorize Safe Convoy via Rail Failover</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* 3. OPTIONAL ADVANCED ENGINEERING INTEL ACCORDION */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDetailedIntel(!showDetailedIntel)}
+                  className="w-full py-2.5 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold flex items-center justify-between transition-colors cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    <Info className="w-4 h-4 text-brand-600" />
+                    <span>Advanced Corridor Engineering & Meteorological Telemetry</span>
+                  </span>
+                  {showDetailedIntel ? (
+                    <span className="flex items-center gap-1 text-slate-500">
+                      Hide Details <ChevronUp className="w-4 h-4" />
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-brand-600 font-bold">
+                      Expand Full Intel <ChevronDown className="w-4 h-4" />
+                    </span>
+                  )}
+                </button>
+
+                {(showDetailedIntel || routeViewMode === 'intel') && (
+                  <div className="mt-3 p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4 animate-fade-in-up">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Left: Clearance & Capacity */}
+                      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
+                          Operational Clearance & Allocated Capacity:
+                        </span>
+                        <div className="space-y-1.5 text-slate-800">
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">Clearance Authority:</span>
+                            <span className="font-bold">{currentRouteData.safeRoute.clearanceAuthority}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">Allocated Ro-Ro & Barge Fleet:</span>
+                            <span className="font-bold">{currentRouteData.safeRoute.capacityDetails}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Weather Doppler & Terrain Alert */}
+                      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
+                          Meteorological & Geological Sensors:
+                        </span>
+                        <div className="space-y-1.5 text-slate-800">
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">IMD Doppler Precipitation:</span>
+                            <span className="font-bold text-rose-700">{currentRouteData.affectedRoute.weatherAlert}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px]">Autonomous Protocol:</span>
+                            <span className="font-bold text-emerald-700">SETU Autonomous Failover Engine v2.4</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Detailed Segment Tables */}
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
+                        Detailed Waypoint-By-Waypoint Routing Table:
+                      </span>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                        {/* Affected Segments */}
+                        <div className="space-y-1.5">
+                          <span className="text-[10px] font-bold text-rose-700 uppercase">Blocked Highway Segments:</span>
+                          {currentRouteData.affectedRoute.segments.map((seg, idx) => (
+                            <div key={idx} className="p-2 rounded-lg bg-rose-50/70 border border-rose-200 flex items-center justify-between text-[11px]">
+                              <span>{seg.from} ➔ {seg.to}</span>
+                              <span className="font-mono text-slate-500 font-bold">{seg.distance}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {/* Safe Segments */}
+                        <div className="space-y-1.5">
+                          <span className="text-[10px] font-bold text-emerald-700 uppercase">Safe Bypass Segments:</span>
+                          {currentRouteData.safeRoute.segments.map((seg, idx) => (
+                            <div key={idx} className="p-2 rounded-lg bg-emerald-50/70 border border-emerald-200 flex items-center justify-between text-[11px]">
+                              <span>{seg.from} ➔ {seg.to}</span>
+                              <span className="font-mono text-emerald-800 font-bold">{seg.distance}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

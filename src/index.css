@@ -328,3 +328,32 @@ body {
   animation: radarFlash 1.8s ease-in-out infinite;
 }
 
+/* Strategic Route Flow Animation (Fluid Green Conduit) */
+@keyframes routeFlow {
+  from {
+    stroke-dashoffset: 48;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-route-flow {
+  animation: routeFlow 1.8s linear infinite;
+}
+
+@keyframes routeHazardPulse {
+  0%, 100% {
+    stroke-opacity: 0.9;
+    stroke-width: 4.5;
+  }
+  50% {
+    stroke-opacity: 0.45;
+    stroke-width: 6.5;
+  }
+}
+
+.animate-route-hazard {
+  animation: routeHazardPulse 2.2s ease-in-out infinite;
+}
+
