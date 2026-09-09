@@ -43,44 +43,44 @@ export function generateMOUDocument(supplierId, customTerms = {}) {
     ...customTerms
   };
 
-  const documentId = `MOU-AURA-${supplier.id.toUpperCase()}-${Date.now().toString().slice(-6)}`;
+  const documentId = `MOU-MDONER-${supplier.id.toUpperCase()}-${Date.now().toString().slice(-6)}`;
 
   return {
     documentId,
-    title: "MEMORANDUM OF UNDERSTANDING (MOU) FOR EXPEDITED SEMICONDUCTOR ALLOCATION",
+    title: "INTER-AGENCY EMERGENCY SERVICE AGREEMENT & REQUISITION (MOU) FOR NER LIFELINE RESTORATION",
     generatedAt: new Date().toISOString(),
     parties: {
       buyer: {
-        name: "AURA Devices Inc.",
-        signatory: "Autonomous AI Procurement Agent (Authorized by Executive Committee)",
-        location: "Bengaluru, India"
+        name: "Ministry of Development of North Eastern Region (MDoNER) & North Eastern Council (NEC)",
+        signatory: "Autonomous Inter-Agency Requisition Agent (Authorized by Secretary MDoNER)",
+        location: "Shillong & Guwahati, India"
       },
       supplier: {
         name: supplier.name,
         signatory: `${supplier.repName}, ${supplier.repRole}`,
-        location: "Kansai / Phoenix"
+        location: "Guwahati / Siliguri / Shillong"
       }
     },
     clauses: [
       {
-        clause: "1. Volume & Allocation Commitment",
-        details: `Supplier guarantees immediate allocation of ${terms.capacityUnits.toLocaleString()} units with priority line reservation.`
+        clause: "1. Priority Lifeline Allocation",
+        details: `Partner agency guarantees immediate deployment of ${terms.capacityUnits.toLocaleString()} units/tonnes with Green Corridor transit clearance.`
       },
       {
-        clause: "2. Unit Pricing & Currency",
-        details: `Agreed baseline unit pricing locked at ₹${terms.unitPriceINR.toLocaleString()} INR (inclusive of capped ${terms.rushSurchargePct}% emergency surge fee).`
+        clause: "2. Requisition Tariff & Zero-Surge Agreement",
+        details: `Agreed operational tariff locked at ₹${terms.unitPriceINR.toLocaleString()} INR (inclusive of 0% emergency surcharge under NDMA protocol).`
       },
       {
-        clause: "3. Logistics & Transit Guarantee",
-        details: `Dock-to-dock delivery timeframe capped at ${terms.leadTimeDays} business days via direct air freight.`
+        clause: "3. Turnaround & Transit Guarantee",
+        details: `Point-to-point delivery timeframe capped at ${terms.leadTimeDays} business days via dedicated priority corridor.`
       },
       {
-        clause: "4. Master Service Agreement Extension",
-        details: `Buyer commits to a ${terms.minimumContractMonths}-month dual-sourcing minimum volume allocation post-crisis.`
+        clause: "4. Standing Inter-State Logistics Charter",
+        details: `MDoNER commits to a ${terms.minimumContractMonths}-month standing inter-state logistics reservation with guaranteed treasury settlement.`
       },
       {
-        clause: "5. Non-Performance Penalty",
-        details: "Daily 2.5% penalty credit for every 24-hour delay exceeding the SLA delivery window."
+        clause: "5. Disaster Management Statutory Clearance",
+        details: "Priority right-of-way and statutory fuel/security clearance authorized under NDMA Section 38."
       }
     ],
     financialSummary: {

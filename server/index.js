@@ -11,6 +11,7 @@ import networkRoutes from './routes/networkRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import databaseRoutes from './routes/databaseRoutes.js';
+import sosRoutes from './routes/sosRoutes.js';
 import { initDatabase } from './db/database.js';
 
 // Initialize SQLite database & migrations
@@ -50,6 +51,7 @@ app.use('/api/network', networkRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/db', databaseRoutes);
+app.use('/api/sos', sosRoutes);
 
 import path from 'path';
 import { fileURLToPath } from 'url';

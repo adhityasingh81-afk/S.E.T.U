@@ -1,161 +1,162 @@
-// Recovery Strategy Optimizer & Multi-Agent Engine
+// Recovery Strategy Optimizer & Multi-Agent Engine for North Eastern Region (NER)
+// Formulates Pareto-optimal disaster recovery pathways across Rail, River, Air, and Highway corridors
 
 export function generateRecoveryStrategies(disruptionState, resilienceBudget = { maxCostPct: 4, costWeight: 30, speedWeight: 40, resilienceWeight: 30 }) {
-  const { metrics = {}, affectedNode, severityPct = 40 } = disruptionState || {};
-  const revAtRisk = metrics?.totalRevenueAtRiskCr || 18.7;
-  const unassistedDays = metrics?.unassistedRecoveryDays || 27;
-  const nexusDays = metrics?.nexusRecoveryDays || 3.2;
+  const { metrics = {}, affectedNode, severityPct = 75 } = disruptionState || {};
+  const revAtRisk = metrics?.totalRevenueAtRiskCr || 21.4;
+  const unassistedDays = metrics?.unassistedRecoveryDays || 18.0;
+  const nexusDays = metrics?.nexusRecoveryDays || 3.4;
 
   // Base Strategies with deterministic scaling
   const strategies = [
     {
       id: "strat-cost-opt",
       name: "Strategy A",
-      title: "Cost-Optimized Reallocation",
-      tagline: "Minimum immediate capital expenditure with staggered factory ramp-up",
+      title: "Cost-Optimized Intermodal Failover (Rail + Waterway)",
+      tagline: "Minimum capital expenditure utilizing NFR rail freight and NW-2 Brahmaputra cargo barges",
       badge: "Budget Friendly",
       badgeColor: "emerald",
-      costCr: Math.round((revAtRisk * 0.165) * 10) / 10, // ~₹3.1 Cr
-      costPercentageOfAnnual: 0.68,
-      recoveryTimeDays: Math.max(7, Math.round(unassistedDays * 0.58)), // ~11 days
-      revenueProtectedPct: 71,
-      revenueProtectedCr: Math.round((revAtRisk * 0.71) * 10) / 10,
-      resilienceGain: 5,
-      confidencePct: 88,
+      costCr: Math.round((revAtRisk * 0.155) * 10) / 10, // ~₹3.3 Cr
+      costPercentageOfAnnual: 0.51,
+      recoveryTimeDays: Math.max(6, Math.round(unassistedDays * 0.52)), // ~9 days
+      revenueProtectedPct: 74,
+      revenueProtectedCr: Math.round((revAtRisk * 0.74) * 10) / 10,
+      resilienceGain: 6,
+      confidencePct: 89,
       riskLevel: "Moderate",
-      primaryAgent: "Finance & Inventory Agent",
-      recommendedSupplier: "Kyoto Microelectronics & Local Buffers",
+      primaryAgent: "Intermodal Transport Agent",
+      recommendedSupplier: "NFR Maligaon & IWAI Pandu River Port",
       keyActions: [
         {
           id: "act-1",
-          agent: "Inventory Agent",
-          title: "Reallocate Global Buffer Stock",
-          description: "Reroute 35,000 finished chip assemblies from Singapore buffer to Chennai Plant 1 via commercial air-cargo within 48h.",
-          timeframe: "T+2 Days",
-          costCr: 0.8,
+          agent: "Rail Operations Agent",
+          title: "Mobilize Lumding-Badarpur Freight Shuttle",
+          description: "Reroute 40,000 units of essential foodgrains and POL fuel via NFR Lumding-Badarpur railhead directly to Agartala Siding.",
+          timeframe: "T+36 Hours",
+          costCr: 1.1,
         },
         {
           id: "act-2",
-          agent: "Procurement Agent",
-          title: "Contract Secondary Production In Kyoto",
-          description: "Execute standard-tier contract addendum with Kyoto Microelectronics for 30,000 units/mo with zero rush premium.",
-          timeframe: "T+5 Days",
-          costCr: 1.5,
+          agent: "Waterways Agent",
+          title: "Activate NW-2 River Cargo Barges",
+          description: "Dispatch 4 self-propelled 200-tonne river barges from Pandu Port to Dhubri/Jogighopa along National Waterway 2.",
+          timeframe: "T+48 Hours",
+          costCr: 0.9,
         },
         {
           id: "act-3",
-          agent: "Logistics Agent",
-          title: "Optimize Standard Cargo Freight",
-          description: "Consolidate maritime shipments via Colombo transshipment hub at baseline contractual rates.",
-          timeframe: "T+10 Days",
-          costCr: 0.8,
+          agent: "Civil Supplies Agent",
+          title: "Stagger District Ration Quotas",
+          description: "Authorize district collectors in Tripura and Mizoram to draw from FCI buffer granaries at standard issue price.",
+          timeframe: "T+4 Days",
+          costCr: 1.3,
         },
       ],
       aiExplanation: {
-        summary: "Strategy A minimizes immediate out-of-pocket procurement surcharges by prioritizing existing warehouse safety stock and standard-lead-time secondary sourcing.",
-        pros: ["Lowest cost outlay (+₹3.1 Cr)", "Preserves gross margins", "Zero expedited freight penalties"],
-        tradeoffs: ["Longer recovery timeline (11 days)", "Lower revenue protection (71%)", "Risk of minor delay penalties with Stuttgart Automotive"],
-        whySelected: "Best suited for fiscal quarters under tight margin pressure where customer delivery tolerance permits up to 12 days flexibility.",
+        summary: "Strategy A prioritizes high-capacity rail and river assets over expensive airlifts, minimizing emergency exchequer outlay while guaranteeing steady bulk food and fuel delivery.",
+        pros: ["Lowest fiscal cost (+₹3.3 Cr)", "High bulk capacity (85k units via rail/river)", "Zero road corridor congestion"],
+        tradeoffs: ["Longer recovery duration (9 days)", "Requires secondary truck transshipment at Badarpur railhead"],
+        whySelected: "Best suited for sustained monsoon crises where bulk foodgrains and fuel must be maintained on a strict state disaster relief budget.",
       }
     },
     {
       id: "strat-speed-opt",
       name: "Strategy B",
-      title: "Speed-Optimized Rapid Airlift",
-      tagline: "Ultra-fast air corridor deployment & priority foundry preemption",
+      title: "Speed-Optimized Tactical Air Bridge (IAF + Pawan Hans)",
+      tagline: "Rapid-deployment air bridge using C-130J Hercules & Mi-17V5 helicopters for life-critical supplies",
       badge: "Fastest Recovery",
       badgeColor: "brand",
-      costCr: Math.round((revAtRisk * 0.256) * 10) / 10, // ~₹4.8 Cr
-      costPercentageOfAnnual: 1.06,
-      recoveryTimeDays: Math.max(4, Math.round(unassistedDays * 0.26)), // ~5 days
-      revenueProtectedPct: 94,
-      revenueProtectedCr: Math.round((revAtRisk * 0.94) * 10) / 10,
-      resilienceGain: 7,
-      confidencePct: 93,
-      riskLevel: "Low",
-      primaryAgent: "Logistics & Supplier Agent",
-      recommendedSupplier: "Apex Silicon (Phoenix) + Dedicated Air Bridge",
+      costCr: Math.round((revAtRisk * 0.265) * 10) / 10, // ~₹5.7 Cr
+      costPercentageOfAnnual: 0.88,
+      recoveryTimeDays: Math.max(2, Math.round(unassistedDays * 0.22)), // ~3.9 days
+      revenueProtectedPct: 88,
+      revenueProtectedCr: Math.round((revAtRisk * 0.88) * 10) / 10,
+      resilienceGain: 8,
+      confidencePct: 94,
+      riskLevel: "Low Operational Risk",
+      primaryAgent: "Emergency Aviation Agent",
+      recommendedSupplier: "Eastern Air Command (Borjhar) & Pawan Hans",
       keyActions: [
         {
           id: "act-1",
-          agent: "Logistics Agent",
-          title: "Charter Dedicated Cargo Airlift",
-          description: "Commission 2x Boeing 777-F charter flights from Phoenix & Kyoto directly to Chennai Airport, bypassing maritime bottlenecks.",
-          timeframe: "T+24 Hours",
-          costCr: 2.1,
+          agent: "Aviation Logistics Agent",
+          title: "Launch Operation Setu Tactical Air Bridge",
+          description: "Clear 6 sorties of IAF C-130J Hercules from Borjhar Air Base to Agartala and Lengpui carrying 18,000 cryogenic oxygen cylinders.",
+          timeframe: "T+6 Hours",
+          costCr: 2.8,
         },
         {
           id: "act-2",
-          agent: "Supplier Agent",
-          title: "Preempt Apex Silicon Production Line",
-          description: "Pay 12% expediting surge fee to Apex Silicon Solutions (Phoenix) to clear line 4 and supply 45,000 qualified ASICs immediately.",
-          timeframe: "T+3 Days",
-          costCr: 2.2,
+          agent: "Helicopter Operations Agent",
+          title: "Deploy Pawan Hans Hill Shuttles",
+          description: "Establish helicopter airlift corridors to isolated hill hospital helipads in Aizawl, Lunglei, and Churachandpur.",
+          timeframe: "T+12 Hours",
+          costCr: 1.6,
         },
         {
           id: "act-3",
-          agent: "Operations Agent",
-          title: "Emergency 24/7 Factory Overtime",
-          description: "Initiate triple-shift 24/7 assembly at Chennai Plant 1 with pre-tested replacement components.",
-          timeframe: "T+4 Days",
-          costCr: 0.5,
+          agent: "Medical Taskforce Agent",
+          title: "Pre-Position Mobile Oxygen Concentrators",
+          description: "Distribute 250 high-flow oxygen concentrators to primary health centers facing road cutoff.",
+          timeframe: "T+24 Hours",
+          costCr: 1.3,
         },
       ],
       aiExplanation: {
-        summary: "Strategy B prioritizes time-to-recovery above all else by booking dedicated air charters and paying supplier surge premiums to restore 94% revenue within 5 days.",
-        pros: ["Recovers full production in just 5 days", "Protects 94% (₹17.6 Cr) of revenue", "Eliminates enterprise SLA breach penalties"],
-        tradeoffs: ["Higher upfront expenditure (+₹4.8 Cr)", "Charter air freight consumes 44% of recovery budget"],
-        whySelected: "Chosen when preserving tier-1 enterprise SLA commitments and market reputation is paramount.",
+        summary: "Strategy B bypasses blocked mountain roads entirely via airborne delivery, completely eliminating patient hypoxia risks in Tripura and Mizoram hospitals within 24 hours.",
+        pros: ["Fastest lifeline restoration (3.9 days)", "Instant hospital oxygen replenishment", "Completely immune to ongoing mudslides"],
+        tradeoffs: ["Higher operating cost (+₹5.7 Cr)", "Payload limited compared to rail freight"],
+        whySelected: "Imperative when hospital cryogenic oxygen buffers drop below 48 hours and human lives are in immediate jeopardy.",
       }
     },
     {
       id: "strat-resilience-opt",
       name: "Strategy C",
-      title: "Resilience-Optimized Multi-Sourcing",
-      tagline: "Permanent multi-hub dual sourcing & dynamic autonomous routing",
+      title: "Balanced Lifeline Corridor Resilience (Tri-Modal Split)",
+      tagline: "BRO emergency Bailey bridge launch combined with NFR rail shuttles & diplomatic transit",
       badge: "Highest Resilience",
-      badgeColor: "amber",
-      costCr: Math.round((revAtRisk * 0.288) * 10) / 10, // ~₹5.4 Cr
-      costPercentageOfAnnual: 1.2,
-      recoveryTimeDays: Math.max(3, Math.round(nexusDays)), // ~3.2 days
-      revenueProtectedPct: 96,
-      revenueProtectedCr: Math.round((revAtRisk * 0.96) * 10) / 10,
-      resilienceGain: 10,
-      confidencePct: 96,
+      badgeColor: "indigo",
+      costCr: Math.round((revAtRisk * 0.21) * 10) / 10, // ~₹4.5 Cr
+      costPercentageOfAnnual: 0.69,
+      recoveryTimeDays: Math.max(3, Math.round(nexusDays)), // ~3.4 days
+      revenueProtectedPct: 97,
+      revenueProtectedCr: Math.round((revAtRisk * 0.97) * 10) / 10,
+      resilienceGain: 11,
+      confidencePct: 97,
       riskLevel: "Very Low",
-      primaryAgent: "Orchestrator & Risk Agent",
-      recommendedSupplier: "Multi-Hub Tri-Sourcing (Kyoto + Phoenix + Munich)",
+      primaryAgent: "Orchestrator & Civil Defense Agent",
+      recommendedSupplier: "BRO Project Pushpak + NFR Freight + IOCL NE",
       keyActions: [
         {
           id: "act-1",
-          agent: "Orchestrator Agent",
-          title: "Activate Tri-Hub Split Sourcing",
-          description: "Split component requisition: 40% Kyoto Microelectronics, 35% Apex Silicon USA, 25% Bavaria Sensorik Germany.",
-          timeframe: "T+18 Hours",
-          costCr: 2.4,
+          agent: "Border Roads Agent",
+          title: "Launch Sonapur Double-Single Bailey Bridge",
+          description: "Deploy 120-ft military Bailey bridge across Sonapur collapse zone with round-the-clock excavator relays to open single-lane convoy passage.",
+          timeframe: "T+36 Hours",
+          costCr: 1.9,
         },
         {
           id: "act-2",
-          agent: "Negotiation Agent",
-          title: "Execute Long-Term Capacity MOUs",
-          description: "Negotiate volume rebate offset with secondary suppliers; secures guaranteed line availability for 6 months.",
+          agent: "Rail & Waterway Agent",
+          title: "Activate Parallel Rail-Barge Relief Feeder",
+          description: "Route 35,000 units via NFR Lumding rakes while BRO clears the highway, guaranteeing uninterrupted hospital supply.",
           timeframe: "T+2 Days",
-          costCr: 1.6,
+          costCr: 1.4,
         },
         {
           id: "act-3",
-          agent: "Logistics Agent",
-          title: "Multi-Modal Intermodal Route Diversification",
-          description: "Route 50% through direct air cargo and 50% through high-speed sea feeder via Singapore hub.",
-          timeframe: "T+3 Days",
-          costCr: 1.4,
+          agent: "Energy Security Agent",
+          title: "Clear MEA Dawki-Tamabil Fuel Transit",
+          description: "Dispatch 40 bonded IOCL fuel tankers via the diplomatic Bangladesh transit protocol corridor.",
+          timeframe: "T+44 Hours",
+          costCr: 1.2,
         },
       ],
       aiExplanation: {
-        summary: "Strategy C delivers rapid recovery (3.2 days) while structurally upgrading the supply chain against future disruptions by permanently qualifying 3 independent regional sources.",
-        pros: ["Fastest recovery speed (3.2 days)", "Protects 96% (₹18.0 Cr) of revenue", "Permanently boosts composite resilience from 81 to 91/100", "Eliminates single-point-of-failure vulnerabilities"],
-        tradeoffs: ["Requires ₹5.4 Cr initial commitment", "Demands cross-border vendor onboarding coordination"],
-        whySelected: "Recommended because the avoided long-term disruption loss (₹18.0 Cr protected) vastly exceeds the ₹5.4 Cr investment, yielding a net positive business ROI of +₹12.6 Cr.",
+        summary: "Strategy C simultaneously restores physical highway access via BRO Bailey engineering while keeping rail and river relief pipelines running, creating lasting structural resilience.",
+        pros: ["Optimal recovery speed (3.4 days)", "Protects 97% (₹20.8 Cr) of regional economic value", "Restores all-weather highway access for civil traffic", "Permanently boosts Regional Connectivity Index (RCI) from 68 to 88/100"],
+        tradeoffs: ["Requires close inter-agency synchronization (BRO, Railways, State Police)"],
+        whySelected: "Recommended because the avoided disaster loss (₹20.8 Cr protected) delivers the highest risk-adjusted benefit, completely resolving the isolation crisis.",
       }
     }
   ];
@@ -183,7 +184,6 @@ export function generateRecoveryStrategies(disruptionState, resilienceBudget = {
     let compositeRankScore = (costSubScore * wCost) + (speedSubScore * wSpeed) + (resSubScore * wRes);
 
     // Budget Cap Enforcement:
-    // If strategy percentage of annual budget exceeds user's Max Cost Cap slider, penalize score
     const withinBudget = strat.costPercentageOfAnnual <= (resilienceBudget.maxCostPct ?? 4.0);
     if (!withinBudget) {
       compositeRankScore = compositeRankScore * 0.45; // 55% penalty for exceeding budget cap

@@ -10,6 +10,7 @@ import { CounterfactualView } from './components/counterfactual/CounterfactualVi
 import { ResiliencePlanner } from './components/resilience-planner/ResiliencePlanner';
 import { ExecutiveReportModal } from './components/executive-report/ExecutiveReportModal';
 import { LoginPage } from './components/auth/LoginPage';
+import { SosEmergencyPage } from './components/sos/SosEmergencyPage';
 import { BackgroundAnimation } from './components/common/BackgroundAnimation';
 import { DEMO_USERS } from './data/usersData';
 import { NODES } from './data/auraSupplyChainData';
@@ -19,6 +20,7 @@ import { simulateRippleEffect } from './engine/rippleSimulation';
 import { calculateResilienceScore } from './engine/resilienceCalculator';
 import { generateRecoveryStrategies } from './engine/recoveryOptimizer';
 import { voiceService } from './engine/voiceService';
+import { triggerEmergencySos } from './services/emergencyTrigger';
 import { nexusApi } from './api/nexusApi';
 
 export default function App() {
@@ -31,13 +33,41 @@ export default function App() {
     return DEMO_USERS[0];
   });
 
-  const [activeTab, setActiveTab] = useState('command-center');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/sos') {
+      return 'sos';
+    }
+    return 'command-center';
+  });
+  const [sosPrefillData, setSosPrefillData] = useState(null);
   const [activeScenario, setActiveScenario] = useState(CRISIS_SCENARIOS[0]);
   const [isDisrupted, setIsDisrupted] = useState(true); // Default to primary scenario active for immediate demonstration
   const [activeStrategy, setActiveStrategy] = useState(null);
   const [activePersona, setActivePersona] = useState('exec');
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [backendOnline, setBackendOnline] = useState(true);
+
+  // Sync browser back/forward history for /sos route
+  useEffect(() => {
+    const handlePopState = () => {
+      if (window.location.pathname === '/sos') {
+        setActiveTab('sos');
+      } else {
+        setActiveTab(prev => (prev === 'sos' ? 'command-center' : prev));
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Programmatic or click navigation to /sos
+  const handleNavigateSos = (prefill = null) => {
+    setSosPrefillData(prefill);
+    setActiveTab('sos');
+    if (typeof window !== 'undefined' && window.location.pathname !== '/sos') {
+      window.history.pushState(null, '', '/sos');
+    }
+  };
 
   // Check backend health on mount
   useEffect(() => {
@@ -143,6 +173,21 @@ export default function App() {
     setIsAuthenticated(false);
   };
 
+  // Dedicated /sos Emergency Route (Works completely offline via Service Worker & IndexedDB)
+  if (activeTab === 'sos' || (typeof window !== 'undefined' && window.location.pathname === '/sos')) {
+    return (
+      <SosEmergencyPage
+        prefilledData={sosPrefillData}
+        onNavigateBack={() => {
+          if (typeof window !== 'undefined' && window.location.pathname === '/sos') {
+            window.history.pushState(null, '', '/');
+          }
+          setActiveTab('command-center');
+        }}
+      />
+    );
+  }
+
   // If not authenticated, render Login Page
   if (!isAuthenticated) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
@@ -167,6 +212,7 @@ export default function App() {
         onUpdateUser={(updated) => setCurrentUser(updated)}
         onLogout={handleLogout}
         onNavigateToTab={setActiveTab}
+        onNavigateSos={handleNavigateSos}
         backendOnline={backendOnline}
       />
 
@@ -180,6 +226,7 @@ export default function App() {
           metrics={simulationResult?.metrics}
           resilienceScore={resilienceScore}
           activeStrategy={activeStrategy}
+          onNavigateSos={handleNavigateSos}
         />
 
         <main className="flex-1 overflow-y-auto p-6 bg-[#f4f6fa]">
@@ -215,6 +262,7 @@ export default function App() {
               activeScenario={activeScenario}
               simulationResult={simulationResult}
               onNavigateToRecovery={() => setActiveTab('recovery-cockpit')}
+              onNavigateSos={handleNavigateSos}
               isDisrupted={isDisrupted}
               onResetNetwork={handleResetNetwork}
             />
@@ -227,6 +275,7 @@ export default function App() {
               onApplyStrategy={handleApplyStrategy}
               onNavigateToNegotiation={() => setActiveTab('negotiation-room')}
               onNavigateToCounterfactual={() => setActiveTab('counterfactual')}
+              onNavigateSos={handleNavigateSos}
             />
           )}
 

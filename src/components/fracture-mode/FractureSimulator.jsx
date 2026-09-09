@@ -86,6 +86,7 @@ export function FractureSimulator({
   activeScenario,
   simulationResult,
   onNavigateToRecovery,
+  onNavigateSos,
   isDisrupted,
   onResetNetwork
 }) {
@@ -152,7 +153,7 @@ export function FractureSimulator({
   const amplification = currentResult?.amplification || {};
   const whatBreaksFirst = currentResult?.whatBreaksFirst || [];
   const blastRadius = currentResult?.blastRadius || {};
-  const cascadeNodes = currentResult?.cascadeNodes || currentResult?.propagationTimeline || [];
+  const cascadeNodes = currentResult?.cascadeNodes || currentResult?.cascadeTimeline || currentResult?.propagationTimeline || [];
 
   // Selected timeline node drilldown
   const activeTimelineNode = cascadeNodes.find(n => n.id === selectedTimelineNodeId) || cascadeNodes[0];
@@ -272,6 +273,21 @@ export function FractureSimulator({
           >
             <Play className={`w-3.5 h-3.5 ${isSimulating ? 'animate-spin' : ''}`} />
             <span>{isSimulating ? 'Propagating Ripple...' : 'Simulate Fracture'}</span>
+          </button>
+
+          {/* Emergency SOS Button for Field Responders */}
+          <button
+            onClick={() => onNavigateSos && onNavigateSos({
+              disruptionType: eventType,
+              severity: severityPct >= 70 ? 'Critical' : 'Severe',
+              nodeId: selectedNodeId,
+              note: `Simulated fracture on ${selectedNodeId}: ${severityPct}% capacity cut for ${durationDays} days.`
+            })}
+            className="px-3.5 py-1.5 rounded-full text-xs font-black text-red-600 bg-red-50 hover:bg-red-100 border border-red-200/80 shadow-xs flex items-center gap-1.5 cursor-pointer transition-colors"
+            title="Dispatch Emergency SOS for this disruption"
+          >
+            <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
+            <span className="hidden sm:inline">Field SOS</span>
           </button>
         </div>
       </div>
@@ -867,7 +883,7 @@ export function FractureSimulator({
                       {blastRadius.tier1Direct?.map(node => (
                         <div key={node.id} className="p-3 rounded-xl bg-rose-50/70 border border-rose-200 text-xs space-y-1">
                           <div className="font-extrabold text-slate-900 truncate">{node.name}</div>
-                          <div className="text-rose-600 font-mono font-bold">{node.impactPct}</div>
+                          <div className="text-rose-600 font-mono font-bold">{node.impactPct || node.impairedPct}</div>
                           <div className="text-[10px] text-slate-500 font-mono">{node.runway}</div>
                         </div>
                       ))}
@@ -886,7 +902,7 @@ export function FractureSimulator({
                       {blastRadius.tier2Secondary?.map(node => (
                         <div key={node.id} className="p-3 rounded-xl bg-amber-50/50 border border-amber-200 text-xs space-y-1">
                           <div className="font-extrabold text-slate-900 truncate">{node.name}</div>
-                          <div className="text-amber-600 font-mono font-bold">{node.delayDays}</div>
+                          <div className="text-amber-600 font-mono font-bold">{node.delayDays || node.impairedPct}</div>
                           <div className="text-[10px] text-slate-500 font-mono">{node.runway}</div>
                         </div>
                       ))}

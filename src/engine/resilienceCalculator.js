@@ -1,31 +1,34 @@
-// Composite Resilience Scoring Engine
-import { BASELINE_RESILIENCE_METRICS } from '../data/auraSupplyChainData';
+// Composite Resilience Scoring Engine for North Eastern Region (NER)
+// Calculates Regional Connectivity Index (RCI) and dimensional resilience breakdown
+import { BASELINE_RESILIENCE_METRICS } from '../data/auraSupplyChainData.js';
 
 /**
  * Calculates composite resilience score and dimensional breakdown
- * @param {object} scenarioState - Current active scenario or recovery strategy
+ * @param {object} activeStrategy - Active recovery strategy if applied
+ * @param {boolean} isDisrupted - Whether an emergency disruption is active
+ * @param {number} severityPct - Disruption severity percentage
  */
 export function calculateResilienceScore(activeStrategy = null, isDisrupted = false, severityPct = 0) {
   if (!isDisrupted && !activeStrategy) {
     return {
-      overallScore: BASELINE_RESILIENCE_METRICS.overallScore,
+      overallScore: BASELINE_RESILIENCE_METRICS.overallScore, // RCI: 80
       breakdown: BASELINE_RESILIENCE_METRICS.breakdown,
       status: "optimal",
-      summary: "All 6 resilience vectors operational. Multi-regional redundancy active.",
+      summary: "All 8 North Eastern state lifelines operational. Intermodal road, rail, and waterway corridors nominal.",
     };
   }
 
   // If disruption is active and no recovery plan applied
   if (isDisrupted && !activeStrategy) {
-    const penalty = Math.round(severityPct * 0.7);
+    const penalty = Math.round(severityPct * 0.52);
     const degradedScore = Math.max(38, BASELINE_RESILIENCE_METRICS.overallScore - penalty);
 
     const degradedBreakdown = BASELINE_RESILIENCE_METRICS.breakdown.map(item => {
       let itemScore = item.score;
-      if (item.dimension === "Supplier Diversity") itemScore = Math.max(35, item.score - Math.round(severityPct * 0.8));
-      if (item.dimension === "Inventory Buffer") itemScore = Math.max(25, item.score - Math.round(severityPct * 0.9));
-      if (item.dimension === "Recovery Velocity") itemScore = Math.max(40, item.score - Math.round(severityPct * 0.6));
-      if (item.dimension === "Geographic Diversity") itemScore = Math.max(30, item.score - Math.round(severityPct * 0.7));
+      if (item.dimension === "All-Weather Route Diversity") itemScore = Math.max(28, item.score - Math.round(severityPct * 0.7));
+      if (item.dimension === "Medical Cryogenic Reserves") itemScore = Math.max(22, item.score - Math.round(severityPct * 0.85));
+      if (item.dimension === "High-Altitude Stockpile Autonomy") itemScore = Math.max(32, item.score - Math.round(severityPct * 0.6));
+      if (item.dimension === "Terrain & Monsoon Adaptability") itemScore = Math.max(30, item.score - Math.round(severityPct * 0.65));
 
       return {
         ...item,
@@ -38,23 +41,24 @@ export function calculateResilienceScore(activeStrategy = null, isDisrupted = fa
       overallScore: degradedScore,
       breakdown: degradedBreakdown,
       status: "critical",
-      summary: `Network resilience degraded to ${degradedScore}/100. Single-point supplier fracture cascading through manufacturing tiers.`,
+      summary: `Regional Connectivity Index (RCI) degraded to ${degradedScore}/100. Mountain landslide at NH-6 Sonapur Pass severing Tripura & Mizoram supplies.`,
     };
   }
 
   // If a recovery strategy is applied:
   let boost = 0;
-  if (activeStrategy.id === "strat-cost-opt") boost = 5;
-  if (activeStrategy.id === "strat-speed-opt") boost = 7;
-  if (activeStrategy.id === "strat-resilience-opt") boost = 10;
+  if (activeStrategy.id === "strat-cost-opt") boost = 6;
+  if (activeStrategy.id === "strat-speed-opt") boost = 8;
+  if (activeStrategy.id === "strat-resilience-opt") boost = 11;
 
-  const recoveredScore = Math.min(96, Math.max(82, BASELINE_RESILIENCE_METRICS.overallScore + boost));
+  const recoveredScore = Math.min(97, Math.max(84, BASELINE_RESILIENCE_METRICS.overallScore + boost));
 
   const recoveredBreakdown = BASELINE_RESILIENCE_METRICS.breakdown.map(item => {
-    let itemScore = Math.min(99, item.score + (activeStrategy.resilienceGain || 6));
-    if (activeStrategy.id === "strat-resilience-opt" && item.dimension === "Supplier Diversity") itemScore = 94;
-    if (activeStrategy.id === "strat-resilience-opt" && item.dimension === "Geographic Diversity") itemScore = 88;
-    if (activeStrategy.id === "strat-speed-opt" && item.dimension === "Recovery Velocity") itemScore = 96;
+    let itemScore = Math.min(99, item.score + (activeStrategy.resilienceGain || 7));
+    if (activeStrategy.id === "strat-resilience-opt" && item.dimension === "All-Weather Route Diversity") itemScore = 92;
+    if (activeStrategy.id === "strat-resilience-opt" && item.dimension === "Multimodal Failover Readiness") itemScore = 98;
+    if (activeStrategy.id === "strat-speed-opt" && item.dimension === "Disaster Recovery Velocity") itemScore = 97;
+    if (activeStrategy.id === "strat-speed-opt" && item.dimension === "Medical Cryogenic Reserves") itemScore = 95;
 
     return {
       ...item,
@@ -67,6 +71,6 @@ export function calculateResilienceScore(activeStrategy = null, isDisrupted = fa
     overallScore: recoveredScore,
     breakdown: recoveredBreakdown,
     status: "fortified",
-    summary: `Resilience restored to ${recoveredScore}/100 with ${activeStrategy.title}. Redundant supply corridors and expedited inventory allocations active.`,
+    summary: `Regional Connectivity Index fortified to ${recoveredScore}/100 via ${activeStrategy.title}. Tri-modal rail, river, and BRO Bailey passage active.`,
   };
 }

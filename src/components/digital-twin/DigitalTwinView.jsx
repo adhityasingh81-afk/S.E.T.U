@@ -56,6 +56,7 @@ export function DigitalTwinView({
   activeScenario
 }) {
   const [viewMode, setViewMode] = useState('graph'); // 'graph' | 'map' | 'cards'
+  const [mapScope, setMapScope] = useState('ner'); // 'ner' | 'india'
   const [selectedTypeFilter, setSelectedTypeFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredNode, setHoveredNode] = useState(null);
@@ -166,13 +167,19 @@ export function DigitalTwinView({
   const countriesData = useMemo(() => feature(worldAtlasData, worldAtlasData.objects.countries).features, []);
   const graticuleData = useMemo(() => geoGraticule10(), []);
 
-  // Standard Mercator projection calibrated for global supply chain viewport (1000 x 500)
+  // Standard Mercator projection calibrated for North Eastern Region (1000 x 500)
   const geoProjection = useMemo(() => {
+    if (mapScope === 'india') {
+      return geoMercator()
+        .scale(880)
+        .center([82.5, 22.5])
+        .translate([500, 250]);
+    }
     return geoMercator()
-      .scale(132)
-      .center([10, 20])
-      .translate([500, 245]);
-  }, []);
+      .scale(2900)
+      .center([92.5, 25.6])
+      .translate([500, 250]);
+  }, [mapScope]);
 
   const geoPathGenerator = useMemo(() => geoPath(geoProjection), [geoProjection]);
 
@@ -613,14 +620,42 @@ export function DigitalTwinView({
             {/* ================= VIEW 2: ACCURATE GEOGRAPHIC WORLD MAP ================= */}
             {viewMode === 'map' && (
               <div className="relative z-10 space-y-3 flex-1 flex flex-col">
-                <div className="text-xs text-slate-500 font-semibold flex items-center justify-between pb-2 border-b border-slate-100">
+                <div className="text-xs text-slate-500 font-semibold flex items-center justify-between pb-2 border-b border-slate-100 flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <Globe2 className="w-4 h-4 text-brand-500" />
-                    <span className="text-slate-800 font-bold">Global Multi-Modal Logistics Corridors</span>
+                    <span className="text-slate-800 font-bold">North Eastern Region (NER) Strategic Corridors Map</span>
                   </div>
-                  <span className="text-brand-600 font-mono text-[11px] bg-orange-50 px-2.5 py-0.5 rounded-full border border-orange-200">
-                    4 Continents • 10 Active Corridors • Zoom up to 800%
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                      <button
+                        onClick={() => {
+                          setMapScope('ner');
+                          setMapPan({ x: 0, y: 0 });
+                          setMapZoom(1);
+                        }}
+                        className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                          mapScope === 'ner' ? 'bg-white text-brand-600 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        NER Focus
+                      </button>
+                      <button
+                        onClick={() => {
+                          setMapScope('india');
+                          setMapPan({ x: 0, y: 0 });
+                          setMapZoom(1);
+                        }}
+                        className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                          mapScope === 'india' ? 'bg-white text-brand-600 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        All-India Gateway
+                      </button>
+                    </div>
+                    <span className="text-brand-600 font-mono text-[11px] bg-orange-50 px-2.5 py-0.5 rounded-full border border-orange-200">
+                      8 States • 16 Corridors • NH-6 / NW-2 Active
+                    </span>
+                  </div>
                 </div>
 
                 {/* Real Continental Map Stage with Wheel Zoom & Pan */}
@@ -908,6 +943,16 @@ export function DigitalTwinView({
                     {selectedNode.tier && (
                       <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700">
                         Tier {selectedNode.tier}
+                      </span>
+                    )}
+                    {selectedNode.altitudeMeters != null && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+                        {selectedNode.altitudeMeters}m Alt
+                      </span>
+                    )}
+                    {selectedNode.state && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {selectedNode.state}
                       </span>
                     )}
                     <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-full bg-orange-50 text-brand-700 border border-orange-200/60">

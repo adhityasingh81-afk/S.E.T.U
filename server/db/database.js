@@ -150,12 +150,33 @@ export function initDatabase() {
       updated_at TEXT DEFAULT (datetime('now'))
     );
 
+    -- SOS Emergency Alerts Table
+    CREATE TABLE IF NOT EXISTS sos_alerts (
+      id TEXT PRIMARY KEY,
+      disruption_type TEXT NOT NULL,
+      severity TEXT NOT NULL,
+      latitude REAL,
+      longitude REAL,
+      accuracy REAL,
+      node_id TEXT,
+      node_name TEXT,
+      timestamp INTEGER NOT NULL,
+      note TEXT,
+      queued_at INTEGER,
+      status TEXT DEFAULT 'SENT',
+      sms_sid TEXT,
+      sms_provider TEXT,
+      recipient_phone TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     -- Indexes for fast querying
     CREATE INDEX IF NOT EXISTS idx_nodes_type ON nodes(type);
     CREATE INDEX IF NOT EXISTS idx_nodes_criticality ON nodes(criticality);
     CREATE INDEX IF NOT EXISTS idx_simulations_time ON simulations(simulated_at);
     CREATE INDEX IF NOT EXISTS idx_mous_supplier ON mous(supplier_id);
     CREATE INDEX IF NOT EXISTS idx_reports_time ON executive_reports(generated_at);
+    CREATE INDEX IF NOT EXISTS idx_sos_alerts_time ON sos_alerts(created_at);
   `);
 
   seedInitialData();
@@ -462,6 +483,40 @@ export function dbGetExecutiveReports(limit = 10) {
   return db.prepare('SELECT * FROM executive_reports ORDER BY generated_at DESC LIMIT ?').all(limit);
 }
 
+// --- SOS Alerts ---
+export function dbSaveSosAlert(alert) {
+  const insert = db.prepare(`
+    INSERT OR REPLACE INTO sos_alerts (id, disruption_type, severity, latitude, longitude, accuracy, node_id, node_name, timestamp, note, queued_at, status, sms_sid, sms_provider, recipient_phone)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  insert.run(
+    alert.id || `sos-${Date.now()}`,
+    alert.disruptionType || 'Unspecified Disruption',
+    alert.severity || 'Critical',
+    alert.coordinates?.latitude != null ? Number(alert.coordinates.latitude) : null,
+    alert.coordinates?.longitude != null ? Number(alert.coordinates.longitude) : null,
+    alert.coordinates?.accuracy != null ? Number(alert.coordinates.accuracy) : null,
+    alert.nodeId || null,
+    alert.nodeName || null,
+    alert.timestamp || Date.now(),
+    alert.note || null,
+    alert.queuedAt || null,
+    alert.status || 'SENT',
+    alert.smsSid || null,
+    alert.smsProvider || 'Twilio',
+    alert.recipientPhone || null
+  );
+  return dbGetSosAlertById(alert.id);
+}
+
+export function dbGetSosAlertById(id) {
+  return db.prepare('SELECT * FROM sos_alerts WHERE id = ?').get(id);
+}
+
+export function dbGetSosAlerts(limit = 25) {
+  return db.prepare('SELECT * FROM sos_alerts ORDER BY created_at DESC LIMIT ?').all(limit);
+}
+
 // --- Database Metrics & Stats ---
 export function dbGetStats() {
   return {
@@ -472,6 +527,7 @@ export function dbGetStats() {
     simulationsCount: db.prepare('SELECT COUNT(*) as c FROM simulations').get().c,
     mousCount: db.prepare('SELECT COUNT(*) as c FROM mous').get().c,
     reportsCount: db.prepare('SELECT COUNT(*) as c FROM executive_reports').get().c,
+    sosAlertsCount: db.prepare('SELECT COUNT(*) as c FROM sos_alerts').get().c,
     databaseEngine: 'SQLite (Node 24 Built-in DatabaseSync)',
     dbPath
   };

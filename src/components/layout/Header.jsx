@@ -56,6 +56,7 @@ export function Header({
   onUpdateUser,
   onLogout,
   onNavigateToTab,
+  onNavigateSos,
   backendOnline = true
 }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -112,12 +113,12 @@ export function Header({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Notification items state
+  // Notification items state for MDoNER
   const [notifications, setNotifications] = useState([
     {
       id: 'notif-1',
-      title: 'Active Fracture Detected: Taiwan Micro Foundry',
-      desc: '40% throughput degradation in Hsinchu corridor. Chennai assembly runway down to 9 days.',
+      title: 'Active Landslide Severance: NH-6 Sonapur Pass',
+      desc: '75% flow disruption in East Jaintia Hills. Agartala & Aizawl medical oxygen runway down to 2.2 days.',
       time: '2m ago',
       type: 'crisis',
       unread: true,
@@ -126,8 +127,8 @@ export function Header({
     },
     {
       id: 'notif-2',
-      title: 'Kyoto Advanced Ceramics Concession Offer',
-      desc: 'Supplier agreed to expedite 40,000 IC chips with 6% volume discount via Air Freight.',
+      title: 'NFR Freight Green Corridor Finalised',
+      desc: 'North East Frontier Railway locked 2 dedicated Ro-Ro trains through Badarpur siding within 48 hours.',
       time: '14m ago',
       type: 'negotiation',
       unread: true,
@@ -136,8 +137,8 @@ export function Header({
     },
     {
       id: 'notif-3',
-      title: 'Autonomous Reroute Protocol Ready',
-      desc: 'Strategy C (Resilience-Optimized) computed +₹12.5 Cr net value preservation.',
+      title: 'Multimodal Failover Protocol Active',
+      desc: 'Strategy C (Balanced Tri-Modal) computed +₹20.8 Cr net economic & relief value preserved.',
       time: '35m ago',
       type: 'recovery',
       unread: false,
@@ -146,34 +147,34 @@ export function Header({
     },
   ]);
 
-  // Supplier Inquiries / Messages state
+  // Supplier / Inter-Agency Messages state
   const [messages, setMessages] = useState([
     {
       id: 'msg-1',
-      sender: 'Kenji Sato (VP Sales, Kyoto Ceramics)',
+      sender: 'Col. Vikramaditya Rathore (BRO Task Force)',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-      subject: 'Emergency IC Substrate Allocation Confirmed',
-      preview: 'We have reserved Batch #KY-9921 for AURA Devices. Ready to dispatch via Tokyo-Narita express.',
-      time: '10:14 AM',
+      subject: 'Sonapur Pass 120-ft Bailey Bridge Deployment',
+      preview: 'Double-single military Bailey bridge launched. Single-lane emergency convoy passage opens in 36 hours.',
+      time: '10:20 AM',
       unread: true,
       actionTab: 'negotiation-room',
     },
     {
       id: 'msg-2',
-      sender: 'Marcus Vance (Logistics Director, DHL Global)',
+      sender: 'Sanjay K. Barua, IRTS (NFR Maligaon)',
       avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-      subject: 'Air Freight Cargo Route TSMC -> Chennai',
-      preview: 'Charter slot confirmed for 48-hour transit window. Awaiting final procurement sign-off.',
+      subject: 'Emergency Rake Allocation: Lumding-Badarpur',
+      preview: '14 flat-car wagons allocated for cryogenic oxygen tankers. Green corridor clear signal authorized.',
       time: '09:45 AM',
       unread: true,
       actionTab: 'recovery-cockpit',
     },
     {
       id: 'msg-3',
-      sender: 'Dr. Cheryl Ng (Singapore Regional Gateway)',
+      sender: 'Pranab Bordoloi (IWAI Pandu Port)',
       avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80',
-      subject: 'Buffer Inventory Stockpile Audit',
-      preview: 'Singapore gateway warehouse inventory at 14 days runway. All regional fulfillment lines clear.',
+      subject: 'NW-2 River Barge Flotilla En Route',
+      preview: '4 self-propelled 200-tonne river barges departed Pandu for Dhubri/Jogighopa along National Waterway 2.',
       time: '08:20 AM',
       unread: false,
       actionTab: 'digital-twin',
@@ -441,7 +442,7 @@ export function Header({
           <input
             ref={searchInputRef}
             type="text"
-            placeholder="Search features, views, crisis scenarios, suppliers, hubs... (⌘K)"
+            placeholder="Search corridors, mountain passes, depots, district stockpiles... (⌘K)"
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -982,6 +983,16 @@ export function Header({
         >
           <FileText className="w-3.5 h-3.5" />
           <span className="hidden md:inline">Executive Brief</span>
+        </button>
+
+        {/* Field Emergency SOS Quick Trigger */}
+        <button
+          onClick={() => onNavigateSos && onNavigateSos()}
+          className="px-3 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 shadow-sm cursor-pointer transition-all bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white border border-red-500/80 hover:shadow-md hover:shadow-red-500/25"
+          title="Launch Field SOS & Offline Emergency Alert System"
+        >
+          <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+          <span>SOS ALERT</span>
         </button>
       </div>
 

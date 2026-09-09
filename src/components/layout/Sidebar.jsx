@@ -8,7 +8,9 @@ import {
   GitCompare, 
   SlidersHorizontal,
   ChevronRight,
-  Building2
+  Building2,
+  ShieldAlert,
+  Radio
 } from 'lucide-react';
 
 export function Sidebar({ 
@@ -18,7 +20,8 @@ export function Sidebar({
   activeScenario, 
   metrics,
   resilienceScore,
-  activeStrategy 
+  activeStrategy,
+  onNavigateSos 
 }) {
   const sections = [
     {
@@ -67,6 +70,18 @@ export function Sidebar({
           icon: SlidersHorizontal,
         },
       ]
+    },
+    {
+      title: "FIELD RESILIENCE & SOS",
+      items: [
+        {
+          id: 'sos',
+          label: 'Emergency SOS Alert',
+          icon: ShieldAlert,
+          count: '0-NET',
+          isSos: true,
+        },
+      ]
     }
   ];
 
@@ -86,12 +101,12 @@ export function Sidebar({
         </div>
         <div>
           <h1 className="text-lg font-extrabold tracking-tight text-slate-900 font-sans flex items-center gap-1.5">
-            NEXUS
+            SETU <span className="text-slate-400 font-light">•</span> NEXUS
             <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-orange-100 text-brand-600 font-mono">
-              AI
+              NER
             </span>
           </h1>
-          <p className="text-[11px] text-slate-400 font-medium">Self-Healing Supply Chain</p>
+          <p className="text-[11px] text-slate-500 font-medium">MDoNER • Smart Logistics</p>
         </div>
       </div>
 
@@ -109,18 +124,26 @@ export function Sidebar({
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    if (item.isSos && onNavigateSos) {
+                      onNavigateSos();
+                    } else {
+                      setActiveTab(item.id);
+                    }
+                  }}
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all group ${
-                    isActive
+                    item.isSos
+                      ? 'text-red-700 bg-red-50 hover:bg-red-100 border border-red-200/80 shadow-xs'
+                      : isActive
                       ? 'nav-item-active'
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <Icon className={`w-4 h-4 transition-colors ${
-                      isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700'
+                      item.isSos ? 'text-red-600' : isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-700'
                     }`} />
-                    <span className="text-xs font-bold font-sans tracking-tight">
+                    <span className={`text-xs font-bold font-sans tracking-tight ${item.isSos ? 'text-red-700 font-black' : ''}`}>
                       {item.label}
                     </span>
                   </div>

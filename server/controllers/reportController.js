@@ -6,31 +6,31 @@ export function generateExecutiveReport(req, res) {
     const { activeScenario, simulationResult, activeStrategy, resilienceScore } = req.body;
 
     const report = {
-      reportId: `NEXUS-EXEC-REPORT-${Date.now().toString().slice(-6)}`,
+      reportId: `SITREP-NER-${Date.now().toString().slice(-6)}`,
       company: COMPANY_PROFILE.name,
       generatedAt: new Date().toISOString(),
-      classification: "CONFIDENTIAL // BOARD OF DIRECTORS BRIEFING",
+      classification: "OFFICIAL // MDoNER & NDMA INTER-AGENCY SITREP",
       crisisSummary: {
-        scenarioTitle: activeScenario?.title || "Active Network Fracture",
-        affectedNode: simulationResult?.affectedNode?.name || "Taiwan Micro Foundry",
-        severityPct: simulationResult?.severityPct || 40,
-        unassistedExposureCr: simulationResult?.metrics?.totalRevenueAtRiskCr || 18.7,
-        unassistedDowntimeDays: simulationResult?.metrics?.unassistedRecoveryDays || 27,
+        scenarioTitle: activeScenario?.title || "Active Mountain Corridor Fracture",
+        affectedNode: simulationResult?.affectedNode?.name || "NH-6 Sonapur Mountain Pass",
+        severityPct: simulationResult?.severityPct || 75,
+        unassistedExposureCr: simulationResult?.metrics?.totalRevenueAtRiskCr || 21.4,
+        unassistedDowntimeDays: simulationResult?.metrics?.unassistedRecoveryDays || 18,
       },
       mitigationStatus: activeStrategy ? {
         strategyTitle: activeStrategy.title,
         executionCostCr: activeStrategy.costCr,
         recoveryTimeDays: activeStrategy.recoveryTimeDays,
         netRevenueProtectedCr: activeStrategy.revenueProtectedCr,
-        resilienceScoreLift: resilienceScore?.overallScore || 91,
+        resilienceScoreLift: resilienceScore?.overallScore || 92,
         status: "APPROVED & DISPATCHED"
       } : {
         status: "PENDING AUTHORIZATION",
-        recommendedAction: "Dispatch Speed-Optimized Rapid Airlift (Strategy B)"
+        recommendedAction: "Dispatch Balanced Lifeline Corridor Resilience (Strategy C)"
       },
       auditSignature: {
-        signatory: "NEXUS Self-Healing Autonomous Engine",
-        complianceStandard: "ISO 22301 Business Continuity Management",
+        signatory: "NEXUS Autonomous Inter-Agency Engine",
+        complianceStandard: "NDMA Act 2005 Chapter IV Statutory Compliance",
         verified: true
       }
     };

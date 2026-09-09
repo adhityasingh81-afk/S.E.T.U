@@ -197,9 +197,9 @@ export const voiceService = {
    */
   announceFracture(nodeName, riskAmountCr, callbacks = {}) {
     if (!isVoiceEnabled) return;
-    const cleanName = (nodeName || 'Target Node').split('(')[0].trim();
+    const cleanName = (nodeName || 'Target Corridor').split('(')[0].trim();
     const cleanRisk = typeof riskAmountCr === 'number' ? riskAmountCr.toFixed(1) : riskAmountCr;
-    const text = `Fracture simulation initiated at ${cleanName}, estimated revenue risk - ${cleanRisk} crore`;
+    const text = `Corridor disruption alert at ${cleanName}. Estimated regional value at risk: ${cleanRisk} crore. Simulating multi-modal failover.`;
     this.speak(text, callbacks);
   },
 
@@ -208,6 +208,6 @@ export const voiceService = {
    */
   announceReset(callbacks = {}) {
     if (!isVoiceEnabled) return;
-    this.speak('Simulation reset.', callbacks);
+    this.speak('Regional lifeline network restored to nominal baseline.', callbacks);
   }
 };

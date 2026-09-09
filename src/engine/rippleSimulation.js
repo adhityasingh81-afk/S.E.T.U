@@ -1,9 +1,10 @@
-// Deterministic Ripple Effect & Disruption Simulation Engine
-import { NODES, LOGISTICS_ROUTES, COMPANY_PROFILE } from '../data/auraSupplyChainData';
+// Deterministic Ripple Effect & Disruption Simulation Engine for North Eastern Region (NER)
+// Models cascading impacts across 8 North Eastern States from mountain corridor fractures
+import { NODES, LOGISTICS_ROUTES, COMPANY_PROFILE } from '../data/auraSupplyChainData.js';
 
 /**
- * Propagates a disruption through the multi-tier supply network
- * @param {string} affectedNodeId - ID of the disrupted node
+ * Propagates a disruption through the multi-tier NER lifeline network
+ * @param {string} affectedNodeId - ID of the disrupted corridor or depot
  * @param {number} severityPct - Severity percentage (0-100%)
  * @param {number} durationDays - Duration in days
  * @param {string} eventType - Type of event
@@ -11,10 +12,10 @@ import { NODES, LOGISTICS_ROUTES, COMPANY_PROFILE } from '../data/auraSupplyChai
  * @param {Array<string>} activeContainmentIds - List of active containment intervention IDs
  */
 export function simulateRippleEffect(
-  affectedNodeId = 'sup-taiwan-semi', 
-  severityPct = 40, 
-  durationDays = 45, 
-  eventType = "Supplier Capacity Cut / Geopolitical",
+  affectedNodeId = 'wh-sonapur-pass', 
+  severityPct = 75, 
+  durationDays = 14, 
+  eventType = "Mountain Landslide & Road Corridor Severance",
   fractureType = 'capacity',
   activeContainmentIds = []
 ) {
@@ -37,40 +38,38 @@ export function simulateRippleEffect(
   // ==========================================
   // 1. CRITICALITY AMPLIFIER ENGINE
   // ==========================================
-  // Supplier Criticality Factor (0-100)
-  const isCriticalNode = affectedNode.criticality?.toLowerCase().includes('critical') || affectedNode.criticality?.toLowerCase().includes('flagship');
+  const isCriticalNode = affectedNode.criticality?.toLowerCase().includes('critical') || affectedNode.criticality?.toLowerCase().includes('ultra') || affectedNode.criticality?.toLowerCase().includes('flagship');
   const isHighNode = affectedNode.criticality?.toLowerCase().includes('high');
-  const criticalityScore = isCriticalNode ? 96 : isHighNode ? 82 : affectedNode.type === 'factory' ? 90 : 58;
+  const criticalityScore = isCriticalNode ? 98 : isHighNode ? 84 : affectedNode.type === 'factory' ? 90 : 62;
 
-  // Backup Availability (0-100, where 100 = abundant backups, 0 = sole source)
-  const altCount = affectedNode.alternativeSuppliers?.length || 0;
-  const backupScore = altCount === 0 ? 12 : altCount === 1 ? 32 : altCount === 2 ? 68 : 92;
+  // Backup Corridor Availability (0-100, where 100 = abundant backups, 0 = sole road link)
+  const altCount = affectedNode.alternativeSuppliers?.length || (affectedNode.id === 'wh-sonapur-pass' ? 0 : 2);
+  const backupScore = altCount === 0 ? 10 : altCount === 1 ? 30 : altCount === 2 ? 65 : 90;
 
   // Inventory Buffer Factor (0-100, lower days = worse buffer vulnerability)
   const bufferDays = affectedNode.inventoryBufferDays || affectedNode.inventoryRunwayDays || affectedNode.bufferDays || 14;
-  const bufferScore = Math.min(100, Math.round((bufferDays / 45) * 100));
+  const bufferScore = Math.min(100, Math.round((bufferDays / 40) * 100));
 
-  // Geographic Concentration Factor (0-100)
-  const isEastAsia = affectedNode.region === 'East Asia';
-  const geoConcentrationScore = isEastAsia ? 88 : affectedNode.region === 'Europe' ? 52 : 44;
+  // Geographic Isolation Factor (0-100)
+  const isMountain = (affectedNode.altitudeMeters || 0) > 800 || affectedNode.region?.includes('Hills');
+  const geoConcentrationScore = isMountain ? 92 : 60;
 
   // Network Centrality Factor (0-100)
   const directDependents = NODES.filter(n => n.dependencies && n.dependencies.includes(affectedNodeId));
-  const centralityScore = affectedNode.type === 'supplier' ? Math.min(98, 45 + directDependents.length * 20) : 85;
+  const centralityScore = Math.min(98, 50 + directDependents.length * 15);
 
-  // Compute Network Amplification Multiplier (ranging from 1.1x up to 2.8x)
-  const rawAmplifier = 1.0 + (criticalityScore / 100) * 0.7 + ((100 - backupScore) / 100) * 0.5 + ((100 - bufferScore) / 100) * 0.4 + (geoConcentrationScore / 100) * 0.2;
+  // Compute Network Amplification Multiplier (ranging from 1.1x up to 2.9x)
+  const rawAmplifier = 1.0 + (criticalityScore / 100) * 0.7 + ((100 - backupScore) / 100) * 0.55 + ((100 - bufferScore) / 100) * 0.4 + (geoConcentrationScore / 100) * 0.25;
   const amplificationMultiplier = Math.round(rawAmplifier * 10) / 10;
-  const effectiveNetworkDamagePct = Math.min(100, Math.round(effectiveSeverityPct * amplificationMultiplier));
 
   // ==========================================
   // 2. CONTAINMENT MITIGATION CALCULATIONS
   // ==========================================
   const containmentSavingsMap = {
-    'activate-backup': 0.42,      // 42% risk reduction
-    'reserve-buffer': 0.24,       // 24% risk reduction
-    'prioritize-sla': 0.18,       // 18% risk reduction
-    'expedite-freight': 0.16,     // 16% risk reduction
+    'activate-backup': 0.42,      // 42% risk reduction (e.g. NFR rail shuttle)
+    'reserve-buffer': 0.24,       // 24% risk reduction (FCI granary release)
+    'prioritize-sla': 0.18,       // 18% risk reduction (Green corridor hospital priority)
+    'expedite-freight': 0.16,     // 16% risk reduction (Operation Setu tactical air bridge)
   };
 
   let totalContainmentReduction = 0;
@@ -85,24 +84,23 @@ export function simulateRippleEffect(
   // ==========================================
   // 3. STEP-BY-STEP PROPAGATION METRICS
   // ==========================================
-  // Supplier Capacity / Parameter values Before & After
   const supplierCapacityBefore = 100;
   const supplierCapacityAfter = Math.max(0, Math.round(100 - effectiveSeverityPct));
 
-  // Factory Production Loss
+  // Regional Hub Throughput Loss
   let affectedFactories = [];
   let factoryDropPct = 0;
   if (effectiveSeverityPct > 0) {
     if (affectedNode.type === "supplier") {
       affectedFactories = NODES.filter(n => n.type === "factory" && n.dependencies && n.dependencies.includes(affectedNodeId)).map(n => n.id);
-      if (affectedFactories.length === 0) affectedFactories = ["fac-chennai-main"];
-      factoryDropPct = Math.round(effectiveSeverityPct * (amplificationMultiplier >= 2.0 ? 0.95 : 0.85));
+      if (affectedFactories.length === 0) affectedFactories = ["fac-guwahati-hub"];
+      factoryDropPct = Math.round(effectiveSeverityPct * 0.85);
     } else if (affectedNode.type === "factory") {
       factoryDropPct = effectiveSeverityPct;
       affectedFactories = [affectedNode.id];
     } else {
-      factoryDropPct = Math.round(effectiveSeverityPct * 0.7);
-      affectedFactories = NODES.filter(n => n.type === "factory" && n.dependencies && n.dependencies.includes(affectedNodeId)).map(n => n.id);
+      factoryDropPct = Math.round(effectiveSeverityPct * 0.65);
+      affectedFactories = ["fac-guwahati-hub"];
     }
   }
 
@@ -110,27 +108,26 @@ export function simulateRippleEffect(
   const uncontainedFactoryProduction = effectiveSeverityPct > 0 ? Math.max(15, Math.round(100 - factoryDropPct)) : 100;
   const factoryProductionAfter = Math.round(uncontainedFactoryProduction + (100 - uncontainedFactoryProduction) * totalContainmentReduction * 0.7);
 
-  // Inventory Runway Depletion
-  const baselineRunwayDays = 31;
-  const uncontainedRunwayDays = Math.max(3, Math.round(baselineRunwayDays * (1 - severityMultiplier * 0.78)));
+  // Stockpile Runway Depletion
+  const baselineRunwayDays = 28;
+  const uncontainedRunwayDays = Math.max(2, Math.round(baselineRunwayDays * (1 - severityMultiplier * 0.82)));
   const inventoryDepletionDays = Math.min(baselineRunwayDays, Math.round(uncontainedRunwayDays + (baselineRunwayDays - uncontainedRunwayDays) * totalContainmentReduction));
 
-  // Customer Fulfillment Degradation
-  const customerFulfillmentBefore = 98.2;
-  const uncontainedCustomerFulfillment = effectiveSeverityPct > 0 ? Math.max(32, Math.round((customerFulfillmentBefore - (effectiveSeverityPct * 0.92)) * 10) / 10) : 98.2;
+  // District Delivery Fulfillment
+  const customerFulfillmentBefore = 98.4;
+  const uncontainedCustomerFulfillment = effectiveSeverityPct > 0 ? Math.max(28, Math.round((customerFulfillmentBefore - (effectiveSeverityPct * 0.94)) * 10) / 10) : 98.4;
   const customerFulfillmentAfter = Math.round((uncontainedCustomerFulfillment + (customerFulfillmentBefore - uncontainedCustomerFulfillment) * totalContainmentReduction) * 10) / 10;
 
-  // Uncontained Base Revenue at Risk (₹ Cr)
-  const dailyBaseLossCr = (COMPANY_PROFILE.annualRevenueCr / 365) * severityMultiplier * (amplificationMultiplier * 0.35);
-  const penaltySurchargesCr = (durationDays * 0.08) * severityMultiplier * (amplificationMultiplier * 0.4);
-  const uncontainedTotalRiskCr = effectiveSeverityPct > 0 ? Math.round((dailyBaseLossCr * Math.min(durationDays, 25) + penaltySurchargesCr) * 10) / 10 : 0.0;
+  // Economic Value-at-Risk (₹ Cr)
+  const dailyBaseLossCr = (COMPANY_PROFILE.annualRevenueCr / 365) * severityMultiplier * (amplificationMultiplier * 0.4);
+  const emergencyReliefCostsCr = (durationDays * 0.12) * severityMultiplier * (amplificationMultiplier * 0.35);
+  const uncontainedTotalRiskCr = effectiveSeverityPct > 0 ? Math.round((dailyBaseLossCr * Math.min(durationDays, 22) + emergencyReliefCostsCr) * 10) / 10 : 0.0;
 
-  // Contained Revenue at Risk
   const totalRevenueAtRiskCr = Math.round((uncontainedTotalRiskCr * (1 - totalContainmentReduction)) * 10) / 10;
   const capitalSavedCr = Math.round((uncontainedTotalRiskCr - totalRevenueAtRiskCr) * 10) / 10;
 
   // Recovery Velocity
-  const unassistedRecoveryDays = effectiveSeverityPct > 0 ? Math.round(durationDays * 0.42 + 8) : 0;
+  const unassistedRecoveryDays = effectiveSeverityPct > 0 ? Math.round(durationDays * 0.45 + 7) : 0;
   const nexusRecoveryDays = effectiveSeverityPct > 0 ? Math.round((unassistedRecoveryDays * (1 - totalContainmentReduction) * 0.22) * 10) / 10 : 0;
   const recoveryVelocityGainPct = unassistedRecoveryDays > 0 ? Math.round(((unassistedRecoveryDays - nexusRecoveryDays) / unassistedRecoveryDays) * 100) : 0;
 
@@ -140,41 +137,41 @@ export function simulateRippleEffect(
   const whatBreaksFirst = [
     {
       order: 1,
-      name: "Chennai Mega Integrator (Plant 1)",
-      nodeId: "fac-chennai-main",
-      type: "Factory SMT Starvation",
-      estimatedDays: "2.4 Days",
-      hours: 58,
+      name: "Agartala Integrated Healthcare (Tripura)",
+      nodeId: "cust-agartala-hub",
+      type: "Cryogenic Medical O2 Depletion",
+      estimatedDays: "2.2 Days",
+      hours: 52,
       severity: "Critical Starvation",
-      impact: "Surface-mount assembly lines stall as SoC buffer drops to 0 units.",
+      impact: "Hospital liquid oxygen tanks fall below critical 48-hour clinical threshold as road tankers are stranded.",
       statusColor: "rose"
     },
     {
       order: 2,
-      name: "Jurong Global Hub (Singapore)",
-      nodeId: "wh-singapore-hub",
-      type: "Logistics Buffer Depletion",
-      estimatedDays: "5.7 Days",
-      hours: 136,
+      name: "Aizawl Emergency Supplies Directorate (Mizoram)",
+      nodeId: "cust-aizawl-capital",
+      type: "High-Altitude POL Fuel Exhaustion",
+      estimatedDays: "3.6 Days",
+      hours: 86,
       severity: "Stockout Warning",
-      impact: "Outbound consolidation queue starves; regional distribution buffers exhaust.",
+      impact: "Isolated district diesel generation buffers drop past redline; hill municipal water pumping threatened.",
       statusColor: "amber"
     },
     {
       order: 3,
-      name: "Apex HyperScale Cloud Systems",
-      nodeId: "cust-global-tier1-tech",
-      type: "Enterprise SLA Breach",
-      estimatedDays: "8.2 Days",
-      hours: 196,
-      severity: "Contractual Penalty",
-      impact: "Guaranteed SLA threshold (<95%) breached; ₹65 Lakhs/day penalty invoked.",
+      name: "Guwahati Central Logistics ICD (Assam)",
+      nodeId: "fac-guwahati-hub",
+      type: "Corridor Freight Yard Gridlock",
+      estimatedDays: "5.4 Days",
+      hours: 130,
+      severity: "Terminal Backlog",
+      impact: "Over 450 outbound relief trucks backed up along Guwahati-Shillong corridor; yard capacity breaches 98%.",
       statusColor: "rose"
     }
   ];
 
   // ==========================================
-  // 5. BLAST RADIUS CLASSIFICATION (TIER 1, 2, 3)
+  // 5. BLAST RADIUS CLASSIFICATION
   // ==========================================
   const tier1Direct = [
     {
@@ -182,105 +179,105 @@ export function simulateRippleEffect(
       name: affectedNode.name,
       type: affectedNode.type,
       location: affectedNode.location,
-      impactType: "Origin Fracture Point",
-      impairedPct: `${effectiveSeverityPct}% Impairment`,
-      runway: "0 Days (Direct Shock)",
+      impactType: "Origin Fracture Epicenter",
+      impairedPct: `${effectiveSeverityPct}% Flow Severance`,
+      runway: "0 Days (Direct Landslide / Blockage)",
       severity: "critical",
       dependencyPath: "Primary Epicenter"
     },
     {
-      id: "fac-chennai-main",
-      name: "Chennai Mega Integrator (Plant 1)",
-      type: "factory",
-      location: "Chennai, India",
-      impactType: "Direct Sub-Assembly Starvation",
+      id: "cust-agartala-hub",
+      name: "Agartala Integrated Healthcare (Tripura)",
+      type: "customer",
+      location: "Agartala, Tripura",
+      impactType: "Direct Life-Line Severance",
       impairedPct: `-${100 - factoryProductionAfter}% Throughput`,
-      runway: "2.4 Days Buffer Remaining",
+      runway: "2.2 Days Buffer Remaining",
       severity: "critical",
-      dependencyPath: `${affectedNode.name} ➔ Chennai Plant 1`
+      dependencyPath: `${affectedNode.name} ➔ Agartala Hub`
     },
     {
-      id: "fac-penang-module",
-      name: "Penang Advanced Module Plant (Plant 2)",
-      type: "factory",
-      location: "Penang, Malaysia",
-      impactType: "Secondary Module Bottleneck",
-      impairedPct: "-45% Output",
-      runway: "3.8 Days Buffer Remaining",
+      id: "cust-aizawl-capital",
+      name: "Aizawl Emergency Supplies (Mizoram)",
+      type: "customer",
+      location: "Aizawl, Mizoram",
+      impactType: "Mountain Road Access Cutoff",
+      impairedPct: "-68% Inbound Flow",
+      runway: "3.6 Days Buffer Remaining",
       severity: "warning",
-      dependencyPath: `${affectedNode.name} ➔ Penang Plant 2`
+      dependencyPath: `${affectedNode.name} ➔ Aizawl Depot`
     }
   ];
 
   const tier2Secondary = [
     {
-      id: "wh-singapore-hub",
-      name: "Jurong Global Logistics Hub",
-      type: "warehouse",
-      location: "Singapore",
-      impactType: "Global Consolidation Outage",
-      impairedPct: "-68% Inbound Flow",
-      runway: "5.7 Days Safety Stock",
+      id: "fac-guwahati-hub",
+      name: "Guwahati Central Multi-Modal ICD",
+      type: "factory",
+      location: "Guwahati, Assam",
+      impactType: "Outbound Freight Gridlock",
+      impairedPct: "-55% Dispatch Flow",
+      runway: "5.4 Days Yard Capacity",
       severity: "warning",
-      dependencyPath: "Chennai Plant 1 ➔ Jurong Hub"
+      dependencyPath: "Guwahati ICD ➔ Sonapur Pass"
     },
     {
-      id: "wh-rotterdam-hub",
-      name: "Rotterdam Euro-Gateway Depot",
+      id: "wh-shillong-hub",
+      name: "Shillong Regional Cold-Chain Depot",
       type: "warehouse",
-      location: "Rotterdam, Netherlands",
-      impactType: "Euro Distribution Backlog",
-      impairedPct: "-52% Stock Replenishment",
-      runway: "7.1 Days Safety Stock",
-      severity: "warning",
-      dependencyPath: "Jurong Hub ➔ Rotterdam Depot"
-    },
-    {
-      id: "wh-dubai-hub",
-      name: "Jebel Ali MENA Gateway",
-      type: "warehouse",
-      location: "Dubai, UAE",
-      impactType: "Regional Gateway Congestion",
-      impairedPct: "-38% Stock Flow",
-      runway: "9.0 Days Safety Stock",
+      location: "Shillong, Meghalaya",
+      impactType: "Highland Transit Congestion",
+      impairedPct: "-45% Transshipment",
+      runway: "7.0 Days Stock Runway",
       severity: "moderate",
-      dependencyPath: "Chennai Plant 1 ➔ Dubai Gateway"
+      dependencyPath: "Shillong Hub ➔ Sonapur Corridor"
+    },
+    {
+      id: "wh-dima-hasao-depot",
+      name: "Dima Hasao Hill Rail Depot",
+      type: "warehouse",
+      location: "Haflong, Assam",
+      impactType: "Transshipment Load Spike",
+      impairedPct: "+90% Diverted Load",
+      runway: "8.5 Days Safety Stock",
+      severity: "moderate",
+      dependencyPath: "Guwahati ➔ Lumding-Badarpur"
     }
   ];
 
   const tier3Tertiary = [
     {
-      id: "cust-global-tier1-tech",
-      name: "Apex HyperScale Cloud Systems",
+      id: "cust-imphal-valley",
+      name: "Imphal Valley RIMS Hospital Network",
       type: "customer",
-      location: "Silicon Valley & Frankfurt",
-      impactType: "SLA Penalty Incurred",
-      impairedPct: "₹65 Lakhs/day Breach",
-      runway: "8.2 Days Until Breach",
-      severity: "critical",
-      dependencyPath: "Rotterdam Depot ➔ Apex Cloud"
-    },
-    {
-      id: "cust-auto-mobility",
-      name: "Stuttgart Autonomous Mobility",
-      type: "customer",
-      location: "Stuttgart, Germany",
-      impactType: "Automotive Line Hold",
-      impairedPct: "₹45 Lakhs/day Breach",
-      runway: "11.5 Days Until Breach",
+      location: "Imphal, Manipur",
+      impactType: "Contagion Fuel & Pharma Strain",
+      impairedPct: "₹50 Lakhs/day Risk",
+      runway: "9.5 Days Buffer",
       severity: "warning",
-      dependencyPath: "Rotterdam Depot ➔ Stuttgart Auto"
+      dependencyPath: "Dimapur Railhead ➔ Imphal"
     },
     {
-      id: "cust-medtech-lifecare",
-      name: "MedTech LifeCare Devices",
+      id: "cust-kohima-nagaland",
+      name: "Kohima District Disaster Response",
       type: "customer",
-      location: "Boston & Basel",
-      impactType: "Critical Healthcare Allocation",
-      impairedPct: "Protected Priority",
-      runway: "14.0 Days Runway",
+      location: "Kohima, Nagaland",
+      impactType: "Secondary Surcharge Impact",
+      impairedPct: "₹30 Lakhs/day Risk",
+      runway: "12.0 Days Runway",
       severity: "moderate",
-      dependencyPath: "Dallas Hub ➔ MedTech LifeCare"
+      dependencyPath: "Dimapur ➔ Kohima"
+    },
+    {
+      id: "cust-itanagar-arunachal",
+      name: "Itanagar Lifeline Network",
+      type: "customer",
+      location: "Itanagar, Arunachal Pradesh",
+      impactType: "Regional Transport Divergence",
+      impairedPct: "Protected Priority",
+      runway: "14.5 Days Runway",
+      severity: "healthy",
+      dependencyPath: "Tezpur ➔ Itanagar"
     }
   ];
 
@@ -293,96 +290,96 @@ export function simulateRippleEffect(
       timeLabel: '0h',
       timeframe: 'T+0h',
       step: 1,
-      title: 'Supplier Failure',
+      title: 'Corridor Fracture Inception',
       nodeName: affectedNode.name,
       stage: 'Epicenter Inception',
       status: 'critical',
       color: 'rose',
-      metricName: fractureType === 'lead-time' ? 'Lead Time' : fractureType === 'cost' ? 'Unit Cost' : fractureType === 'quality' ? 'Defect Rate' : 'Supplier Capacity',
-      beforeVal: fractureType === 'lead-time' ? '14 Days' : fractureType === 'cost' ? '₹4,200' : fractureType === 'quality' ? '2.1%' : '100%',
-      afterVal: fractureType === 'lead-time' ? '35 Days' : fractureType === 'cost' ? '₹7,140' : fractureType === 'quality' ? '15.4%' : `${supplierCapacityAfter}%`,
-      badgeText: `${effectiveSeverityPct}% ${fractureType.toUpperCase()} CUT`,
-      description: `${affectedNode.name} suffers sudden operational collapse due to ${eventType}.`,
-      rootCause: `Geopolitical export restriction and severe seismic shock affecting primary fab in ${affectedNode.location}.`,
-      affectedComponents: ['AuraX 3nm SoC Silicon', 'Multi-Layer High-Frequency Substrates', 'ASIC Controllers'],
-      mitigationAction: 'Immediate failover trigger to Apex Silicon (Phoenix) or Kyoto Microelectronics.'
+      metricName: fractureType === 'lead-time' ? 'Transit Time' : fractureType === 'cost' ? 'Freight Rate' : 'Corridor Flow',
+      beforeVal: '100% Flow',
+      afterVal: `${supplierCapacityAfter}% Flow`,
+      badgeText: `${effectiveSeverityPct}% CORRIDOR CUT`,
+      description: `${affectedNode.name} suffers sudden passage collapse due to ${eventType}.`,
+      rootCause: `Heavy cloudburst triggers slope liquefaction and 180m debris flow across highway in ${affectedNode.location}.`,
+      affectedComponents: ['Cryogenic Oxygen Convoys', 'POL Fuel Tankers', 'FCI Essential Grain Trucks'],
+      mitigationAction: 'Immediate failover mobilization via NFR rail ro-ro and IWAI NW-2 river barges.'
     },
     {
       id: 'node-t18',
       timeLabel: '18h',
       timeframe: 'T+18h',
       step: 2,
-      title: 'Factory Starvation',
-      nodeName: 'Chennai Mega Integrator (Plant 1)',
-      stage: 'Sub-Assembly Throttling',
+      title: 'Hospital Oxygen Alert',
+      nodeName: 'Agartala Integrated Healthcare (Tripura)',
+      stage: 'Life-Line Throttling',
       status: 'warning',
       color: 'amber',
-      metricName: 'SMT Assembly Cadence',
-      beforeVal: `${factoryProductionBefore}%`,
-      afterVal: `${factoryProductionAfter}%`,
-      badgeText: `-${100 - factoryProductionAfter}% CADENCE`,
-      description: 'Chennai Plant 1 line buffer rapidly exhausts as component feed stalls.',
-      rootCause: 'Lack of upstream silicon chips halts high-speed SMT surface-mount pick-and-place lines.',
-      affectedComponents: ['Mainboard PCB Sub-Assemblies', 'AuraVision Edge Controller Units'],
-      mitigationAction: 'Deploy emergency air freight of 15,000 units from Kyoto backup facility.'
+      metricName: 'Medical O2 Runway',
+      beforeVal: '14 Days',
+      afterVal: '2.2 Days',
+      badgeText: '2.2d RUNWAY LEFT',
+      description: 'Tripura and Mizoram medical centers project rapid depletion of cryogenic liquid oxygen.',
+      rootCause: 'Cryogenic bulk tankers unable to traverse blocked mountain bypass.',
+      affectedComponents: ['Liquid Medical Oxygen (LMO)', 'ICU Ventilator Manifolds'],
+      mitigationAction: 'Deploy Operation Setu IAF C-130J air bridge from Borjhar Air Base.'
     },
     {
       id: 'node-t3d',
       timeLabel: '3d',
       timeframe: 'T+3d',
       step: 3,
-      title: 'Inventory Exhaustion',
-      nodeName: 'Jurong Global Logistics Hub (Singapore)',
-      stage: 'Warehouse Safety Stockout',
+      title: 'Hill Fuel Depletion',
+      nodeName: 'Aizawl Emergency Supplies Directorate',
+      stage: 'Regional Stockout Warning',
       status: 'warning',
       color: 'amber',
-      metricName: 'Regional Safety Runway',
+      metricName: 'POL Generator Fuel',
       beforeVal: `${baselineRunwayDays} Days`,
       afterVal: `${inventoryDepletionDays} Days`,
       badgeText: `${inventoryDepletionDays}d RUNWAY LEFT`,
-      description: 'Regional distribution safety reserves in Singapore & Rotterdam breach minimum threshold.',
-      rootCause: 'Outbound order fulfillment burns through reserve stock without manufacturing replenishment.',
-      affectedComponents: ['Finished Controller Stock', 'Regional Spares Inventory'],
-      mitigationAction: 'Re-route regional stock from Dallas DFW master hub via charter freight.'
+      description: 'Mizoram capital buffer tanks breach emergency minimum operating reserve.',
+      rootCause: 'Inbound tanker turnaround frozen; local depots rationing fuel for emergency municipal power.',
+      affectedComponents: ['High-Altitude Diesel', 'Emergency Power Reserves'],
+      mitigationAction: 'Clear MEA diplomatic transit via Bangladesh (Dawki-Tamabil route).'
     },
     {
       id: 'node-t7d',
       timeLabel: '7d',
       timeframe: 'T+7d',
       step: 4,
-      title: 'SLA Breach',
-      nodeName: 'Apex HyperScale Cloud Systems',
-      stage: 'Contractual Default Warning',
+      title: 'Inter-State Economic Stress',
+      nodeName: 'Guwahati Central Logistics ICD',
+      stage: 'Regional Yard Congestion',
       status: 'critical',
       color: 'rose',
-      metricName: 'Tier-1 Fulfillment Rate',
+      metricName: 'Inter-State Fulfillment',
       beforeVal: `${customerFulfillmentBefore}%`,
       afterVal: `${customerFulfillmentAfter}%`,
       badgeText: `-${(customerFulfillmentBefore - customerFulfillmentAfter).toFixed(1)}% FULFILLMENT`,
-      description: 'Delivery obligations to enterprise clients slip past grace period; penalty clauses trigger.',
-      rootCause: 'Backlog in European & Asian distribution gateways exceeds contract delivery buffer.',
-      affectedComponents: ['Enterprise Cloud Acceleration Kits', 'Smart Cockpit Module Batches'],
-      mitigationAction: 'Activate AI autonomous contractual re-negotiation with Tier-1 enterprise buyers.'
+      description: 'Regional dispatch fulfillment drops significantly as gridlock extends across Jaintia Hills.',
+      rootCause: 'Highway queue reaches 450+ trucks; transshipment points at full container capacity.',
+      affectedComponents: ['PDS Grain Rations', 'Pharmaceutical Freight Batches'],
+      mitigationAction: 'BRO launches double-single Bailey bridge across Sonapur collapse.'
     },
     {
       id: 'node-t14d',
       timeLabel: '14d',
       timeframe: 'T+14d',
       step: 5,
-      title: 'Revenue Loss',
-      nodeName: 'AURA Corporate Treasury Exposure',
-      stage: 'Cumulative Financial Fracture',
+      title: 'Regional Economic Exposure',
+      nodeName: 'MDoNER Disaster Exchequor Exposure',
+      stage: 'Cumulative Value-at-Risk',
       status: 'terminal-critical',
       color: 'red',
       isTerminalRed: true,
-      metricName: 'Total Capital Exposure',
+      metricName: 'Cumulative Value at Risk',
       beforeVal: '₹0.0 Cr',
       afterVal: `₹${totalRevenueAtRiskCr} Cr`,
       badgeText: `₹${totalRevenueAtRiskCr} Cr AT RISK`,
-      description: `Unmitigated network shock produces ₹${totalRevenueAtRiskCr} Cr cumulative exposure across ${durationDays} days.`,
-      rootCause: 'Direct lost sales margin combined with statutory SLA delivery breach penalties.',
-      affectedComponents: ['Quarterly Operating Margin', 'Enterprise ARR Renewal Pipeline'],
-      mitigationAction: 'Deploy NEXUS multi-agent recovery plan to safeguard 85%+ of capital exposure.'
+      description: `Unmitigated corridor severance produces ₹${totalRevenueAtRiskCr} Cr cumulative economic and relief loss across ${durationDays} days.`,
+      rootCause: 'Loss of inter-state commerce, emergency spot air transport premiums, and perishable spoilage.',
+      affectedComponents: ['Regional Economic Velocity', 'Emergency Relief Exchequor Funds'],
+      mitigationAction: 'Execute NEXUS tri-modal recovery strategy to preserve ₹20.8+ Cr of value.'
     }
   ];
 
@@ -390,25 +387,25 @@ export function simulateRippleEffect(
   const simulatedNodes = NODES.map(node => {
     let nodeStatus = "operational";
     let healthPct = 100;
-    let impactNote = "Normal operations. Inventory within healthy thresholds.";
+    let impactNote = "All-weather passage operational. Stockpile within healthy threshold.";
 
     if (effectiveSeverityPct > 0) {
       if (node.id === affectedNodeId) {
         nodeStatus = "disrupted";
         healthPct = supplierCapacityAfter;
-        impactNote = `Direct fracture: ${effectiveSeverityPct}% ${fractureType} curtailed for ${durationDays} days.`;
+        impactNote = `Direct corridor fracture: ${effectiveSeverityPct}% flow severance for ${durationDays} days.`;
       } else if (affectedFactories.includes(node.id)) {
         nodeStatus = "impaired";
         healthPct = factoryProductionAfter;
-        impactNote = `Upstream component shortage throttling throughput to ${factoryProductionAfter}%.`;
+        impactNote = `Upstream corridor blockage throttling regional throughput to ${factoryProductionAfter}%.`;
       } else if (node.dependencies && (node.dependencies.includes(affectedNodeId) || node.dependencies.some(d => affectedFactories.includes(d)))) {
         nodeStatus = "impaired";
-        healthPct = Math.max(40, Math.round(100 - effectiveSeverityPct * 0.7));
-        impactNote = `Downstream buffer depletion. Runway reduced to ${inventoryDepletionDays} days.`;
-      } else if (node.type === "customer") {
+        healthPct = Math.max(38, Math.round(100 - effectiveSeverityPct * 0.72));
+        impactNote = `Downstream buffer depletion. Autonomy reduced to ${inventoryDepletionDays} days.`;
+      } else if (node.type === "customer" && node.dependencies && node.dependencies.includes(affectedNodeId)) {
         nodeStatus = "at-risk";
         healthPct = customerFulfillmentAfter;
-        impactNote = `Delivery SLA threatened. Fill rate dropped to ${customerFulfillmentAfter}%.`;
+        impactNote = `Lifeline road access cut off. Supply fulfillment dropped to ${customerFulfillmentAfter}%.`;
       }
     }
 
@@ -449,49 +446,36 @@ export function simulateRippleEffect(
       bufferScore,
       geoConcentrationScore,
       centralityScore,
-      multiplier: amplificationMultiplier,
-      effectiveNetworkDamagePct,
-      formulaExplanation: `${effectiveSeverityPct}% Initial Disruption × ${amplificationMultiplier} Multiplier = ${effectiveNetworkDamagePct}% Operational Shock`
-    },
-    whatBreaksFirst,
-    blastRadius: {
-      tier1Direct,
-      tier2Secondary,
-      tier3Tertiary,
-      totalSitesAffected: tier1Direct.length + tier2Secondary.length + tier3Tertiary.length
-    },
-    containment: {
-      activeContainmentIds,
-      totalContainmentReductionPct: Math.round(totalContainmentReduction * 100),
-      uncontainedRiskCr: uncontainedTotalRiskCr,
-      containedRiskCr: totalRevenueAtRiskCr,
-      capitalSavedCr: capitalSavedCr,
-      uncontainedDowntimeDays: unassistedRecoveryDays,
-      containedDowntimeDays: nexusRecoveryDays,
-      uncontainedBlastSites: 9,
-      containedBlastSites: Math.max(2, Math.round(9 * (1 - totalContainmentReduction)))
+      multiplier: amplificationMultiplier
     },
     metrics: {
       supplierCapacityBefore,
       supplierCapacityAfter,
       factoryProductionBefore,
       factoryProductionAfter,
-      baselineRunwayDays,
       inventoryDepletionDays,
+      baselineRunwayDays,
       customerFulfillmentBefore,
       customerFulfillmentAfter,
       totalRevenueAtRiskCr,
       uncontainedTotalRiskCr,
       capitalSavedCr,
-      dailyLossRateCr: (totalRevenueAtRiskCr / Math.min(durationDays, 25)).toFixed(2),
       unassistedRecoveryDays,
       nexusRecoveryDays,
       recoveryVelocityGainPct,
+      totalContainmentReductionPct: Math.round(totalContainmentReduction * 100)
     },
-    simulatedNodes,
-    simulatedRoutes,
+    whatBreaksFirst,
+    blastRadius: {
+      totalSitesAffected: tier1Direct.length + tier2Secondary.length + tier3Tertiary.length,
+      tier1Direct,
+      tier2Secondary,
+      tier3Tertiary
+    },
+    cascadeTimeline: cascadeNodes,
+    cascadeNodes: cascadeNodes,
     propagationTimeline: cascadeNodes,
-    cascadeNodes
+    simulatedNodes,
+    simulatedRoutes
   };
 }
-

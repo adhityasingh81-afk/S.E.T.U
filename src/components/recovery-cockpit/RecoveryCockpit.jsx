@@ -15,11 +15,16 @@ import {
   ChevronRight,
   Info,
   Sparkles,
-  Award
+  Award,
+  ShieldAlert,
+  Radio,
+  Send,
+  CheckCircle2
 } from 'lucide-react';
 import { generateRecoveryStrategies } from '../../engine/recoveryOptimizer';
 import { nexusApi } from '../../api/nexusApi';
 import { voiceService } from '../../engine/voiceService';
+import { triggerEmergencySos } from '../../services/emergencyTrigger';
 
 function getStrategyVoiceDescriptor(strat) {
   if (!strat) return 'Speed optimized';
@@ -98,6 +103,7 @@ export function RecoveryCockpit({
   onApplyStrategy,
   onNavigateToNegotiation,
   onNavigateToCounterfactual,
+  onNavigateSos,
 }) {
   const [resilienceBudget, setResilienceBudget] = useState({
     maxCostPct: 4.0,
@@ -110,6 +116,26 @@ export function RecoveryCockpit({
   const [selectedStrategyForDetails, setSelectedStrategyForDetails] = useState(null);
   const [showExplanationModal, setShowExplanationModal] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [sosDispatching, setSosDispatching] = useState(false);
+  const [sosDispatchedResult, setSosDispatchedResult] = useState(null);
+
+  const handleTriggerProgrammaticSos = async () => {
+    setSosDispatching(true);
+    try {
+      const res = await triggerEmergencySos({
+        disruptionType: simulationResult?.eventType || 'Severe Lifeline Corridor Fracture',
+        severity: (simulationResult?.severityPct || 75) >= 70 ? 'Critical' : 'Severe',
+        nodeId: simulationResult?.affectedNodeId || 'wh-sonapur-pass',
+        note: `Autonomous emergency alert triggered by NEXUS Recovery Engine for ${simulationResult?.affectedNodeName || 'Critical Lifeline'} with ${simulationResult?.severityPct || 75}% disruption.`
+      });
+      setSosDispatchedResult(res);
+    } catch (err) {
+      console.error('Programmatic SOS dispatch error:', err);
+    } finally {
+      setSosDispatching(false);
+    }
+  };
+
   const [strategies, setStrategies] = useState(() => 
     normalizeStrategies(generateRecoveryStrategies(simulationResult, resilienceBudget), resilienceBudget)
   );
@@ -201,6 +227,60 @@ export function RecoveryCockpit({
           </button>
         </div>
       </div>
+
+      {/* Critical Disruption Emergency SOS Integration Banner */}
+      {(simulationResult?.severityPct || 0) >= 70 && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-red-950/90 via-slate-900 to-rose-950/90 border border-red-500/50 shadow-lg text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start space-x-3">
+            <div className="p-2 rounded-xl bg-red-600/20 border border-red-500/40 text-red-400 mt-0.5">
+              <ShieldAlert className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-red-400">
+                  Critical Disruption Protocol ({simulationResult?.severityPct || 75}% Capacity Cut)
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-600 text-white font-mono">
+                  MDoNER SOS HOOK ACTIVE
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-0.5">
+                The Recovery Engine has flagged severe lifeline distress on <span className="font-bold text-white">{simulationResult?.affectedNodeName || 'NH-6 Sonapur Corridor'}</span>. Offline-capable emergency alerts can be broadcast to NDMA &amp; field units.
+              </p>
+              {sosDispatchedResult && (
+                <div className="mt-2 text-xs font-mono text-emerald-400 flex items-center gap-1.5 bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-500/40">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>
+                    Emergency SOS {sosDispatchedResult.mode === 'offline_queued' ? 'Queued Offline in IndexedDB' : 'Dispatched via Twilio SMS'} (ID: {sosDispatchedResult.alert?.id})
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 shrink-0 self-end sm:self-auto">
+            <button
+              onClick={handleTriggerProgrammaticSos}
+              disabled={sosDispatching}
+              className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-red-600/30 transition-all cursor-pointer disabled:opacity-50"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>{sosDispatching ? 'Transmitting...' : 'Broadcast SOS Now'}</span>
+            </button>
+            <button
+              onClick={() => onNavigateSos && onNavigateSos({
+                disruptionType: simulationResult?.eventType || 'Mountain Landslide / Rockfall',
+                severity: 'Critical',
+                nodeId: simulationResult?.affectedNodeId || 'wh-sonapur-pass',
+                note: `Critical corridor severance on ${simulationResult?.affectedNodeName || 'NH-6 Sonapur Pass'}`
+              })}
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-all cursor-pointer"
+            >
+              Open /sos Form
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Resilience Budget & Preferences Bar */}
       <div className="extej-card p-5 space-y-3">
