@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { CRISIS_SCENARIOS } from '../../data/scenariosData';
+import { FindMyRouteSection } from './FindMyRouteSection';
 
 const TIMEFRAME_DATA = {
   '1D': [
@@ -439,96 +440,13 @@ export function CommandCenter({
         </div>
       </div>
 
-      {/* MIDDLE SECTION: Live Dynamic Time-Series Chart */}
-      <div className="extej-card p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-slate-900 font-sans">
-                Regional Lifeline Network Health & RCI Trajectory
-              </h3>
-              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-orange-100 text-brand-700 font-mono">
-                {timeRange} Horizon
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 font-medium">
-              Real-time regional connectivity telemetry & autonomous multi-modal self-healing trajectory
-            </p>
-          </div>
-
-          {/* Timeframe Filter Buttons */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-bold text-slate-600">
-            {['1D', '7D', '1M', '3M', '6M', '1Y', 'ALL'].map((tf) => (
-              <button
-                key={tf}
-                onClick={() => setTimeRange(tf)}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  timeRange === tf
-                    ? 'btn-orange-pill text-white shadow-sm'
-                    : 'hover:text-slate-900'
-                }`}
-              >
-                {tf}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Chart Canvas with Smooth Orange Curve & Gradient */}
-        <div className="h-64 sm:h-72 w-full pt-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={activeChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="extejOrangeGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ff7a1a" stopOpacity={0.35} />
-                  <stop offset="95%" stopColor="#ff5500" stopOpacity={0.0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis 
-                dataKey="label" 
-                tick={{ fontSize: 11, fill: '#64748b' }} 
-                axisLine={false} 
-                tickLine={false} 
-              />
-              <YAxis 
-                domain={[30, 100]} 
-                tick={{ fontSize: 11, fill: '#64748b' }} 
-                axisLine={false} 
-                tickLine={false} 
-              />
-              <Tooltip 
-                content={({ active, payload, label }) => {
-                  if (active && payload && payload.length) {
-                    const data = payload[0].payload;
-                    return (
-                      <div className="bg-white/95 backdrop-blur-md p-3 rounded-xl border border-slate-200 shadow-xl text-xs space-y-1">
-                        <p className="font-extrabold text-slate-800">{label}</p>
-                        <p className="text-brand-600 font-bold">RCI Health: {data.health}%</p>
-                        <p className="text-slate-500">Relief Protected: ₹{data.revProtected} Cr</p>
-                        {data.note && (
-                          <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-brand-700">
-                            {data.note}
-                          </span>
-                        )}
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="health" 
-                stroke="#ff7a1a" 
-                strokeWidth={3} 
-                fillOpacity={1} 
-                fill="url(#extejOrangeGrad)" 
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      {/* MIDDLE SECTION: Find My Route (Corridor & Lifeline Risk Navigator) & RCI Trajectory */}
+      <FindMyRouteSection
+        isDisrupted={isDisrupted}
+        timeRange={timeRange}
+        setTimeRange={setTimeRange}
+        activeChartData={activeChartData}
+      />
     </div>
   );
 }
