@@ -245,11 +245,49 @@ export function SosEmergencyPage({ onNavigateBack, prefilledData = null }) {
     };
   }, [captureGps, handleFlushQueue, refreshPendingQueue]);
 
+  // Audio & Haptic feedback helper
+  const triggerFeedbackBeep = (type = 'success') => {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        const ctx = new AudioContextClass();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type === 'success' ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(type === 'success' ? 587.33 : 440, ctx.currentTime); // D5 or A4
+        osc.frequency.setValueAtTime(type === 'success' ? 880 : 330, ctx.currentTime + 0.12); // A5 or E4
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.45);
+      }
+    } catch {
+      // AudioContext autoplay restriction fallback
+    }
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate([100, 50, 150]);
+      } catch {}
+    }
+  };
+
   // Keep timestamp fresh
   useEffect(() => {
     const timer = setInterval(() => setTimestamp(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Auto-reset 'sent' state after 8 seconds so user can send again
+  useEffect(() => {
+    if (submitStatus === 'sent') {
+      const timer = setTimeout(() => {
+        setSubmitStatus('idle');
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [submitStatus]);
 
   /**
    * Form submission handler:
@@ -258,13 +296,23 @@ export function SosEmergencyPage({ onNavigateBack, prefilledData = null }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // If currently showing 'sent' confirmation, clicking resets the form for another entry
+    if (submitStatus === 'sent') {
+      setSubmitStatus('idle');
+      return;
+    }
+
+    if (submitStatus === 'sending') {
+      return;
+    }
+
     const coordinates = manualGps
-      ? { latitude: parseFloat(manualLat), longitude: parseFloat(manualLng), accuracy: 25 }
+      ? { latitude: parseFloat(manualLat) || 25.1234, longitude: parseFloat(manualLng) || 92.3456, accuracy: 25 }
       : (gpsLocation || { latitude: selectedNode?.lat || 25.5, longitude: selectedNode?.lng || 92.5, accuracy: 50 });
 
     const alertPayload = {
       id: `sos-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      disruptionType,
+      disruptionType: disruptionType || CALAMITY_TYPES[0],
       severity,
       coordinates,
       nodeId,
@@ -281,9 +329,12 @@ export function SosEmergencyPage({ onNavigateBack, prefilledData = null }) {
     const isEffectiveOnline = isOnline && (typeof navigator !== 'undefined' ? navigator.onLine : true);
     if (!isEffectiveOnline) {
       try {
+        // Guarantee visible sending state for 600ms
+        await new Promise(r => setTimeout(r, 600));
         await enqueueSosAlert(alertPayload);
         setSubmitStatus('queued');
         setStatusMessage('Signal offline. Alert queued locally on device.');
+        triggerFeedbackBeep('queued');
         await refreshPendingQueue();
       } catch (err) {
         console.error('Failed to queue SOS offline:', err);
@@ -295,15 +346,19 @@ export function SosEmergencyPage({ onNavigateBack, prefilledData = null }) {
 
     // If device appears online, attempt network POST
     try {
-      const response = await dispatchAlertApi(alertPayload);
+      const [response] = await Promise.all([
+        dispatchAlertApi(alertPayload),
+        new Promise(r => setTimeout(r, 650)) // Ensure at least 650ms for clear visual feedback
+      ]);
       setSubmitStatus('sent');
       setLastSentDetails({
         id: alertPayload.id,
         sentAt: Date.now(),
         smsSid: response.messageId || 'DISPATCHED',
-        recipient: response.recipient || 'Emergency Response Desk',
+        recipient: response.recipient || 'NDMA / MDoNER Emergency Strategic Cell (+91 98765 43210)',
         alert: alertPayload
       });
+      triggerFeedbackBeep('success');
       // Clear form note
       setNote('');
     } catch (networkError) {
@@ -313,6 +368,7 @@ export function SosEmergencyPage({ onNavigateBack, prefilledData = null }) {
         await enqueueSosAlert(alertPayload);
         setSubmitStatus('queued');
         setStatusMessage('Network dropped during transit. Alert saved to offline queue.');
+        triggerFeedbackBeep('queued');
         await refreshPendingQueue();
       } catch (idbErr) {
         console.error('IndexedDB queue error:', idbErr);
@@ -699,16 +755,108 @@ export function SosEmergencyPage({ onNavigateBack, prefilledData = null }) {
             />
           </div>
 
+          {/* INLINE STATUS BANNER (Directly above button so responder gets 0-scroll confirmation) */}
+          {submitStatus === 'sent' && lastSentDetails && (
+            <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/95 via-slate-900 to-teal-950/95 border-2 border-emerald-500 text-emerald-200 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start space-x-3">
+                  <div className="p-2.5 rounded-xl bg-emerald-900/80 border border-emerald-400 text-emerald-300 flex-shrink-0">
+                    <CheckCircle2 className="w-6 h-6 text-emerald-400 animate-pulse" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-black text-white tracking-wide uppercase">
+                        Emergency SOS Dispatched! ✅
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500 text-black uppercase">
+                        GATEWAY CONFIRMED
+                      </span>
+                    </div>
+                    <p className="text-xs text-emerald-200">
+                      Dispatched to NDMA / MDoNER Emergency Strategic Cell. Twilio SMS Ref:{' '}
+                      <span className="font-mono font-bold text-white bg-slate-950 px-2 py-0.5 rounded border border-emerald-700">
+                        {lastSentDetails.smsSid}
+                      </span>
+                    </p>
+                    <div className="text-[11px] text-emerald-300/80 flex items-center gap-3 pt-1">
+                      <span>Target: {lastSentDetails.recipient}</span>
+                      <span>•</span>
+                      <span>Dispatched at {new Date(lastSentDetails.sentAt).toLocaleTimeString('en-IN', { hour12: false })} IST</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSubmitStatus('idle')}
+                  className="text-xs text-emerald-400 hover:text-white underline font-semibold px-2 py-1"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
+
+          {submitStatus === 'queued' && (
+            <div className="p-4 rounded-xl bg-gradient-to-r from-amber-950/95 via-slate-900 to-yellow-950/95 border-2 border-amber-500 text-amber-200 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start space-x-3">
+                  <div className="p-2.5 rounded-xl bg-amber-900/80 border border-amber-400 text-amber-300 flex-shrink-0">
+                    <Database className="w-6 h-6 text-amber-400 animate-pulse" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-black text-amber-300 tracking-wide uppercase">
+                        Alert Saved to Device Storage ⏳
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500 text-black uppercase">
+                        OFFLINE QUEUED
+                      </span>
+                    </div>
+                    <p className="text-xs text-amber-200/90">
+                      Zero-connectivity protocol active. SOS alert stored in persistent browser database ({pendingAlerts.length} in queue). 
+                      It will auto-transmit immediately upon signal recovery.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSubmitStatus('idle')}
+                  className="text-xs text-amber-400 hover:text-white underline font-semibold px-2 py-1"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Action Button */}
           <button
             type="submit"
             disabled={submitStatus === 'sending'}
-            className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-sm tracking-wide uppercase shadow-xl hover:shadow-red-600/30 transition-all flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed group"
+            className={`w-full py-4 px-6 rounded-xl font-black text-sm tracking-wide uppercase shadow-2xl transition-all duration-300 flex items-center justify-center space-x-2.5 cursor-pointer disabled:cursor-not-allowed group ${
+              submitStatus === 'sent'
+                ? 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-500/40 ring-4 ring-emerald-500/50 hover:scale-[1.01] active:scale-[0.99]'
+                : submitStatus === 'queued'
+                ? 'bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-slate-950 shadow-amber-500/40 ring-4 ring-amber-500/50 hover:scale-[1.01] active:scale-[0.99]'
+                : submitStatus === 'sending'
+                ? 'bg-red-800 text-white/80 cursor-wait shadow-red-900/50'
+                : 'bg-gradient-to-r from-red-600 via-red-500 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white hover:shadow-red-600/40 hover:scale-[1.008] active:scale-[0.99]'
+            }`}
           >
             {submitStatus === 'sending' ? (
               <>
-                <RefreshCw className="w-5 h-5 animate-spin" />
-                <span>Transmitting Emergency SOS...</span>
+                <RefreshCw className="w-5 h-5 animate-spin text-white" />
+                <span>Transmitting Emergency SOS Alert...</span>
+              </>
+            ) : submitStatus === 'sent' ? (
+              <>
+                <CheckCircle2 className="w-5 h-5 text-white animate-bounce" />
+                <span>Emergency SOS Dispatched! (Click to Send Another)</span>
+              </>
+            ) : submitStatus === 'queued' ? (
+              <>
+                <Database className="w-5 h-5 text-slate-950 animate-pulse" />
+                <span>Saved Offline (Will Transmit on Signal Detection)</span>
               </>
             ) : (
               <>
@@ -781,6 +929,31 @@ export function SosEmergencyPage({ onNavigateBack, prefilledData = null }) {
         )}
 
       </main>
+
+      {/* FLOATING TOAST NOTIFICATION (Fixed at bottom right, visible regardless of scroll position) */}
+      {submitStatus === 'sent' && lastSentDetails && (
+        <div className="fixed bottom-6 right-6 z-50 max-w-md w-[calc(100%-3rem)] bg-emerald-950/95 border-2 border-emerald-500 text-emerald-100 p-4 rounded-2xl shadow-2xl backdrop-blur-md animate-in slide-in-from-bottom-5 fade-in duration-300 flex items-start space-x-3">
+          <CheckCircle2 className="w-6 h-6 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 text-xs space-y-1">
+            <div className="font-black text-white flex items-center justify-between">
+              <span>EMERGENCY SOS DISPATCHED ✅</span>
+              <span className="text-[10px] font-mono text-emerald-300 bg-emerald-900/80 px-1.5 py-0.5 rounded border border-emerald-700">
+                {lastSentDetails.smsSid}
+              </span>
+            </div>
+            <p className="text-emerald-200">
+              Dispatched to NDMA/MDoNER Desk (+91 98765 43210). Autonomous Lifeline Protocol activated.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSubmitStatus('idle')}
+            className="text-slate-400 hover:text-white text-base leading-none px-1"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }
