@@ -357,3 +357,35 @@ body {
   animation: routeHazardPulse 2.2s ease-in-out infinite;
 }
 
+/* Leaflet Animated Safe Route Flow & Marker Rings */
+@keyframes leafletDashFlow {
+  from {
+    stroke-dashoffset: 48;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.leaflet-animated-flow path {
+  animation: leafletDashFlow 1.6s linear infinite;
+  stroke-dasharray: 10, 14;
+}
+
+.leaflet-container {
+  font-family: inherit;
+  z-index: 10;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  line-height: 1.4;
+}
+
