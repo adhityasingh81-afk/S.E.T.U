@@ -211,3 +211,37 @@ export function generateRecoveryStrategies(disruptionState, resilienceBudget = {
     rank: index + 1,
   }));
 }
+
+/**
+ * Evaluates whether a disruption state reaches critical thresholds to trigger an autonomous Emergency SOS.
+ * Triggers when severity >= 70%, revenue risk >= ₹15 Cr, or inventory runway <= 3 days.
+ */
+export function evaluateCriticalDisruptionSos(disruptionState) {
+  if (!disruptionState) return { isCritical: false };
+  
+  const { metrics = {}, severityPct = 0, eventType, affectedNodeId } = disruptionState;
+  const revAtRisk = metrics?.totalRevenueAtRiskCr || 0;
+  const unassistedDays = metrics?.unassistedRecoveryDays || 0;
+  const inventoryRunway = metrics?.inventoryDepletionDays || 99;
+
+  const isCritical = severityPct >= 70 || revAtRisk >= 15 || unassistedDays >= 20 || inventoryRunway <= 3;
+
+  if (!isCritical) {
+    return { isCritical: false, severityPct, revAtRisk };
+  }
+
+  return {
+    isCritical: true,
+    severity: severityPct >= 70 ? 'Critical' : 'Severe',
+    disruptionType: eventType || 'Critical Lifeline Corridor Fracture',
+    nodeId: affectedNodeId || 'wh-sonapur-pass',
+    note: `NEXUS AI Recovery Engine detected critical disruption: ${severityPct}% severity, ₹${revAtRisk} Cr revenue exposure, ${inventoryRunway}d inventory runway.`,
+    metrics: {
+      severityPct,
+      revAtRisk,
+      unassistedDays,
+      inventoryRunway
+    }
+  };
+}
+

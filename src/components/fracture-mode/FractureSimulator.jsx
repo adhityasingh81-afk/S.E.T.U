@@ -679,6 +679,23 @@ export function FractureSimulator({
                   <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
                   <span>Reset Simulation</span>
                 </button>
+
+                {/* Emergency SOS Quick Dispatch Button for Critical Fractures */}
+                {isFractureActive && (severityPct >= 70 || fractureType === 'blackout') && (
+                  <button
+                    onClick={() => onNavigateSos && onNavigateSos({
+                      disruptionType: eventType || 'Severe Corridor Fracture',
+                      severity: 'Critical',
+                      nodeId: selectedNodeId,
+                      note: `Simulated fracture: ${severityPct}% capacity reduction on ${NODES.find(n => n.id === selectedNodeId)?.name || selectedNodeId}.`
+                    })}
+                    className="w-full px-4 py-2 rounded-full text-xs font-black bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white flex items-center justify-center gap-1.5 shadow-md shadow-red-500/20 transition-all cursor-pointer"
+                    title="Launch Emergency SOS Form"
+                  >
+                    <ShieldAlert className="w-3.5 h-3.5" />
+                    <span>Emergency SOS Alert</span>
+                  </button>
+                )}
               </div>
             </div>
 

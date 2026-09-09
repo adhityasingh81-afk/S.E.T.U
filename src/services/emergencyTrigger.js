@@ -1,5 +1,5 @@
-import { enqueueSosAlert, dispatchAlertApi } from './sosQueue';
-import { NODES } from '../data/auraSupplyChainData';
+import { enqueueSosAlert, dispatchAlertApi } from './sosQueue.js';
+import { NODES } from '../data/auraSupplyChainData.js';
 
 /**
  * Programmatic integration with NEXUS AI Recovery Engine & Fracture Simulator.

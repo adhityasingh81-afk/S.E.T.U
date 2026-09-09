@@ -205,7 +205,7 @@ export function SosEmergencyPage({ onNavigateBack, prefilledData = null }) {
       setIsOnline(false);
     };
 
-    // iOS Safari Fallback: visibilitychange triggers flush when app is reopened/foregrounded
+    // iOS Safari Fallbacks: visibilitychange, pageshow (bfcache resume), and focus
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && navigator.onLine) {
         console.log('📲 App foregrounded (visibilitychange fallback on iOS Safari) — triggering flush');
@@ -213,9 +213,24 @@ export function SosEmergencyPage({ onNavigateBack, prefilledData = null }) {
       }
     };
 
+    const handlePageShow = (event) => {
+      if (navigator.onLine) {
+        console.log('📲 App resumed from background/bfcache (pageshow fallback on iOS Safari) — triggering flush');
+        handleFlushQueue();
+      }
+    };
+
+    const handleWindowFocus = () => {
+      if (navigator.onLine) {
+        handleFlushQueue();
+      }
+    };
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('focus', handleWindowFocus);
 
     // Initial load checks
     captureGps();
@@ -225,6 +240,8 @@ export function SosEmergencyPage({ onNavigateBack, prefilledData = null }) {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('focus', handleWindowFocus);
     };
   }, [captureGps, handleFlushQueue, refreshPendingQueue]);
 
@@ -454,18 +471,41 @@ export function SosEmergencyPage({ onNavigateBack, prefilledData = null }) {
             </p>
           </div>
 
-          {/* Calamity Type Selector */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
-              Disruption / Calamity Nature <span className="text-red-400">*</span>
-            </label>
+          {/* Calamity Type Selector (Dropdown, Presets, and Text Input) */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                Disruption / Calamity Nature <span className="text-red-400">*</span>
+              </label>
+              <span className="text-[10px] text-slate-400 font-mono">Select dropdown or type below</span>
+            </div>
+
+            {/* Dropdown Menu */}
+            <select
+              value={CALAMITY_TYPES.includes(disruptionType) ? disruptionType : 'custom'}
+              onChange={(e) => {
+                if (e.target.value !== 'custom') {
+                  setDisruptionType(e.target.value);
+                }
+              }}
+              className="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer"
+            >
+              {CALAMITY_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+              <option value="custom">Other / Custom Disruption...</option>
+            </select>
+
+            {/* Quick-Select Field Preset Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {CALAMITY_TYPES.map((type) => (
                 <button
                   type="button"
                   key={type}
                   onClick={() => setDisruptionType(type)}
-                  className={`p-3 text-left rounded-xl border text-xs font-semibold transition-all ${
+                  className={`p-2.5 text-left rounded-xl border text-xs font-semibold transition-all ${
                     disruptionType === type
                       ? 'border-red-500 bg-red-950/40 text-red-200 shadow-md ring-1 ring-red-500'
                       : 'border-slate-800 bg-slate-800/60 hover:bg-slate-800 text-slate-300'
@@ -474,6 +514,17 @@ export function SosEmergencyPage({ onNavigateBack, prefilledData = null }) {
                   {type}
                 </button>
               ))}
+            </div>
+
+            {/* Custom Text Field */}
+            <div className="pt-1">
+              <input
+                type="text"
+                value={disruptionType}
+                onChange={(e) => setDisruptionType(e.target.value)}
+                placeholder="Or specify custom calamity description here..."
+                className="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-red-500 font-medium"
+              />
             </div>
           </div>
 

@@ -22,6 +22,29 @@ self.addEventListener('install', (event) => {
           '/',
           '/index.html'
         ]);
+
+        // Eagerly discover and cache script & stylesheet bundles referenced in index.html
+        try {
+          const indexRes = await fetch('/index.html');
+          if (indexRes.ok) {
+            const html = await indexRes.text();
+            const scriptMatches = [...html.matchAll(/<script[^>]+src=["']([^"']+)["']/g)].map(m => m[1]);
+            const styleMatches = [...html.matchAll(/<link[^>]+href=["']([^"']+\.css)["']/g)].map(m => m[1]);
+            const assetsToCache = [...new Set([...scriptMatches, ...styleMatches])];
+            for (const assetUrl of assetsToCache) {
+              try {
+                const assetRes = await fetch(assetUrl);
+                if (assetRes.ok) {
+                  await cache.put(assetUrl, assetRes);
+                }
+              } catch (e) {
+                // Ignore individual asset prefetch errors
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('[SW] Could not pre-fetch linked index assets:', e);
+        }
       } catch (err) {
         console.warn('[SW] Pre-caching /sos initial shell:', err);
       }
