@@ -34,7 +34,7 @@ if (NODE_ENV !== 'test') {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
-    service: 'NEXUS Autonomous Supply Chain API Server',
+    service: 'SETU Autonomous Supply Chain API Server',
     database: 'SQLite (Node 24 DatabaseSync)',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
@@ -92,7 +92,7 @@ app.use((err, req, res, next) => {
 // Start listening
 const server = app.listen(PORT, () => {
   console.log(`========================================================`);
-  console.log(` 🚀 NEXUS Backend API Server Running on port ${PORT}`);
+  console.log(` 🚀 SETU Backend API Server Running on port ${PORT}`);
   console.log(` 📡 Health Check: http://localhost:${PORT}/api/health`);
   console.log(`========================================================`);
 });

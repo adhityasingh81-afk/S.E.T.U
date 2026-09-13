@@ -29,7 +29,7 @@ export function generateExecutiveReport(req, res) {
         recommendedAction: "Dispatch Balanced Lifeline Corridor Resilience (Strategy C)"
       },
       auditSignature: {
-        signatory: "NEXUS Autonomous Inter-Agency Engine",
+        signatory: "SETU Autonomous Inter-Agency Engine",
         complianceStandard: "NDMA Act 2005 Chapter IV Statutory Compliance",
         verified: true
       }

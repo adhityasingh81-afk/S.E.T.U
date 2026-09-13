@@ -1,6 +1,6 @@
 @echo off
 echo ========================================================
-echo  NEXUS: Self-Healing Supply Chain Platform
+echo  SETU: Self-Healing Supply Chain Platform
 echo ========================================================
 echo.
 echo Installing dependencies (if needed)...

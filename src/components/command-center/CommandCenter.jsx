@@ -67,7 +67,7 @@ const TIMEFRAME_DATA = {
     { label: '2023', health: 68, revProtected: 340.0, baseline: 65, note: 'Legacy Road-Only Bottlenecks' },
     { label: '2024', health: 74, revProtected: 410.0, baseline: 72, note: 'Lumding-Badarpur Broad Gauge' },
     { label: '2025', health: 82, revProtected: 490.0, baseline: 78, note: 'NW-2 River Barge Trials' },
-    { label: '2026 (NEXUS)', health: 96, revProtected: 650.0, baseline: 84, note: 'Autonomous AI Lifeline Platform' },
+    { label: '2026 (SETU)', health: 96, revProtected: 650.0, baseline: 84, note: 'Autonomous AI Lifeline Platform' },
   ]
 };
 
@@ -274,7 +274,7 @@ export function CommandCenter({
                 {recoveryDays} <span className="text-base text-slate-400 font-semibold font-sans">Days</span>
               </div>
               <div className="text-xs text-slate-500 font-medium mt-0.5">
-                NEXUS Autonomous Recovery vs 18.0 Days Unassisted
+                SETU Autonomous Recovery vs 18.0 Days Unassisted
               </div>
             </div>
 

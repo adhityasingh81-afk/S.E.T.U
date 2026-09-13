@@ -379,7 +379,7 @@ export function simulateRippleEffect(
       description: `Unmitigated corridor severance produces ₹${totalRevenueAtRiskCr} Cr cumulative economic and relief loss across ${durationDays} days.`,
       rootCause: 'Loss of inter-state commerce, emergency spot air transport premiums, and perishable spoilage.',
       affectedComponents: ['Regional Economic Velocity', 'Emergency Relief Exchequor Funds'],
-      mitigationAction: 'Execute NEXUS tri-modal recovery strategy to preserve ₹20.8+ Cr of value.'
+      mitigationAction: 'Execute SETU tri-modal recovery strategy to preserve ₹20.8+ Cr of value.'
     }
   ];
 

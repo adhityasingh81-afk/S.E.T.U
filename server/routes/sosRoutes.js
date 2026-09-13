@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
     });
 
     const smsBody = [
-      `🚨 [NEXUS EMERGENCY SOS ALERT] 🚨`,
+      `🚨 [SETU EMERGENCY SOS ALERT] 🚨`,
       `Type: ${disruptionType.toUpperCase()}`,
       `Severity: ${severity.toUpperCase()}`,
       `Location: ${nodeName} (${nodeId})`,
@@ -89,7 +89,7 @@ router.post('/', async (req, res) => {
       smsStatus = 'delivered_mock';
       smsProvider = 'Twilio (Mock Mode - Set TWILIO_ACCOUNT_SID in .env for live SMS)';
       console.log(`\n========================================================`);
-      console.log(`📢 [NEXUS EMERGENCY SOS - SIMULATED TWILIO DISPATCH]`);
+      console.log(`📢 [SETU EMERGENCY SOS - SIMULATED TWILIO DISPATCH]`);
       console.log(`To: ${EMERGENCY_CONTACT_NUMBER}`);
       console.log(`--------------------------------------------------------`);
       console.log(smsBody);

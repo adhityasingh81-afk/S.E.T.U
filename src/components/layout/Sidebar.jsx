@@ -101,7 +101,7 @@ export function Sidebar({
         </div>
         <div>
           <h1 className="text-lg font-extrabold tracking-tight text-slate-900 font-sans flex items-center gap-1.5">
-            SETU <span className="text-slate-400 font-light">•</span> NEXUS
+            SETU
             <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-orange-100 text-brand-600 font-mono">
               NER
             </span>

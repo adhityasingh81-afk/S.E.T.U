@@ -645,7 +645,7 @@ export const BASELINE_RESILIENCE_METRICS = {
     { dimension: "Terrain & Monsoon Adaptability", score: 74, benchmark: 70, status: "healthy", description: "Sela Tunnel, pre-positioned Bailey bridges, and real-time Doppler radar alerts." },
   ],
   baselineRecoveryDays: 18.0, // Unassisted manual bureaucratic coordination
-  nexusRecoveryDays: 3.4,     // NEXUS autonomous multimodal failover & BRO clearance
+  nexusRecoveryDays: 3.4,     // SETU autonomous multimodal failover & BRO clearance
   revenueAtRiskCr: 0.0,
   activeDisruptionsCount: 0,
 };

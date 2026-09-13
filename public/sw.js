@@ -1,5 +1,5 @@
 /**
- * SETU • NEXUS Service Worker
+ * SETU Service Worker
  * Scoped specifically to /sos route for zero-connectivity offline capability
  * and Background Sync ('sync-sos')
  */
@@ -109,7 +109,7 @@ self.addEventListener('fetch', (event) => {
         }
 
         return new Response(
-          '<!DOCTYPE html><html><head><title>NEXUS Offline SOS</title></head><body><h1>Offline SOS Ready</h1></body></html>',
+          '<!DOCTYPE html><html><head><title>SETU Offline SOS</title></head><body><h1>Offline SOS Ready</h1></body></html>',
           { headers: { 'Content-Type': 'text/html' } }
         );
       })()

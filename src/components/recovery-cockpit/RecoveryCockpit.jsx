@@ -126,7 +126,7 @@ export function RecoveryCockpit({
         disruptionType: simulationResult?.eventType || 'Severe Lifeline Corridor Fracture',
         severity: (simulationResult?.severityPct || 75) >= 70 ? 'Critical' : 'Severe',
         nodeId: simulationResult?.affectedNodeId || 'wh-sonapur-pass',
-        note: `Autonomous emergency alert triggered by NEXUS Recovery Engine for ${simulationResult?.affectedNodeName || 'Critical Lifeline'} with ${simulationResult?.severityPct || 75}% disruption.`
+        note: `Autonomous emergency alert triggered by SETU Recovery Engine for ${simulationResult?.affectedNodeName || 'Critical Lifeline'} with ${simulationResult?.severityPct || 75}% disruption.`
       });
       setSosDispatchedResult(res);
     } catch (err) {

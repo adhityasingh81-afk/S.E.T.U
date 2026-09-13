@@ -555,7 +555,7 @@ export function Header({
                   <kbd className="px-1 py-0.2 bg-white border border-slate-200 rounded font-mono text-[9px]">ESC</kbd> to close
                 </span>
               </div>
-              <span className="text-brand-600 font-semibold">Nexus Command Search</span>
+              <span className="text-brand-600 font-semibold">Setu Command Search</span>
             </div>
           </div>
         )}

@@ -415,7 +415,7 @@ export function PersonaMatrixView() {
             <div className="p-4 rounded-2xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-brand-700 block">
-                  NEXUS Solution Feature Mapping:
+                  SETU Solution Feature Mapping:
                 </span>
                 <h5 className="font-extrabold text-slate-900">{selectedPersona.solutionAlignment.feature}</h5>
                 <p className="text-[11px] text-slate-600 font-medium mt-0.5">{selectedPersona.solutionAlignment.impact}</p>
@@ -516,7 +516,7 @@ export function PersonaMatrixView() {
                   <th className="p-3.5">Explicit Need</th>
                   <th className="p-3.5">Latent Underlying Need</th>
                   <th className="p-3.5">Empirical Evidence / Research Basis</th>
-                  <th className="p-3.5">NEXUS Solution Feature</th>
+                  <th className="p-3.5">SETU Solution Feature</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
@@ -631,7 +631,7 @@ export function PersonaMatrixView() {
                 </span>
               </div>
               <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                Direct 1-to-1 connection between user pain points and NEXUS features: Recovery Cockpit (Austin), AI Negotiation Room (Elena), Digital Twin Stepper (Karthik), and Resilience Planner (Sarah).
+                Direct 1-to-1 connection between user pain points and SETU features: Recovery Cockpit (Austin), AI Negotiation Room (Elena), Digital Twin Stepper (Karthik), and Resilience Planner (Sarah).
               </p>
               <div className="text-[11px] text-emerald-700 font-bold flex items-center gap-1">
                 <Check className="w-3.5 h-3.5" /> Verified across all 8 live modules

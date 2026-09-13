@@ -11,7 +11,7 @@ export const DEMO_USERS = [
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
     clearance: 'Tier-1 Apex Ministerial Command',
     heroImage: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1600&auto=format&fit=crop',
-    quote: "NEXUS autonomous routing bypassed the NH-6 Sonapur landslide within 3.4 hours, dispatching 12 rakes and 4 river barges to preserve Tripura & Mizoram medical lifelines.",
+    quote: "SETU autonomous routing bypassed the NH-6 Sonapur landslide within 3.4 hours, dispatching 12 rakes and 4 river barges to preserve Tripura & Mizoram medical lifelines.",
     accent: '#ff6b00'
   },
   {

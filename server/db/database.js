@@ -180,7 +180,7 @@ export function initDatabase() {
   `);
 
   seedInitialData();
-  console.log(`🗄️  NEXUS SQLite Database Initialized & Connected at: ${dbPath}`);
+  console.log(`🗄️  SETU SQLite Database Initialized & Connected at: ${dbPath}`);
 }
 
 /**
@@ -341,7 +341,7 @@ export function dbSaveUser(u) {
     u.role || 'Authorized Operator',
     u.persona || 'custom',
     u.avatar || null,
-    u.quote || 'Authorized user connected to NEXUS Network.',
+    u.quote || 'Authorized user connected to SETU Network.',
     u.clearance || 'Tier-1 Command',
     u.heroImage || null
   );

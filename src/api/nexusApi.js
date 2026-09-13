@@ -1,5 +1,5 @@
 /**
- * NEXUS Frontend API Client Layer
+ * SETU Frontend API Client Layer
  * Handles communication with the Node.js Express backend with seamless client-side fallback.
  */
 
@@ -288,7 +288,7 @@ export const nexusApi = {
       () => {
         const { activeScenario, simulationResult, activeStrategy, resilienceScore } = reportData || {};
         return {
-          reportId: `NEXUS-EXEC-REPORT-${Date.now().toString().slice(-6)}`,
+          reportId: `SETU-EXEC-REPORT-${Date.now().toString().slice(-6)}`,
           company: COMPANY_PROFILE.name,
           generatedAt: new Date().toISOString(),
           classification: "CONFIDENTIAL // BOARD OF DIRECTORS BRIEFING",
@@ -311,7 +311,7 @@ export const nexusApi = {
             recommendedAction: "Dispatch Speed-Optimized Rapid Airlift (Strategy B)"
           },
           auditSignature: {
-            signatory: "NEXUS Self-Healing Autonomous Engine",
+            signatory: "SETU Self-Healing Autonomous Engine",
             complianceStandard: "ISO 22301 Business Continuity Management",
             verified: true
           }

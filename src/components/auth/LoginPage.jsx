@@ -99,7 +99,7 @@ export function LoginPage({ onLoginSuccess }) {
         role: 'Custom Station Operator',
         persona: 'custom',
         avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
-        quote: "Authorized user connected to NEXUS Network.",
+        quote: "Authorized user connected to SETU Network.",
         clearance: 'Tier-1 Command'
       };
       setIsLoading(false);
@@ -159,12 +159,12 @@ export function LoginPage({ onLoginSuccess }) {
                 <span className="inline-block animate-spin-slow">✱</span>
               </div>
               <span className="text-xl font-extrabold tracking-tight text-white font-sans drop-shadow-md">
-                NEXUS
+                SETU
               </span>
             </div>
 
             <div className="flex items-center gap-3 text-xs font-semibold text-white/80">
-              <span className="hover:text-white transition-colors">nexus-chain.ai</span>
+              <span className="hover:text-white transition-colors">setu-chain.ai</span>
               {/* Auto-play toggle button */}
               <button
                 type="button"
@@ -425,7 +425,7 @@ export function LoginPage({ onLoginSuccess }) {
           </div>
 
           <div className="text-center pt-2 text-[11px] text-slate-400 font-medium">
-            Protected by NEXUS Zero-Trust Defense • AURA Enterprise Network
+            Protected by SETU Zero-Trust Defense • AURA Enterprise Network
           </div>
         </div>
       </div>

@@ -72,7 +72,7 @@ export function ProfileSettingsModal({
   const fileInputRef = useRef(null);
 
   const [name, setName] = useState(currentUser?.name || 'Authorized Operator');
-  const [email, setEmail] = useState(currentUser?.email || 'operator@nexus.ai');
+  const [email, setEmail] = useState(currentUser?.email || 'operator@setu.gov.in');
   const [role, setRole] = useState(currentUser?.role || 'Chief Supply Chain Officer');
   const [clearance, setClearance] = useState(currentUser?.clearance || 'Tier-1 Command');
   const [quote, setQuote] = useState(currentUser?.quote || 'Autonomous resilience operational. Zero-defect supply chain protocol active.');
@@ -85,7 +85,7 @@ export function ProfileSettingsModal({
   useEffect(() => {
     if (isOpen && currentUser) {
       setName(currentUser.name || 'Authorized Operator');
-      setEmail(currentUser.email || 'operator@nexus.ai');
+      setEmail(currentUser.email || 'operator@setu.gov.in');
       setRole(currentUser.role || 'Chief Supply Chain Officer');
       setClearance(currentUser.clearance || 'Tier-1 Command');
       setQuote(currentUser.quote || 'Autonomous resilience operational. Zero-defect supply chain protocol active.');

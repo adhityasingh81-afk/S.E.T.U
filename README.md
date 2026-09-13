@@ -1,4 +1,4 @@
-# NEXUS: Self-Healing Autonomous Supply Chain Platform
+# SETU: Self-Healing Autonomous Supply Chain Platform
 
 An enterprise AI-driven self-healing supply chain simulation and decision-intelligence platform built for high-tech electronics manufacturing.
 

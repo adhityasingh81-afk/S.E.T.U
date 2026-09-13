@@ -474,7 +474,7 @@ export function SosEmergencyPage({ onNavigateBack, prefilledData = null }) {
             <div className="flex items-center space-x-2">
               <ShieldAlert className="w-6 h-6 text-red-600 animate-pulse" />
               <h1 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2 font-sans">
-                NEXUS <span className="px-2.5 py-0.5 text-xs font-black uppercase tracking-wider bg-red-600 text-white rounded-md shadow-xs">SOS FIELD ALERT</span>
+                SETU <span className="px-2.5 py-0.5 text-xs font-black uppercase tracking-wider bg-red-600 text-white rounded-md shadow-xs">SOS FIELD ALERT</span>
               </h1>
             </div>
           </div>

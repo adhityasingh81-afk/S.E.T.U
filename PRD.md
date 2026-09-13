@@ -1,6 +1,6 @@
 # Product Requirements Document (PRD)
 
-## Project: NEXUS / S.E.T.U. (Strategic Emergency Transport & Utility Resilience Platform)
+## Project: S.E.T.U. (Strategic Emergency Transport & Utility Resilience Platform)
 - **Document Version:** 2.0 (Post-SOS & GIS Route Integration)
 - **Classification:** Strategic Defense & Critical Infrastructure / Enterprise Supply Chain Intelligence
 - **Status:** Active / Production-Ready
@@ -43,7 +43,7 @@ To safeguard national and enterprise lifelines across vulnerable geostrategic co
 
 ```
 +-----------------------------------------------------------------------------------+
-|                           NEXUS / S.E.T.U. PLATFORM                              |
+|                                S.E.T.U. PLATFORM                                 |
 +-----------------------------------------------------------------------------------+
                                          │
         ┌────────────────────────────────┼────────────────────────────────┐
@@ -116,7 +116,7 @@ To safeguard national and enterprise lifelines across vulnerable geostrategic co
   - When offline, alert payload is saved into browser IndexedDB (`nexus-sos-db`, store `pending-sos`).
   - Automatic background sync when connectivity returns (Chrome `SyncManager` + iOS Safari `visibilitychange` & `pageshow` fallbacks).
   - Web Audio synthetic chime (587 Hz D5 -> 880 Hz A5) and device vibration pattern (`100ms-50ms-150ms`).
-- **FR-6.4:** Clean light theme matching NEXUS Extej design system (`bg-[#f8fafc]`, crisp white cards, red emergency highlight rings).
+- **FR-6.4:** Clean light theme matching SETU Extej design system (`bg-[#f8fafc]`, crisp white cards, red emergency highlight rings).
 
 ### Module 7: Centralized Notification Center & Bell Icon Integration (FR-7)
 - **FR-7.1:** Universal Bell icon in the top header with live unread badge counter (pulsing crimson badge).

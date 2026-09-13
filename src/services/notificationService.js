@@ -1,5 +1,5 @@
 /**
- * Centralized Notification and Messaging Service for NEXUS
+ * Centralized Notification and Messaging Service for SETU
  * Synchronizes crisis alerts, SOS field telemetry, and inter-agency messages
  * across the Command Center, Header Notification Bell, and /sos emergency routes.
  */

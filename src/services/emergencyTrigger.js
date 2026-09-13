@@ -2,7 +2,7 @@ import { enqueueSosAlert, dispatchAlertApi } from './sosQueue.js';
 import { NODES } from '../data/auraSupplyChainData.js';
 
 /**
- * Programmatic integration with NEXUS AI Recovery Engine & Fracture Simulator.
+ * Programmatic integration with SETU AI Recovery Engine & Fracture Simulator.
  * Allows autonomous dispatch or queuing of emergency SOS when severe corridor
  * fractures or lifeline depletion is detected.
  */
@@ -12,7 +12,7 @@ export async function triggerEmergencySos({
   nodeId = 'wh-sonapur-pass',
   nodeName = null,
   coordinates = null,
-  note = 'Triggered programmatically by NEXUS AI Recovery Engine.',
+  note = 'Triggered programmatically by SETU AI Recovery Engine.',
   autoDispatch = true
 }) {
   const node = NODES.find(n => n.id === nodeId);

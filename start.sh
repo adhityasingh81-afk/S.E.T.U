@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "========================================================"
-echo " NEXUS: Self-Healing Supply Chain Platform"
+echo " SETU: Self-Healing Supply Chain Platform"
 echo "========================================================"
 echo ""
 echo "Starting development server..."

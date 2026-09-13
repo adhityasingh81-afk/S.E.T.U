@@ -25,7 +25,7 @@ export function login(req, res) {
           role: 'Custom Station Operator',
           persona: 'custom',
           avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80`,
-          quote: "Autonomous operations authorized. Live connection established with NEXUS Command.",
+          quote: "Autonomous operations authorized. Live connection established with SETU Command.",
           clearance: "Tier-1 Command",
           heroImage: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=1600&auto=format&fit=crop&q=80"
         };
@@ -85,7 +85,7 @@ export function updateProfile(req, res) {
       role: role || existing.role || 'Authorized Operator',
       persona: existing.persona || 'custom',
       avatar: avatar || existing.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
-      quote: quote || existing.quote || 'Authorized user connected to NEXUS Network.',
+      quote: quote || existing.quote || 'Authorized user connected to SETU Network.',
       clearance: clearance || existing.clearance || 'Tier-1 Command',
       heroImage: heroImage || existing.hero_image || existing.heroImage || null
     };

@@ -149,7 +149,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
     setPopupToast({
       type: 'info',
       title: 'Executing Deeper Negotiation Round',
-      message: `NEXUS Agent is applying algorithmic bargaining leverage for lower unit costs and zero surcharges...`
+      message: `SETU Agent is applying algorithmic bargaining leverage for lower unit costs and zero surcharges...`
     });
 
     const nextRound = currentRoundIndex + 1;
@@ -177,7 +177,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
             id: `msg-dynamic-agent-${Date.now()}`,
             round: roundNum,
             speaker: 'nexus-agent',
-            speakerName: 'NEXUS Autonomous Procurement Agent',
+            speakerName: 'SETU Autonomous Procurement Agent',
             avatar: 'NX',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
             message: `${activeNegotiation.repName.split(' ')[0]}, we are close to consensus, but our procurement benchmarks require a unit price of ₹${furtherDiscount} and 100% absorption of freight demurrage to authorize immediate execution.`,
@@ -199,7 +199,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
             id: `msg-dynamic-summary-${Date.now() + 2}`,
             round: roundNum,
             speaker: 'nexus-agent',
-            speakerName: 'NEXUS Autonomous Procurement Agent',
+            speakerName: 'SETU Autonomous Procurement Agent',
             avatar: 'NX',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
             message: `Round ${roundNum} terms evaluated: Net savings increased to ₹${furtherSavings} Cr! Cost and delivery parameters optimized. Awaiting executive approval.`,
@@ -247,7 +247,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
     const newMsg = {
       id: `msg-custom-${Date.now()}`,
       speaker: 'nexus-agent',
-      speakerName: 'NEXUS Autonomous Procurement Agent (Human Direct Command)',
+      speakerName: 'SETU Autonomous Procurement Agent (Human Direct Command)',
       avatar: 'NX',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       message: userText,
@@ -484,7 +484,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
               <div className="p-3 rounded-xl bg-orange-50 border border-orange-200 flex items-center gap-2 text-xs text-brand-800 animate-pulse">
                 <RefreshCw className="w-3.5 h-3.5 animate-spin text-brand-600" />
                 <span className="font-bold font-sans">
-                  NEXUS Autonomous Agent is applying bargaining leverage on Round {currentRoundIndex + 2}...
+                  SETU Autonomous Agent is applying bargaining leverage on Round {currentRoundIndex + 2}...
                 </span>
               </div>
             )}
@@ -753,7 +753,7 @@ export function NegotiationRoom({ onSignTermSheet }) {
                 <div>
                   <h3 className="text-base font-extrabold text-slate-900">Commercial Term Sheet & MOU</h3>
                   <p className="text-xs text-slate-400 font-medium font-mono">
-                    Contract Ref: {generatedMOU?.documentId || `NEXUS-MOU-2026-R${currentRoundIndex + 1}-AZ`}
+                    Contract Ref: {generatedMOU?.documentId || `SETU-MOU-2026-R${currentRoundIndex + 1}-AZ`}
                   </p>
                 </div>
               </div>

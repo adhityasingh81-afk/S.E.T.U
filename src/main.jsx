@@ -14,7 +14,7 @@ class GlobalErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("NEXUS Uncaught UI Exception:", error, errorInfo);
+    console.error("SETU Uncaught UI Exception:", error, errorInfo);
     this.setState({ errorInfo });
   }
 
@@ -43,7 +43,7 @@ class GlobalErrorBoundary extends React.Component {
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
               <span style={{ fontSize: '28px' }}>⚠️</span>
               <h1 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fda4af', margin: 0 }}>
-                NEXUS Runtime Exception Caught
+                SETU Runtime Exception Caught
               </h1>
             </div>
             <p style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: 1.6 }}>

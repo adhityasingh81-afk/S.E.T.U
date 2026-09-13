@@ -235,7 +235,7 @@ export function evaluateCriticalDisruptionSos(disruptionState) {
     severity: severityPct >= 70 ? 'Critical' : 'Severe',
     disruptionType: eventType || 'Critical Lifeline Corridor Fracture',
     nodeId: affectedNodeId || 'wh-sonapur-pass',
-    note: `NEXUS AI Recovery Engine detected critical disruption: ${severityPct}% severity, ₹${revAtRisk} Cr revenue exposure, ${inventoryRunway}d inventory runway.`,
+    note: `SETU AI Recovery Engine detected critical disruption: ${severityPct}% severity, ₹${revAtRisk} Cr revenue exposure, ${inventoryRunway}d inventory runway.`,
     metrics: {
       severityPct,
       revAtRisk,
